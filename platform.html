@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="邑米地方知識探索平台，整合地方知識、成果典藏與數位探索。">
+    <title>邑米地方知識探索平台</title>
+    <link rel="stylesheet" href="css/platform-home.css">
+    <link rel="stylesheet" href="css/platform-shared.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要內容</a>
+
+    <header class="platform-header">
+      <a class="platform-brand" href="platform.html" aria-label="邑米地方知識探索平台首頁">
+        <img src="public/images/yimi-logo.png" alt="">
+        <span>邑米地方知識探索平台</span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="platform-nav">
+        <span></span><span></span><span></span>
+        <span class="sr-only">開啟導覽選單</span>
+      </button>
+      <nav id="platform-nav" class="platform-nav" aria-label="主要導覽">
+        <a class="active" href="platform.html">首頁</a>
+        <a href="index.html#/">成果故事館</a>
+        <a href="index.html#/themes">主題館</a>
+        <a href="index.html#/explore">地方探索館</a>
+        <a href="index.html#/clubs">社團紀錄</a>
+        <a href="index.html#/showcase">成果展示</a>
+        <a href="index.html#/about">關於邑米</a>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section id="hero" class="hero" aria-label="平台主視覺"></section>
+
+      <section class="section hall-section" aria-labelledby="hall-title">
+        <div class="section-heading">
+          <p class="eyebrow">EXPLORE THE PLATFORM</p>
+          <h2 id="hall-title">從六座館，走進地方知識</h2>
+          <p>依照感興趣的方式，探索邑米多年累積的地方故事與行動成果。</p>
+        </div>
+        <div id="hall-grid" class="hall-grid"></div>
+      </section>
+
+      <section class="section place-section" aria-labelledby="place-title">
+        <div class="place-copy">
+          <p class="eyebrow">PLACES WE SERVE</p>
+          <h2 id="place-title">我們走進的地方</h2>
+          <p>邑米社區大學目前深耕嘉義縣十個服務鄉鎮，持續透過課程、走讀、田調與公共參與，累積地方故事與行動成果。</p>
+          <p class="place-hint">點選鄉鎮，可瀏覽該地區的成果故事、主題內容與地方探索紀錄。</p>
+          <a class="text-link" href="index.html#/overview">瀏覽地方成果 <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="place-panel">
+          <div class="river-line" aria-hidden="true"></div>
+          <div id="place-grid" class="place-grid"></div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="latest-title">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="eyebrow">NEW STORIES</p>
+            <h2 id="latest-title">最新內容</h2>
+          </div>
+          <p>依更新日期排列，掌握最新探索、活動與成果故事。</p>
+        </div>
+        <div id="latest-grid" class="latest-grid"></div>
+      </section>
+
+      <section id="platform-about" class="about-section" aria-labelledby="about-title">
+        <div class="about-image">
+          <img id="about-image" src="" alt="">
+        </div>
+        <div class="about-copy">
+          <p class="eyebrow">ABOUT YIMI</p>
+          <h2 id="about-title">讓地方知識被看見，也能繼續累積</h2>
+          <p id="about-text"></p>
+          <a class="button button-light" href="#platform-stats">認識平台成果</a>
+        </div>
+      </section>
+
+      <section id="platform-stats" class="section stats-section" aria-labelledby="stats-title">
+        <div class="section-heading">
+          <p class="eyebrow">PLATFORM IN NUMBERS</p>
+          <h2 id="stats-title">地方累積，成為共同的知識</h2>
+          <p>以年度成果、服務鄉鎮、主題內容與地方探索模組，持續累積邑米社區大學的地方知識資料。</p>
+        </div>
+        <div id="stats-grid" class="stats-grid"></div>
+      </section>
+
+      <section class="section news-section" aria-labelledby="news-title">
+        <div class="section-heading split-heading">
+          <div>
+            <p class="eyebrow">NEWS</p>
+            <h2 id="news-title">最新消息</h2>
+          </div>
+          <p>活動公告、平台更新與最新課程將於此處發布。</p>
+        </div>
+        <div id="news-list" class="news-list"></div>
+      </section>
+    </main>
+
+    <footer class="platform-footer">
+      <div>
+        <strong>嘉義縣邑米社區大學</strong>
+        <p>探索地方．累積知識．連結生活</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://www.facebook.com/IMDCC" target="_blank" rel="noopener noreferrer">Facebook</a>
+        <a href="#" aria-label="YouTube（連結預留）">YouTube</a>
+        <a href="mailto:cycc222@gmail.com">聯絡我們</a>
+      </div>
+      <div class="footer-meta">
+        <span>網站版本 V1.0</span>
+        <span id="last-updated"></span>
+        <span>© 2026 邑米社區大學</span>
+      </div>
+    </footer>
+
+    <script src="data/platform-home-data.js"></script>
+    <script src="js/platform-home.js" defer></script>
+  </body>
+</html>
