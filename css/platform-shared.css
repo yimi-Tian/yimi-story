@@ -68,6 +68,39 @@ body {
   object-fit: contain;
 }
 
+.shell-menu-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  padding: 9px;
+  color: var(--platform-blue-dark);
+  background: var(--platform-white);
+  border: 1px solid var(--platform-line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.shell-menu-toggle > span:not(.sr-only) {
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin: 5px auto;
+  background: currentColor;
+  border-radius: 999px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .platform-nav,
 .top-nav {
   display: flex;
@@ -439,8 +472,23 @@ body {
 }
 
 @media (max-width: 980px) {
+  .platform-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
   .platform-header .platform-nav {
+    position: static;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px;
     display: none;
+    background: var(--platform-white);
+    border: 1px solid var(--platform-line);
+    border-radius: 6px;
+    box-shadow: 0 12px 28px rgba(6, 75, 107, 0.12);
   }
 
   .platform-header .platform-nav.open {
@@ -491,6 +539,105 @@ body {
     max-height: 40px;
   }
 
+  .platform-header .platform-nav.open {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-header .platform-nav a {
+    justify-content: flex-start;
+    min-height: 48px;
+    padding: 10px 14px;
+    color: var(--platform-blue-dark);
+    border: 0;
+    border-bottom: 1px solid var(--platform-line);
+    border-left: 4px solid transparent;
+  }
+
+  .platform-header .platform-nav a:last-child {
+    border-bottom: 0;
+  }
+
+  .platform-header .platform-nav a.active {
+    color: var(--platform-blue);
+    background: var(--platform-blue-soft);
+    border-left-color: var(--platform-blue);
+  }
+
+  .site-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .shell-menu-toggle {
+    display: block;
+  }
+
+  .site-header .top-nav {
+    position: static;
+    grid-column: 1 / -1;
+    display: none;
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px;
+    background: var(--platform-white);
+    border: 1px solid var(--platform-line);
+    border-radius: 6px;
+    box-shadow: 0 12px 28px rgba(6, 75, 107, 0.12);
+  }
+
+  .site-header .top-nav.open {
+    display: grid;
+  }
+
+  .site-header .nav-item {
+    display: grid;
+    width: 100%;
+  }
+
+  .site-header .nav-trigger {
+    justify-content: flex-start;
+    min-height: 48px;
+    padding: 10px 14px;
+    color: var(--platform-blue-dark);
+    border: 0;
+    border-bottom: 1px solid var(--platform-line);
+    border-left: 4px solid transparent;
+  }
+
+  .site-header .nav-trigger.active {
+    color: var(--platform-blue);
+    background: var(--platform-blue-soft);
+    border-left-color: var(--platform-blue);
+    border-bottom-color: var(--platform-line);
+  }
+
+  .site-header .nav-menu,
+  .site-header .nav-item:hover .nav-menu,
+  .site-header .nav-item:focus-within .nav-menu {
+    position: static;
+    display: none;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 5px 8px 9px 20px;
+    background: var(--platform-blue-soft);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .site-header .nav-item.open .nav-menu,
+  .site-header .nav-item.open:focus-within .nav-menu {
+    display: grid;
+  }
+
+  .site-header .nav-menu a {
+    min-height: 44px;
+    padding: 9px 12px;
+    color: var(--platform-blue-dark);
+  }
+
   .top-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -498,6 +645,32 @@ body {
   .platform-hall-banner {
     grid-template-columns: 1fr;
     margin: 20px 0 28px;
+  }
+
+  .app.year-page .platform-hall-banner {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    margin-bottom: 22px;
+  }
+
+  .app.year-page .platform-hall-media {
+    order: 1;
+    width: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+  }
+
+  .app.year-page .platform-hall-copy {
+    order: 2;
+    width: 100%;
+    padding: 24px 22px 28px;
+  }
+
+  .app.year-page .platform-hall-banner h1 {
+    font-size: 32px;
+    line-height: 1.25;
+    white-space: normal;
   }
 
   .platform-hall-copy {

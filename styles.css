@@ -610,6 +610,48 @@ button {
   .integrated-overview .section-heading p {
     margin-top: 0.65rem;
   }
+
+  .year-overview-grid,
+  .overview-activity-grid,
+  .activity-mini-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-overview-card,
+  .overview-activity-card,
+  .activity-mini-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .overview-activity-card,
+  .activity-mini-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+
+  .activity-mini-card > img,
+  .activity-cover {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .mini-card-body,
+  .activity-card-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .year-card-heading span,
+  .mini-card-body h2,
+  .overview-activity-card h2 {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
 }
 
 .year-card-heading {
@@ -3320,5 +3362,50 @@ a.theme-representative-card:focus-visible {
   .rights-note {
     grid-template-columns: minmax(12rem, 0.4fr) minmax(0, 1.6fr);
     align-items: start;
+  }
+}
+
+/* Final mobile layout guard: keep annual and activity cards in one readable column. */
+@media (max-width: 680px) {
+  .year-overview-grid,
+  .overview-activity-grid,
+  .activity-mini-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-overview-card,
+  .overview-activity-card,
+  .activity-mini-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .overview-activity-card,
+  .activity-mini-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+
+  .activity-mini-card > img,
+  .activity-cover {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .mini-card-body,
+  .activity-card-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .year-card-heading span,
+  .mini-card-body h2,
+  .overview-activity-card h2 {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
   }
 }
