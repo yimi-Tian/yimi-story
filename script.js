@@ -5,6 +5,104 @@ const SDG_ICON_BASE = "public/images/sdgs";
 const themeData = typeof window !== "undefined" && window.THEMES_DATA
   ? window.THEMES_DATA
   : { themes: [], featured: [] };
+const showcaseData = {
+  categories: [
+    {
+      id: "activity-photos",
+      title: "活動照片",
+      description: "彙整歷年活動照片，呈現課程、走讀與社區行動成果。",
+      type: "photo",
+      icon: "PHOTO",
+      coverImage: "public/images/activities/112-006/03.jpg",
+      buttonText: "查看照片成果",
+    },
+    {
+      id: "student-works",
+      title: "學員作品",
+      description: "展示學員創作、手作成果與作品紀錄。",
+      status: "內容整理中",
+      icon: "WORK",
+      buttonText: "內容整理中",
+    },
+    {
+      id: "walking-records",
+      title: "走讀紀錄",
+      description: "保存走讀路線、觀察紀錄與地方故事影像。",
+      status: "內容整理中",
+      icon: "WALK",
+      buttonText: "內容整理中",
+    },
+    {
+      id: "video-records",
+      title: "影片紀錄",
+      description: "彙整活動紀錄影片、地方故事影片與成果短片。",
+      status: "內容整理中",
+      icon: "VIDEO",
+      buttonText: "內容整理中",
+    },
+    {
+      id: "publication-materials",
+      title: "出版教材",
+      description: "整理成果手冊、教材、出版品與下載資訊。",
+      status: "內容整理中",
+      icon: "DOC",
+      buttonText: "內容整理中",
+    },
+    {
+      id: "old-photos",
+      title: "老照片",
+      description: "保存地方老照片、歷史影像與今昔對照素材。",
+      status: "內容整理中",
+      icon: "ARCHIVE",
+      buttonText: "內容整理中",
+    },
+  ],
+  featuredActivityIds: ["114-016", "114-017", "114-033", "114-032", "114-022", "114-015", "114-021", "114-026"],
+};
+const clubData = {
+  clubs: [
+    {
+      id: "wood-repair",
+      title: "木工修繕社",
+      subtitle: "以修繕代替汰換，讓木工學習回到社區需要。",
+      description: "木工修繕社由木工課程延伸而來，學員透過家具修繕、木材再利用與公益服務，將課堂所學轉化為社區行動，協助弱勢機構與地方場域改善生活空間。",
+      status: "持續行動中",
+      tags: ["木工修繕", "木材再利用", "社區服務", "永續行動"],
+      coverImage: "public/images/activities/113-002/01.JPG",
+      relatedActivityIds: ["113-002", "114-022"],
+      relatedThemeIds: ["wood-repair", "environmental-education"],
+      detailContent: {
+        intro: "木工修繕社由木工課程延伸而來，學員透過持續練習與社區服務，將木工技術應用於家具修繕、木材再利用與公益行動，讓課堂學習回到地方需求。",
+        principle: "以修繕代替汰換，減少資源浪費；以學習回應地方需要，讓社大課程成果轉化為社區服務。",
+        development: "從老屋修繕、地方空間再利用到社福機構家具修繕，逐步累積木工課程連結社區服務的行動脈絡。",
+        representativeResults: ["六腳復興咱ㄟ厝", "永續木作共好計畫"],
+      },
+      serviceRecords: ["家具修繕與木材再利用", "社福機構服務與生活空間改善", "地方空間修繕與老屋保存學習"],
+    },
+    {
+      id: "multi-dance",
+      title: "多元舞蹈社團",
+      subtitle: "以舞蹈陪伴社區，讓表演成為關懷與交流。",
+      description: "多元舞蹈社團由學員自主練習與展演延伸，透過節慶關懷、社區演出與老人服務，讓學習成果走入社區，陪伴不同年齡與族群的居民。",
+      status: "持續行動中",
+      tags: ["舞蹈展演", "社區關懷", "高齡陪伴", "學員社團"],
+      relatedActivityIds: [],
+      detailContent: {
+        intro: "多元舞蹈社團由學員課後自主練習與展演延伸，透過社區表演、節慶關懷與高齡陪伴，讓學習成果走入社區生活。",
+        principle: "以表演作為陪伴與交流，讓課程成果延伸為社區關懷行動。",
+      },
+    },
+    {
+      id: "club-records-preparing",
+      title: "社團紀錄資料整理中",
+      subtitle: "更多學員社團與公共參與行動將逐步整理。",
+      description: "後續可逐步整理歌唱、舞蹈、手作、志工服務、成果展演與其他社團行動紀錄，呈現邑米社大學員自主學習與公共參與的累積。",
+      status: "內容整理中",
+      tags: ["學員社團", "公共參與", "成果展演"],
+      relatedActivityIds: [],
+    },
+  ],
+};
 let homeCarouselTimer = null;
 const warnedMissingThemeActivityIds = new Set();
 const SDG_INFO = {
@@ -32,7 +130,7 @@ const siteData = {
     title: "成果故事館",
     subtitle: "從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡",
     intro:
-      "邑米社區大學在各鄉鎮推動課程、走讀、展演、工作坊與社區行動，透過成果總覽、主題館、數位走讀互動館、社團記錄及成果展示，帶您看見學習如何在地方發生、累積並產生改變。",
+      "邑米社區大學在各鄉鎮推動課程、走讀、展演、工作坊與社區行動，透過成果總覽、主題館、數位走讀互動館、社團紀錄及成果展示，帶您看見學習如何在地方發生、累積並產生改變。",
   },
   entrances: [
     {
@@ -54,7 +152,7 @@ const siteData = {
       description: "從赤蘭溪 AR 探索出發，逐步擴充嘉義地方文化與環境主題。",
     },
     {
-      title: "社團記錄",
+      title: "社團紀錄",
       href: "#/clubs",
       kicker: "Community",
       description: "記錄六個學習社團的活動歷程、成員作品、交流展演與地方參與。",
@@ -63,7 +161,7 @@ const siteData = {
       title: "活動與學員成果展示",
       href: "#/showcase",
       kicker: "Archive",
-      description: "預留活動照片、學員作品、走讀紀錄、工作坊成果、影片與出版教材的展示區。",
+      description: "預留活動照片、學員作品、走讀紀錄、影片紀錄、出版教材與老照片的展示區。",
     },
   ],
   digitalTours: [
@@ -149,12 +247,12 @@ const siteData = {
     },
   ],
   showcase: [
-    { title: "活動照片", description: "placeholder：之後可放入各年度活動精選照片與圖說。" },
-    { title: "學員作品", description: "placeholder：之後可放入學員創作、作品說明與展示照片。" },
-    { title: "走讀紀錄", description: "placeholder：之後可放入走讀路線、觀察紀錄與地方故事。" },
-    { title: "工作坊成果", description: "placeholder：之後可放入工作坊過程、共創成果與參與回饋。" },
-    { title: "影片紀錄", description: "placeholder：之後可放入影片連結、截圖與簡短介紹。" },
-    { title: "出版與教材成果", description: "placeholder：之後可放入手冊、教材、出版品與下載資訊。" },
+    { title: "活動照片", description: "彙整歷年活動照片，呈現課程、走讀與社區行動成果。" },
+    { title: "學員作品", description: "展示學員創作、手作成果與作品紀錄。" },
+    { title: "走讀紀錄", description: "保存走讀路線、觀察紀錄與地方故事影像。" },
+    { title: "影片紀錄", description: "彙整活動紀錄影片、地方故事影片與成果短片。" },
+    { title: "出版教材", description: "整理成果手冊、教材、出版品與下載資訊。" },
+    { title: "老照片", description: "保存地方老照片、歷史影像與今昔對照素材。" },
   ],
   chilan: {
     description:
@@ -717,38 +815,163 @@ function renderEarlyLifePodcast() {
 
 function renderClubs(detail) {
   const app = document.querySelector("#app");
-  const selected = siteData.clubs.find((item) => item.slug === detail);
+  const clubs = Array.isArray(clubData.clubs) ? clubData.clubs.filter(Boolean) : [];
+  const selected = clubs.find((item) => item.id === detail);
   if (selected) {
-    app.innerHTML = `
-      ${pageHeader(selected.title, selected.description)}
-      <section class="placeholder-feature">
-        <div>
-          <h2>社團紀錄待補</h2>
-          <p>此區可放入社團介紹、活動歷程、成員作品、展演照片、影片與年度成果。</p>
-          <a class="button secondary" href="#/clubs">回社團記錄</a>
-        </div>
-        <img src="${PLACEHOLDER}" alt="${selected.title}">
-      </section>
-    `;
+    renderClubDetail(selected);
     return;
   }
 
+  const totalRelated = clubs.reduce((sum, club) => sum + getClubActivities(club).length, 0);
   app.innerHTML = `
-    ${pageHeader("社團記錄", "保存學習社團的練習歷程、作品成果、交流展演與地方參與，呈現課程之外持續發生的共同學習。")}
-    <section class="club-grid">
-      ${siteData.clubs.map(clubCard).join("")}
+    ${pageHeader("社團紀錄", "讓學習走出教室，陪伴地方一起前進。")}
+    <section class="club-record-intro" aria-label="社團紀錄說明">
+      <div>
+        <span class="section-label">COMMUNITY ACTION</span>
+        <h2>從課程走向社團，讓學習成為地方陪伴</h2>
+        <p>社團紀錄整理邑米社區大學學員在課程之外延伸出的自主學習、社區服務、公益行動與公共參與。透過社團行動紀錄，看見學習如何轉化為陪伴地方、服務社區與累積公共價值的力量。</p>
+        <div class="showcase-actions">
+          <a class="button" href="#club-record-list">瀏覽社團紀錄</a>
+          <a class="button secondary" href="#club-service-records">查看社區服務</a>
+        </div>
+      </div>
+      <div class="showcase-quick-stats">
+        <article><strong>${clubs.length}</strong><span>個社團入口</span></article>
+        <article><strong>${totalRelated}</strong><span>筆正式成果串接</span></article>
+        <article><strong>2</strong><span>個持續行動中</span></article>
+      </div>
+    </section>
+
+    <section class="club-page-section" id="club-record-list" aria-labelledby="club-list-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">CLUBS</span>
+          <h2 id="club-list-title">社團列表</h2>
+        </div>
+        <p>第一版先整理木工修繕社、多元舞蹈社團與後續資料整理入口。</p>
+      </div>
+      <div class="club-record-grid">
+        ${clubs.map(clubCard).join("")}
+      </div>
+    </section>
+
+    <section class="club-page-section" aria-labelledby="featured-club-actions-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">FEATURED ACTIONS</span>
+          <h2 id="featured-club-actions-title">精選社團行動</h2>
+        </div>
+        <p>從木工修繕出發，看見學員如何將課堂所學轉化為社區服務。</p>
+      </div>
+      <div class="club-action-grid">
+        ${getClubActivities(clubs.find((club) => club.id === "wood-repair")).map(clubActivityCard).join("") || clubEmptyState("目前尚無正式成果活動可顯示。")}
+      </div>
+    </section>
+
+    <section class="club-page-section" id="club-service-records" aria-labelledby="club-service-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">SERVICE RECORDS</span>
+          <h2 id="club-service-title">社區服務紀錄</h2>
+        </div>
+        <p>服務紀錄會隨正式社團資料逐步補齊。</p>
+      </div>
+      <div class="club-service-grid">
+        ${clubServiceCards(clubs)}
+      </div>
     </section>
   `;
 }
 
 function renderShowcase() {
   const app = document.querySelector("#app");
+  const route = getRoute();
+  const activities = getActivities();
+  const photoItems = buildShowcasePhotoItems(activities);
+  const featuredItems = selectShowcaseFeaturedItems(photoItems);
+  const years = unique(photoItems.map((item) => item.year).filter(Boolean)).sort((a, b) => b.localeCompare(a));
+  const districts = unique(photoItems.flatMap((item) => item.districts).filter(Boolean)).sort((a, b) => a.localeCompare(b, "zh-Hant"));
+  const activityCount = unique(photoItems.map((item) => item.activityId)).length;
+  const selectedCategoryId = showcaseData.categories.some((category) => category.id === route.detail) ? route.detail : "";
+  const categoryCounts = { "activity-photos": photoItems.length };
   app.innerHTML = `
-    ${pageHeader("活動與學員成果展示", "先建立分類展示區，之後可依年度與主題放入正式照片、作品、影片與出版教材。")}
-    <section class="showcase-grid">
-      ${siteData.showcase.map((item, index) => showcaseCard(item, index)).join("")}
+    ${pageHeader("成果展示", "以影像、圖文與創作，保存地方學習的精彩片段。")}
+    <section class="showcase-intro-card" aria-label="成果展示說明">
+      <div>
+        <span class="section-label">SHOWCASE</span>
+        <h2>集中瀏覽邑米地方學習的視覺成果</h2>
+        <p>成果展示集中整理邑米社區大學歷年累積的活動照片、學員作品、走讀紀錄、影片紀錄、出版教材與老照片，讓使用者能以視覺方式快速瀏覽學習成果與地方記憶。</p>
+        <div class="showcase-actions">
+          <a class="button" href="#showcase-photo-results">瀏覽成果素材</a>
+          <a class="button secondary" href="#showcase-photo-results">查看照片成果</a>
+        </div>
+      </div>
+      <div class="showcase-quick-stats">
+        <article><strong>${photoItems.length}</strong><span>張照片素材</span></article>
+        <article><strong>${activityCount}</strong><span>件活動來源</span></article>
+        <article><strong>${years.length}</strong><span>個年度</span></article>
+      </div>
+    </section>
+
+    <section class="showcase-page-section" aria-labelledby="showcase-category-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">CATEGORIES</span>
+          <h2 id="showcase-category-title">素材分類</h2>
+        </div>
+        <p>照片已先串接正式成果資料；其他素材類型保留為後續整理入口。</p>
+      </div>
+      <div class="showcase-category-grid">
+        ${showcaseData.categories.map((category) => showcaseCategoryCard(category, categoryCounts)).join("")}
+      </div>
+    </section>
+
+    <section class="showcase-page-section" aria-labelledby="showcase-featured-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">FEATURED</span>
+          <h2 id="showcase-featured-title">精選成果素材</h2>
+        </div>
+        <p>優先挑選赤蘭溪、木工修繕、地方文化、食農教育與海洋教育等代表性照片。</p>
+      </div>
+      <div class="showcase-featured-grid">
+        ${featuredItems.map(showcasePhotoCard).join("") || showcaseEmptyState("目前尚無可顯示的精選照片。")}
+      </div>
+    </section>
+
+    <section class="showcase-page-section" id="showcase-photo-results" aria-labelledby="showcase-photo-title">
+      <div class="section-heading showcase-filter-heading">
+        <div>
+          <span class="section-label">PHOTO GALLERY</span>
+          <h2 id="showcase-photo-title">照片成果</h2>
+        </div>
+        <p>照片卡片會導回成果故事館正式活動詳細頁。</p>
+      </div>
+      <div class="showcase-filter-panel" aria-label="成果展示篩選">
+        ${showcaseSelect("showcase-type-filter", "素材類型", [{ value: "", label: "全部素材" }, ...showcaseData.categories.map((category) => ({ value: category.id, label: category.id === "activity-photos" ? category.title : `${category.title}（整理中）` }))])}
+        ${showcaseSelect("showcase-year-filter", "年度", [{ value: "", label: "全部年度" }, ...years.map((year) => ({ value: year, label: `${year} 年` }))])}
+        ${showcaseSelect("showcase-district-filter", "鄉鎮", [{ value: "", label: "全部鄉鎮" }, ...districts.map((district) => ({ value: district, label: district }))])}
+      </div>
+      <div class="showcase-result-note" id="showcase-result-note" aria-live="polite"></div>
+      <div class="showcase-photo-grid" id="showcase-photo-grid">
+        ${photoItems.map(showcasePhotoCard).join("") || showcaseEmptyState("目前沒有可顯示的照片素材。")}
+      </div>
+    </section>
+
+    <section class="showcase-page-section showcase-placeholder-section" aria-labelledby="showcase-reserved-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">COMING NEXT</span>
+          <h2 id="showcase-reserved-title">學員作品、走讀紀錄、影片紀錄、出版教材與老照片</h2>
+        </div>
+        <p>這些素材類型已建立入口，等正式資料整理完成後即可逐步補上。</p>
+      </div>
+      <div class="showcase-reserved-grid">
+        ${showcaseData.categories.filter((category) => category.id !== "activity-photos").map(showcaseReservedCard).join("")}
+      </div>
     </section>
   `;
+  bindShowcaseFilters(photoItems, selectedCategoryId);
 }
 
 function renderAbout() {
@@ -892,11 +1115,11 @@ function pageHeader(title, subtitle) {
     },
     clubs: {
       label: "社團紀錄",
-      image: "assets/images/platform-home/banner-community.jpg",
+      image: "public/images/activities/113-002/01.JPG",
     },
     showcase: {
       label: "成果展示",
-      image: "assets/images/platform-home/latest-work.jpg",
+      image: "public/images/activities/112-006/03.jpg",
     },
     about: {
       label: "關於邑米",
@@ -1427,36 +1650,360 @@ function podcastCard(item, index) {
 }
 
 function clubCard(item) {
+  const activities = getClubActivities(item);
+  const cover = selectClubCover(item, activities);
+  const coverFallbacks = selectClubCoverCandidates(item, activities).filter((path) => path !== cover).concat(PLACEHOLDER).join("|");
+  const hasRealCover = cover && cover !== PLACEHOLDER;
   return `
-    <a class="club-card" href="#/clubs/${item.slug}">
-      <div class="club-number">${String(siteData.clubs.indexOf(item) + 1).padStart(2, "0")}</div>
-      <div>
+    <a class="club-record-card" href="#/clubs/${item.id}">
+      ${
+        hasRealCover
+          ? `<img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${item.title}代表圖片">`
+          : `<div class="club-preparing-visual" aria-label="${item.title}資料整理中"><strong>資料整理中</strong><span>後續將補上社團照片與行動紀錄</span></div>`
+      }
+      <div class="club-record-card-body">
+        <div class="club-record-card-head">
+          <span class="club-status ${item.status === "內容整理中" ? "is-preparing" : ""}">${item.status || "內容整理中"}</span>
+          <span class="club-related-count">${activities.length ? `${activities.length} 筆相關成果` : "資料整理中"}</span>
+        </div>
         <h2>${item.title}</h2>
+        ${hasThemeValue(item.subtitle) ? `<strong>${item.subtitle}</strong>` : ""}
         <p>${item.description}</p>
+        ${renderClubTags(item.tags)}
+        <span class="club-view-link">查看紀錄 →</span>
       </div>
-      <span>查看社團記錄</span>
     </a>
   `;
 }
 
-function showcaseCard(item, index) {
-  const sampleImages = [
-    "public/images/activities/112-002/cover.jpg",
-    "public/images/activities/112-004/cover.jpg",
-    "public/images/activities/112-009/cover.jpg",
-    "public/images/activities/112-006/cover.jpg",
-    "public/images/activities/112-003/cover.jpg",
-    "public/images/activities/112-015/cover.jpg",
-  ];
-  return `
-    <article class="showcase-card">
-      <img src="${sampleImages[index] || PLACEHOLDER}" alt="${item.title}">
-      <div>
-        <h2>${item.title}</h2>
-        <p>${item.description}</p>
+function renderClubDetail(club) {
+  const app = document.querySelector("#app");
+  const activities = getClubActivities(club);
+  const cover = selectClubCover(club, activities);
+  const coverFallbacks = selectClubCoverCandidates(club, activities).filter((path) => path !== cover).concat(PLACEHOLDER).join("|");
+  const detail = club.detailContent || {};
+  const representative = Array.isArray(detail.representativeResults) ? detail.representativeResults.filter(hasThemeValue) : [];
+  const gallery = unique(activities.flatMap((activity) => [activity.cover, ...(activity.photos || [])]).filter(hasThemeValue)).slice(0, 6);
+  app.innerHTML = `
+    <div class="theme-detail-back">
+      <a class="theme-back-link" href="#/clubs">← 返回社團紀錄</a>
+    </div>
+    <section class="page-title platform-hall-banner club-detail-banner">
+      <div class="platform-hall-copy">
+        <div class="page-kicker">社團紀錄</div>
+        <h1>${club.title}</h1>
+        ${hasThemeValue(club.subtitle) ? `<p>${club.subtitle}</p>` : ""}
+        <div class="club-detail-meta">
+          <span>${club.status || "內容整理中"}</span>
+          <span>${activities.length ? `${activities.length} 筆正式成果` : "資料整理中"}</span>
+        </div>
+        ${renderClubTags(club.tags)}
       </div>
+      <div class="platform-hall-media">
+        <img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${club.title}代表圖片">
+      </div>
+    </section>
+
+    <section class="club-page-section club-detail-grid">
+      ${clubDetailBlock("社團介紹", detail.intro || club.description)}
+      ${clubDetailBlock("行動理念", detail.principle)}
+      ${clubDetailBlock("發展脈絡", detail.development)}
+    </section>
+
+    ${
+      representative.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">RESULTS</span><h2>代表成果</h2></div></div>
+            <div class="club-result-list">${representative.map((item) => `<article>${item}</article>`).join("")}</div>
+          </section>`
+        : ""
+    }
+
+    ${
+      Array.isArray(club.serviceRecords) && club.serviceRecords.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">SERVICE</span><h2>社區服務紀錄</h2></div></div>
+            <div class="club-service-grid">${club.serviceRecords.map((item) => `<article class="club-service-card"><span>服務紀錄</span><h3>${item}</h3></article>`).join("")}</div>
+          </section>`
+        : ""
+    }
+
+    <section class="club-page-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">ACTIVITIES</span>
+          <h2>相關成果活動</h2>
+        </div>
+        <p>活動卡片會導回成果故事館正式活動詳細頁。</p>
+      </div>
+      <div class="club-action-grid">
+        ${activities.length ? activities.map(clubActivityCard).join("") : clubEmptyState("此社團相關成果活動目前為資料整理中。")}
+      </div>
+    </section>
+
+    ${
+      gallery.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">PHOTOS</span><h2>相關照片</h2></div></div>
+            <div class="theme-photo-grid">${gallery.map((photo) => `<img src="${photo}" data-image-fallbacks="${PLACEHOLDER}" alt="${club.title}相關照片">`).join("")}</div>
+          </section>`
+        : ""
+    }
+
+    ${
+      Array.isArray(club.relatedThemeIds) && club.relatedThemeIds.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">THEMES</span><h2>相關主題</h2></div></div>
+            <div class="club-tag-list">${club.relatedThemeIds.map((id) => `<a href="#/themes/${id}">${id}</a>`).join("")}</div>
+          </section>`
+        : ""
+    }
+  `;
+}
+
+function clubDetailBlock(title, content) {
+  if (!hasThemeValue(content)) return "";
+  return `
+    <article class="club-detail-block">
+      <h2>${title}</h2>
+      <p>${content}</p>
     </article>
   `;
+}
+
+function getClubActivities(club) {
+  if (!club || !Array.isArray(club.relatedActivityIds) || !club.relatedActivityIds.length) return [];
+  const activities = getActivities();
+  return club.relatedActivityIds
+    .map((id) => activities.find((activity) => activity.id === id))
+    .filter(Boolean)
+    .sort((a, b) => b.year.localeCompare(a.year) || b.id.localeCompare(a.id));
+}
+
+function selectClubCoverCandidates(club, activities = []) {
+  return unique([
+    club?.coverImage,
+    ...activities.flatMap(clubActivityImageCandidates),
+    PLACEHOLDER,
+  ].filter(hasThemeValue));
+}
+
+function selectClubCover(club, activities = []) {
+  return selectClubCoverCandidates(club, activities)[0] || PLACEHOLDER;
+}
+
+function renderClubTags(tags) {
+  const items = Array.isArray(tags) ? tags.filter(hasThemeValue) : [];
+  return items.length ? `<div class="club-tag-list">${items.map((tag) => `<span>${tag}</span>`).join("")}</div>` : "";
+}
+
+function clubActivityCard(activity) {
+  if (!activity || !activity.id || !activity.name) return "";
+  const imageCandidates = unique(clubActivityImageCandidates(activity));
+  const image = imageCandidates[0] || PLACEHOLDER;
+  const fallbacks = imageCandidates.filter((path) => path !== image).concat(PLACEHOLDER).join("|");
+  return `
+    <a class="theme-activity-card club-activity-card" href="#/overview/activity/${encodeURIComponent(activity.id)}/${activity.year || ""}">
+      <img src="${image}" data-image-fallbacks="${fallbacks}" alt="${activity.name}封面照片">
+      <div class="theme-activity-card-body">
+        <div class="theme-activity-meta">
+          ${activity.year ? `<span>${activity.year} 年</span>` : ""}
+          ${activity.districts?.length ? `<span>${activity.districts.join("、")}</span>` : ""}
+        </div>
+        <h3>${activity.name}</h3>
+        ${
+          hasThemeValue(activity.type) || hasThemeValue(activity.topic)
+            ? `<div class="theme-activity-classification">
+                ${hasThemeValue(activity.type) ? `<span>${activity.type}</span>` : ""}
+                ${hasThemeValue(activity.topic) ? `<span>${activity.topic}</span>` : ""}
+              </div>`
+            : ""
+        }
+        ${hasThemeValue(activity.summary) ? `<p>${activity.summary}</p>` : ""}
+        ${renderThemeTags(activity.sdgs)}
+      </div>
+    </a>
+  `;
+}
+
+function clubActivityImageCandidates(activity) {
+  if (!activity || !activity.id) return [];
+  const explicitWoodworkFallbacks =
+    activity.id === "114-022"
+      ? [
+          "public/images/activities/114-022/01.jpg",
+          "public/images/activities/114-022/01.JPG",
+          "public/images/activities/114-022/02.jpg",
+          "public/images/activities/114-022/02.JPG",
+          "public/images/activities/113-002/01.JPG",
+          "public/images/activities/113-002/02.JPG",
+          "public/images/activities/113-002/03.JPG",
+        ]
+      : [];
+  return unique([
+    ...explicitWoodworkFallbacks,
+    activity.cover,
+    ...(activity.photos || []),
+  ].filter(hasThemeValue));
+}
+
+function clubServiceCards(clubs) {
+  const records = clubs.flatMap((club) =>
+    Array.isArray(club.serviceRecords)
+      ? club.serviceRecords.map((record) => ({ club: club.title, record }))
+      : []
+  );
+  return records.length
+    ? records.map((item) => `<article class="club-service-card"><span>${item.club}</span><h3>${item.record}</h3></article>`).join("")
+    : clubEmptyState("社區服務紀錄目前整理中。");
+}
+
+function clubEmptyState(message) {
+  return `<div class="showcase-empty-state">${message}</div>`;
+}
+
+function buildShowcasePhotoItems(activities) {
+  return activities
+    .flatMap((activity) => {
+      const photos = unique([...(activity.photos || []), activity.cover].filter(Boolean));
+      return photos.slice(0, 3).map((src, index) => ({
+        id: `${activity.id}-${index}`,
+        type: "activity-photos",
+        image: src,
+        fallbacks: photos.filter((item) => item !== src).concat(PLACEHOLDER),
+        activityId: activity.id,
+        activityName: activity.name,
+        year: activity.year,
+        districts: activity.districts || [],
+        activityType: activity.type,
+        topic: activity.topic,
+        sdgs: activity.sdgs || [],
+      }));
+    })
+    .filter((item) => item.image && item.activityId && item.activityName)
+    .slice(0, 120);
+}
+
+function selectShowcaseFeaturedItems(photoItems) {
+  const picked = [];
+  showcaseData.featuredActivityIds.forEach((id) => {
+    const item = photoItems.find((photo) => photo.activityId === id && !picked.some((pickedItem) => pickedItem.activityId === id));
+    if (item) picked.push(item);
+  });
+  if (picked.length < 8) {
+    photoItems.forEach((item) => {
+      if (picked.length >= 8) return;
+      if (!picked.some((pickedItem) => pickedItem.activityId === item.activityId)) picked.push(item);
+    });
+  }
+  return picked.slice(0, 8);
+}
+
+function showcaseCategoryCard(category, counts = {}) {
+  const count = counts[category.id] || 0;
+  const isReady = category.id === "activity-photos" && count > 0;
+  return `
+    <article class="showcase-category-card ${isReady ? "is-ready" : "is-reserved"}">
+      ${category.coverImage ? `<img class="showcase-category-image" src="${category.coverImage}" alt="${category.title}代表圖片">` : ""}
+      <div class="showcase-category-icon">${category.icon || "ITEM"}</div>
+      <div class="showcase-category-body">
+        <div class="showcase-card-heading">
+          <h3>${category.title}</h3>
+          <span class="showcase-status">${isReady ? `${count} 筆素材` : category.status}</span>
+        </div>
+        <p>${category.description}</p>
+      </div>
+      <a class="showcase-card-link ${isReady ? "" : "is-disabled"}" href="#/showcase/${category.id}" aria-disabled="${isReady ? "false" : "true"}">${category.buttonText || "查看內容"}</a>
+    </article>
+  `;
+}
+
+function showcaseReservedCard(category) {
+  return `
+    <article class="showcase-reserved-card">
+      <span class="showcase-status">${category.status || "內容整理中"}</span>
+      <h3>${category.title}</h3>
+      <p>${category.description}</p>
+    </article>
+  `;
+}
+
+function showcasePhotoCard(item) {
+  const districts = item.districts?.length ? item.districts.join("、") : "";
+  const meta = [
+    item.year ? `${item.year} 年` : "",
+    districts,
+    item.activityType,
+  ].filter(Boolean);
+  const fallbacks = unique(item.fallbacks || []).filter((path) => path && path !== item.image).join("|");
+  return `
+    <a class="showcase-photo-card" href="#/overview/activity/${encodeURIComponent(item.activityId)}/${item.year || ""}" data-showcase-type="${item.type}" data-showcase-year="${item.year || ""}" data-showcase-districts="${(item.districts || []).join("|")}">
+      <img src="${item.image}" data-image-fallbacks="${fallbacks}" alt="${item.activityName}成果照片">
+      <div class="showcase-photo-body">
+        ${meta.length ? `<div class="showcase-photo-meta">${meta.map((value) => `<span>${value}</span>`).join("")}</div>` : ""}
+        <h3>${item.activityName}</h3>
+        ${item.topic ? `<p>${item.topic}</p>` : ""}
+        ${item.sdgs?.length ? `<div class="showcase-sdg-tags">${item.sdgs.slice(0, 4).map((sdg) => `<span>${sdg}</span>`).join("")}</div>` : ""}
+        <span class="showcase-view-link">查看成果 →</span>
+      </div>
+    </a>
+  `;
+}
+
+function showcaseSelect(id, label, options) {
+  return `
+    <label class="showcase-filter-control" for="${id}">
+      <span>${label}</span>
+      <select id="${id}">
+        ${options.map((option) => `<option value="${option.value}">${option.label}</option>`).join("")}
+      </select>
+    </label>
+  `;
+}
+
+function showcaseEmptyState(message) {
+  return `<div class="showcase-empty-state">${message}</div>`;
+}
+
+function bindShowcaseFilters(photoItems, initialType = "") {
+  const typeSelect = document.querySelector("#showcase-type-filter");
+  const yearSelect = document.querySelector("#showcase-year-filter");
+  const districtSelect = document.querySelector("#showcase-district-filter");
+  const grid = document.querySelector("#showcase-photo-grid");
+  const note = document.querySelector("#showcase-result-note");
+  if (!typeSelect || !yearSelect || !districtSelect || !grid) return;
+
+  if (initialType) typeSelect.value = initialType;
+
+  const update = () => {
+    const type = typeSelect.value;
+    const year = yearSelect.value;
+    const district = districtSelect.value;
+    const filtered = photoItems.filter((item) => {
+      const matchesType = !type || item.type === type;
+      const matchesYear = !year || item.year === year;
+      const matchesDistrict = !district || item.districts.includes(district);
+      return matchesType && matchesYear && matchesDistrict;
+    });
+    const category = showcaseData.categories.find((item) => item.id === type);
+    const isReservedCategory = category && category.id !== "activity-photos";
+    grid.innerHTML = isReservedCategory
+      ? showcaseEmptyState("此類素材目前為內容整理中，尚未上架正式資料。")
+      : filtered.length
+        ? filtered.map(showcasePhotoCard).join("")
+        : showcaseEmptyState("目前沒有符合條件的照片素材。");
+    if (note) {
+      note.textContent = isReservedCategory
+        ? "此類素材目前為內容整理中，尚未上架正式資料。"
+        : `目前顯示 ${filtered.length} 筆照片素材`;
+    }
+    bindImageFallbacks();
+  };
+
+  [typeSelect, yearSelect, districtSelect].forEach((select) => {
+    select.addEventListener("change", update);
+  });
+  update();
 }
 
 function getYearMetrics(activities) {

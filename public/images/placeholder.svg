@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
-  <title id="title">活動照片 placeholder</title>
-  <desc id="desc">溫暖紙色背景上的地方風景線條圖，用於照片尚未提供時顯示。</desc>
+  <title id="title">圖片資料整理中</title>
+  <desc id="desc">地方風景線條圖，用於正式成果圖片尚在整理時顯示。</desc>
   <rect width="1200" height="900" fill="#f4ead8"/>
   <path d="M0 640 C150 560 275 620 408 540 C560 448 700 510 820 432 C970 336 1078 390 1200 320 L1200 900 L0 900 Z" fill="#d9c8aa"/>
   <path d="M0 716 C180 650 300 690 470 616 C625 548 760 590 918 520 C1040 466 1130 488 1200 452 L1200 900 L0 900 Z" fill="#b7c1a3"/>
@@ -9,7 +9,7 @@
   <path d="M256 690 L386 432 L532 690 Z" fill="#5f7b54"/>
   <path d="M168 752 C290 708 393 716 530 744 C683 775 798 760 936 710 C1045 671 1134 676 1200 706 L1200 900 L0 900 L0 778 C48 775 100 766 168 752 Z" fill="#3d6f85" opacity=".82"/>
   <g fill="#2d241d" opacity=".68" font-family="Microsoft JhengHei, Noto Sans TC, sans-serif" text-anchor="middle">
-    <text x="600" y="378" font-size="56" font-weight="700">活動照片待補</text>
-    <text x="600" y="442" font-size="30">public/images/activities/活動ID/</text>
+    <text x="600" y="378" font-size="56" font-weight="700">圖片資料整理中</text>
+    <text x="600" y="442" font-size="30">後續將補上正式成果影像</text>
   </g>
 </svg>

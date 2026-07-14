@@ -1,0 +1,58 @@
+{
+  "categories": [
+    {
+      "id": "activity-photos",
+      "title": "活動照片",
+      "description": "彙整歷年活動照片，呈現課程、走讀與社區行動成果。",
+      "type": "photo",
+      "coverImage": "public/images/activities/112-006/03.jpg",
+      "buttonText": "查看照片成果"
+    },
+    {
+      "id": "student-works",
+      "title": "學員作品",
+      "description": "展示學員創作、手作成果與作品紀錄。",
+      "status": "內容整理中",
+      "buttonText": "內容整理中"
+    },
+    {
+      "id": "walking-records",
+      "title": "走讀紀錄",
+      "description": "保存走讀路線、觀察紀錄與地方故事影像。",
+      "status": "內容整理中",
+      "buttonText": "內容整理中"
+    },
+    {
+      "id": "video-records",
+      "title": "影片紀錄",
+      "description": "彙整活動紀錄影片、地方故事影片與成果短片。",
+      "status": "內容整理中",
+      "buttonText": "內容整理中"
+    },
+    {
+      "id": "publication-materials",
+      "title": "出版教材",
+      "description": "整理成果手冊、教材、出版品與下載資訊。",
+      "status": "內容整理中",
+      "buttonText": "內容整理中"
+    },
+    {
+      "id": "old-photos",
+      "title": "老照片",
+      "description": "保存地方老照片、歷史影像與今昔對照素材。",
+      "status": "內容整理中",
+      "buttonText": "內容整理中"
+    }
+  ],
+  "featuredActivityIds": [
+    "114-016",
+    "114-017",
+    "114-033",
+    "114-032",
+    "114-022",
+    "114-015",
+    "114-021",
+    "114-026"
+  ],
+  "placeholderImage": "public/images/placeholder.svg"
+}

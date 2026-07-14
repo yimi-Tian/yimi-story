@@ -29,36 +29,42 @@ window.PLATFORM_HOME_DATA = {
   "halls": [
     {
       "icon": "果",
+      "iconSrc": "",
       "name": "成果故事館",
       "description": "瀏覽歷年活動成果、SDGs 與地方行動。",
       "href": "index.html#/overview"
     },
     {
       "icon": "題",
+      "iconSrc": "",
       "name": "主題館",
       "description": "依主題探索地方文化與特色計畫。",
       "href": "index.html#/themes"
     },
     {
       "icon": "探",
+      "iconSrc": "",
       "name": "地方探索館",
       "description": "透過探索地圖與數位體驗走進地方。",
       "href": "index.html#/explore"
     },
     {
       "icon": "社",
+      "iconSrc": "",
       "name": "社團紀錄",
       "description": "看見社團學習、服務與陪伴的軌跡。",
       "href": "index.html#/clubs"
     },
     {
       "icon": "展",
+      "iconSrc": "",
       "name": "成果展示",
       "description": "典藏照片、影片、速寫與學員創作。",
       "href": "index.html#/showcase"
     },
     {
       "icon": "邑",
+      "iconSrc": "",
       "name": "關於邑米",
       "description": "認識社區大學、平台理念與聯絡資訊。",
       "href": "#platform-about"
@@ -83,7 +89,7 @@ window.PLATFORM_HOME_DATA = {
       "summary": "沿著流域故事，認識聚落生活與地方記憶。",
       "date": "2026-06-28",
       "image": "assets/images/platform-home/latest-river.jpg",
-      "href": "index.html#/explore/chilan-ar"
+      "href": "index.html#/explore/chilan-river"
     },
     {
       "type": "活動成果",
@@ -107,7 +113,7 @@ window.PLATFORM_HOME_DATA = {
       "summary": "從街區地景讀出地方醫療發展的生活故事。",
       "date": "2026-05-26",
       "image": "assets/images/platform-home/banner-community.jpg",
-      "href": "index.html#/themes/puzi-medical"
+      "href": "index.html#/explore/puzi-medical-culture"
     },
     {
       "type": "社團紀錄",
@@ -127,7 +133,7 @@ window.PLATFORM_HOME_DATA = {
     { "label": "地方探索模組", "value": "1", "unit": "個" },
     { "label": "服務鄉鎮", "value": "10", "unit": "處" },
     { "label": "年度成果", "value": "4", "unit": "年" },
-    { "label": "成果資料", "value": "112–115", "unit": "年" },
+    { "label": "成果資料", "value": "4", "unit": "年" },
     { "label": "主題館內容", "value": "5", "unit": "類" },
     { "label": "社團紀錄", "value": "6", "unit": "組" }
   ],
