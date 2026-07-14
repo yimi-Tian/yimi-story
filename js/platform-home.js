@@ -94,6 +94,49 @@
     `).join("");
   }
 
+  function renderPlatformStats(stats) {
+    const container = document.querySelector("#platform-results-grid");
+    if (!container || !Array.isArray(stats)) return;
+    container.innerHTML = stats.map((stat) => `
+      <article class="platform-result-card">
+        <div class="platform-result-value">
+          <strong>${escapeHtml(stat.value)}</strong>
+          <span>${escapeHtml(stat.unit)}</span>
+        </div>
+        <h3>${escapeHtml(stat.label)}</h3>
+        ${stat.description ? `<p>${escapeHtml(stat.description)}</p>` : ""}
+      </article>
+    `).join("");
+  }
+
+  function renderFeaturedResults(results) {
+    const container = document.querySelector("#featured-results-grid");
+    if (!container || !Array.isArray(results)) return;
+    const placeholder = "public/images/placeholder.svg";
+    container.innerHTML = results.map((result) => `
+      <a class="featured-result-card" href="${escapeHtml(result.link)}">
+        <span class="featured-result-image">
+          <img src="${escapeHtml(result.image || placeholder)}" alt="${escapeHtml(result.title)}" loading="lazy">
+        </span>
+        <span class="featured-result-body">
+          <span class="featured-result-category">${escapeHtml(result.category)}</span>
+          <strong>${escapeHtml(result.title)}</strong>
+          <span class="featured-result-description">${escapeHtml(result.description)}</span>
+          <span class="featured-result-link">查看成果 <span aria-hidden="true">→</span></span>
+        </span>
+      </a>
+    `).join("");
+
+    container.querySelectorAll("img").forEach((image) => {
+      image.addEventListener("error", () => {
+        if (image.dataset.fallbackApplied === "true") return;
+        image.dataset.fallbackApplied = "true";
+        image.src = placeholder;
+        image.alt = "圖片資料整理中";
+      });
+    });
+  }
+
   function renderPlaces(places) {
     document.querySelector("#place-grid").innerHTML = places.map((place, index) => `
       <a href="${escapeHtml(place.href)}" style="--place-order:${index}">
@@ -195,10 +238,11 @@
       if (!data) throw new Error("Platform home data is unavailable");
       renderHero(data.hero);
       renderHalls(data.halls);
+      renderPlatformStats(data.platformStats || data.stats);
+      renderFeaturedResults(data.featuredResults || []);
       renderPlaces(data.places);
       renderLatest(data.latest);
       renderAbout(data.about);
-      renderStats(data.stats);
       renderNews(data.news);
       document.querySelector("#last-updated").textContent = `最後更新：${formatDate(data.meta.lastUpdated)}`;
     } catch (error) {
