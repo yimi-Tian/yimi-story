@@ -714,22 +714,21 @@ button {
 .year-dashboard {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 0.85rem;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
 }
 
 .dashboard-metric {
   display: flex;
-  min-height: 5.1rem;
+  min-height: 3.85rem;
   flex-direction: column;
   justify-content: center;
-  gap: 0.28rem;
+  gap: 0.18rem;
   min-width: 0;
-  padding: 0.65rem 0.75rem;
-  background: rgba(241, 246, 249, 0.72);
-  border: 1px solid rgba(89, 119, 137, 0.16);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(42, 66, 82, 0.035);
+  padding: 0.48rem 0.65rem;
+  background: rgba(245, 248, 250, 0.62);
+  border: 1px solid rgba(89, 119, 137, 0.11);
+  border-radius: 6px;
 }
 
 .dashboard-metric span {
@@ -748,7 +747,7 @@ button {
 .dashboard-metric strong {
   min-width: 0;
   color: var(--stream-dark);
-  font-size: clamp(1.3rem, 4vw, 1.75rem);
+  font-size: clamp(1.18rem, 3vw, 1.52rem);
   line-height: 1.1;
   overflow-wrap: anywhere;
 }
@@ -761,12 +760,12 @@ button {
 
 .year-filter-section {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
   min-width: 0;
-  padding: 0.9rem;
-  background: rgba(247, 250, 252, 0.72);
-  border: 1px solid rgba(89, 119, 137, 0.16);
-  border-radius: 9px;
+  padding: 0.7rem;
+  background: rgba(248, 250, 252, 0.52);
+  border: 1px solid rgba(89, 119, 137, 0.12);
+  border-radius: 7px;
 }
 
 .filter-section-heading {
@@ -778,7 +777,8 @@ button {
 
 .filter-section-heading h2 {
   margin: 0;
-  font-size: 1.08rem;
+  color: var(--stream-dark);
+  font-size: 1rem;
 }
 
 .filter-mobile-toggle,
@@ -789,14 +789,14 @@ button {
   color: var(--stream-dark);
   background: #fff;
   border: 1px solid rgba(62, 96, 117, 0.24);
-  border-radius: 7px;
+  border-radius: 5px;
   font-weight: 800;
 }
 
 .year-filter-toolbar {
   display: none;
   min-width: 0;
-  gap: 0.65rem;
+  gap: 0.55rem;
 }
 
 .year-filter-toolbar.is-open {
@@ -812,7 +812,7 @@ button {
 .filter-control > span,
 .filter-disclosure summary > span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
 }
 
@@ -821,12 +821,12 @@ button {
 .filter-disclosure summary {
   width: 100%;
   min-width: 0;
-  min-height: 2.65rem;
-  padding: 0.55rem 0.65rem;
+  min-height: 2.5rem;
+  padding: 0.48rem 0.6rem;
   color: var(--stream-dark);
   background: #fff;
   border: 1px solid rgba(62, 96, 117, 0.22);
-  border-radius: 7px;
+  border-radius: 5px;
   font: inherit;
 }
 
@@ -837,9 +837,9 @@ button {
 
 .filter-disclosure summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.18rem;
   cursor: pointer;
   list-style: none;
 }
@@ -854,7 +854,6 @@ button {
 }
 
 .filter-disclosure summary strong {
-  grid-column: 1;
   min-width: 0;
   overflow: hidden;
   font-size: 0.86rem;
@@ -872,8 +871,8 @@ button {
   overflow-y: auto;
   background: #fff;
   border: 1px solid rgba(62, 96, 117, 0.2);
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(36, 65, 82, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 7px 18px rgba(36, 65, 82, 0.09);
 }
 
 .district-filter-list {
@@ -885,9 +884,9 @@ button {
   min-width: 0;
   cursor: pointer;
   color: #40586a;
-  background: #edf3f7;
-  border: 1px solid #d5e0e7;
-  border-radius: 7px;
+  background: #f0f4f7;
+  border: 1px solid #dbe4e9;
+  border-radius: 5px;
   font-weight: 800;
 }
 
@@ -924,7 +923,7 @@ button {
 }
 
 .sdg-filter-button img {
-  width: 2rem;
+  width: 1.75rem;
   aspect-ratio: 1;
   object-fit: contain;
 }
@@ -940,8 +939,8 @@ button {
   min-width: 0;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
-  padding-top: 0.15rem;
+  gap: 0.32rem;
+  min-height: 2rem;
 }
 
 .active-filter-label {
@@ -951,30 +950,31 @@ button {
   font-weight: 700;
 }
 
+.active-filter-year {
+  color: var(--stream-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .active-filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   max-width: 100%;
-  min-height: 2rem;
+  min-height: 1.9rem;
   cursor: pointer;
   padding: 0.32rem 0.55rem;
   color: var(--stream-dark);
   background: #e7f0f5;
   border: 1px solid rgba(62, 96, 117, 0.16);
-  border-radius: 999px;
+  border-radius: 5px;
   font-size: 0.78rem;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
 
-.active-filter-chip.is-year {
-  cursor: default;
-  background: transparent;
-}
-
 .active-filter-chip img {
-  width: 1.35rem;
+  width: 1.2rem;
   aspect-ratio: 1;
 }
 
@@ -983,10 +983,29 @@ button {
   white-space: nowrap;
 }
 
+.clear-filter-button:disabled {
+  cursor: default;
+  color: #82919b;
+  background: #f3f5f6;
+  border-color: rgba(62, 96, 117, 0.12);
+}
+
+.filter-mobile-toggle:focus-visible,
+.clear-filter-button:focus-visible,
+.filter-control select:focus-visible,
+.filter-control input:focus-visible,
+.filter-disclosure summary:focus-visible,
+.filter-pill:focus-visible,
+.sdg-filter-button:focus-visible,
+.active-filter-chip:focus-visible {
+  outline: 3px solid rgba(31, 95, 101, 0.3);
+  outline-offset: 2px;
+}
+
 .year-activity-section {
   display: grid;
   gap: 0.85rem;
-  padding-top: 1.25rem;
+  padding-top: 1rem;
 }
 
 .activity-list-heading {
@@ -2600,6 +2619,11 @@ code {
   }
 
   .filter-disclosure:nth-child(3) .filter-options-panel {
+    right: 0;
+    left: auto;
+  }
+
+  body:has(.app.year-page) .nav-item:nth-last-child(2) .nav-menu {
     right: 0;
     left: auto;
   }
