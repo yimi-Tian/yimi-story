@@ -235,12 +235,14 @@
         ${renderPreviewPanel(detail.preview)}
       </section>
 
+      ${renderExplorationMap(module)}
       ${renderFlowSection()}
       ${renderGuidePoints(module.guidePoints)}
       ${renderArPanel(module)}
-      ${renderRelatedThemes(module)}
       ${renderRelatedActivities(activities)}
+      ${renderRelatedThemes(module)}
     `;
+    bindMapNodes(app);
   }
 
   function renderPreviewPanel(items) {
@@ -257,6 +259,46 @@
     `;
   }
 
+  function renderExplorationMap(module) {
+    const info = module.mapInfo || {};
+    const nodes = list(module.mapNodes).sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+    if (!nodes.length) return "";
+    return `
+      <section class="exploration-section exploration-map-section" aria-labelledby="exploration-map-title">
+        <div class="theme-section-heading exploration-map-heading">
+          <div>
+            ${hasValue(info.subtitle) ? `<span class="section-label">${info.subtitle}</span>` : ""}
+            <h2 id="exploration-map-title">${hasValue(info.title) ? info.title : "探索地圖"}</h2>
+          </div>
+          ${hasValue(info.status) ? `<span class="exploration-map-status">${info.status}</span>` : ""}
+        </div>
+        ${hasValue(info.description) ? `<p class="exploration-map-description">${info.description}</p>` : ""}
+        <div class="exploration-map-canvas" role="list" aria-label="赤蘭溪探索節點示意圖">
+          <div class="exploration-river-line" aria-hidden="true"></div>
+          ${nodes.map((node, index) => `
+            <button
+              class="exploration-map-node"
+              type="button"
+              role="listitem"
+              data-guide-target="${node.guidePointId || node.code || ""}"
+              style="--map-node-order:${index}"
+              aria-label="前往 ${node.code || ""} ${node.title || "導覽點"}"
+            >
+              ${hasValue(node.positionLabel) ? `<span class="exploration-map-position">${node.positionLabel}</span>` : ""}
+              <span class="exploration-map-marker" aria-hidden="true"></span>
+              <span class="exploration-map-node-card">
+                ${hasValue(node.code) ? `<strong>${node.code}</strong>` : ""}
+                ${hasValue(node.title) ? `<b>${node.title}</b>` : ""}
+                ${hasValue(node.shortDescription) ? `<small>${node.shortDescription}</small>` : ""}
+              </span>
+            </button>
+          `).join("")}
+          ${hasValue(info.note) ? `<p class="exploration-map-note">${info.note}</p>` : ""}
+        </div>
+      </section>
+    `;
+  }
+
   function renderGuidePoints(points) {
     const items = list(points);
     if (!items.length) return "";
@@ -267,18 +309,64 @@
             <span class="section-label">GUIDE POINTS</span>
             <h2 id="guide-points-title">導覽點預留區</h2>
           </div>
-          <p>導覽點內容目前以「資料整理中」呈現，後續可逐步補入地圖、故事與任務。</p>
+          <p>先整理地方故事與探索任務，導覽位置、影像與現地互動仍持續建置中。</p>
         </div>
         <div class="guide-point-grid">
-          ${items.map((point) => `
-            <article class="guide-point-card">
-              ${hasValue(point.code) ? `<span>${point.code}</span>` : ""}
-              <h3>${point.title}</h3>
-              ${hasValue(point.description) ? `<p>${point.description}</p>` : ""}
-              ${guidePointStatus(point.status)}
-              <button class="button secondary" type="button" disabled>查看內容</button>
-            </article>
-          `).join("")}
+          ${items.map((point) => {
+            const activities = activitiesByIds(point.relatedActivityIds || [], `guide-point-${point.code || "unknown"}`);
+            return `
+              <article id="guide-point-${point.code}" class="guide-point-card">
+                <div class="guide-point-summary">
+                  <div>
+                    ${hasValue(point.code) ? `<span class="guide-point-code">${point.code}</span>` : ""}
+                    <h3>${point.title}</h3>
+                    ${hasValue(point.description) ? `<p>${point.description}</p>` : ""}
+                  </div>
+                  ${guidePointStatus(point.status)}
+                </div>
+                <details class="guide-point-details">
+                  <summary>查看內容 <span aria-hidden="true">＋</span></summary>
+                  <div class="guide-point-detail-content">
+                    ${hasValue(point.story) ? `
+                      <section class="guide-point-content-block guide-point-story">
+                        <h4>地方故事</h4>
+                        <p>${point.story}</p>
+                      </section>
+                    ` : ""}
+                    ${hasValue(point.task) ? `
+                      <section class="guide-point-content-block">
+                        <h4>探索任務</h4>
+                        <p>${point.task}</p>
+                      </section>
+                    ` : ""}
+                    ${hasValue(point.photoDirections) ? `
+                      <section class="guide-point-content-block">
+                        <h4>可放照片方向</h4>
+                        <p>${point.photoDirections}</p>
+                      </section>
+                    ` : ""}
+                    ${list(point.sdgs).length ? `
+                      <section class="guide-point-content-block guide-point-sdgs">
+                        <h4>相關 SDGs</h4>
+                        ${pillList(point.sdgs)}
+                      </section>
+                    ` : ""}
+                    ${activities.length ? `
+                      <section class="guide-point-related-activities">
+                        <div class="guide-point-related-heading">
+                          <h4>相關成果活動</h4>
+                          <span>${activities.length} 項正式成果</span>
+                        </div>
+                        <div class="activity-mini-grid theme-related-activity-grid">
+                          ${activities.map(activityCard).join("")}
+                        </div>
+                      </section>
+                    ` : ""}
+                  </div>
+                </details>
+              </article>
+            `;
+          }).join("")}
         </div>
       </section>
     `;
@@ -405,6 +493,20 @@
     scope.querySelectorAll("[data-exploration-scroll]").forEach((button) => {
       button.addEventListener("click", () => {
         document.querySelector(`#${button.dataset.explorationScroll}`)?.scrollIntoView({ behavior: "smooth" });
+      });
+    });
+  }
+
+  function bindMapNodes(scope) {
+    scope.querySelectorAll("[data-guide-target]").forEach((node) => {
+      node.addEventListener("click", () => {
+        const target = document.getElementById(`guide-point-${node.dataset.guideTarget}`);
+        if (!target) return;
+        const details = target.querySelector(".guide-point-details");
+        if (details) details.open = true;
+        target.classList.add("is-map-target");
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.setTimeout(() => target.classList.remove("is-map-target"), 1400);
       });
     });
   }
