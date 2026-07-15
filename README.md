@@ -1,32 +1,96 @@
-# 邑米社區大學 112-115 成果故事館
+# 邑米地方知識探索平台 V1.0
 
-這是可部署到 GitHub Pages 的靜態網站，使用 HTML、CSS、JavaScript 製作，不需要後端伺服器、資料庫或付費 API。
+這是可部署到 GitHub Pages 的靜態網站，使用 HTML、CSS 與 JavaScript，不需要後端伺服器或資料庫。
 
-## 後續資料維護
+## 網站根目錄
 
-- 年度活動資料：目前由 `activities-data.js` 匯入 112 年 `activities.csv` 內容。之後 113-115 年活動資料若整理成相同欄位，可放進同一份 CSV 資料格式，網站會依年度、地區、SDGs 自動分類。
-- 地方知識主題館：請修改 `script.js` 裡的 `siteData.themes`。
-- 成果展示頁：請修改 `script.js` 裡的 `siteData.showcase`。
-- 赤蘭溪互動體驗文字與連結：請修改 `script.js` 裡的 `siteData.chilan`。
-- 數位走讀互動館：請修改 `script.js` 裡的 `siteData.digitalTours`。
-- 社團記錄：請修改 `script.js` 裡的 `siteData.clubs`。
-- 赤蘭溪早年生活 Podcast：請修改 `script.js` 裡的 `siteData.earlyLifePodcast`。
+目前實際網站根目錄：
 
-## 圖片位置
+`C:\Users\USER\Documents\Codex\yimi-story-site\112-112-activities-csv-1-sdgs\outputs\site`
+
+入口頁：
+
+- 平台首頁：`platform.html`
+- 成果故事館及各館 SPA：`index.html`
+- 成果展示：`index.html#/showcase`
+
+## 活動資料
+
+- `activities.csv` 是 62 筆活動的正式維護來源，目前包含 112、113、114 年資料；115 年保留為後續年度入口。
+- `activities-data.js` 將同一份 CSV 內容包裝為 `window.ACTIVITIES_CSV`，讓網站直接開啟 HTML 或部署為靜態網站時都能載入。
+- 更新活動資料時必須維持活動 ID 不重複，並同步產生 `activities-data.js`。不可只修改其中一份。
+- 班級成果不得寫入活動 CSV，以免改變既有活動統計與成果故事館內容。
+
+## 成果展示設定
+
+- `data/showcase.json` 是成果展示分類、精選活動 ID、照片上限與取樣設定的正式來源。
+- `data/showcase-data.js` 是由 JSON 產生的靜態備援，提供 `window.SHOWCASE_DATA`；不要直接手動修改。
+- `script.js` 只讀取 `window.SHOWCASE_DATA`，資料不存在時才使用最低限度的安全預設值。
+
+修改 `data/showcase.json` 後，在網站根目錄執行：
+
+```powershell
+node tools/sync-static-data.mjs
+```
+
+這會由正式 JSON 重新產生靜態備援檔，避免在程式與 JSON 之間維護兩份獨立設定。
+
+## 班級成果資料
+
+- `data/class-results.json` 是班級成果的正式資料來源，目前為空陣列，尚未上架任何班級成果。
+- `data/class-results-data.js` 是由 JSON 產生的靜態備援，提供 `window.CLASS_RESULTS_DATA`；不要直接手動修改。
+- 前台只顯示 `publicationStatus` 完全等於 `approved` 的項目；`pending`、`private`、未填或其他值都不顯示。
+- 班級群組照片、通訊軟體群組素材或含可辨識個人的影像，不可因已取得檔案就自動視為具有公開授權。
+- 不應填寫或顯示未經同意的個別學員姓名。
+
+班級成果支援欄位：
+
+- `id`
+- `title`
+- `year`
+- `term`
+- `className`
+- `courseCode`
+- `instructor`
+- `summary`
+- `districts`
+- `venue`
+- `relatedActivityId`
+- `sourceType`
+- `coverImage`
+- `images`
+- `publicationStatus`：`approved`、`pending` 或 `private`
+- `rightsNote`
+- `credits`
+- `tags`
+- `featured`
+- `displayOrder`
+- `publishedDate`
+
+新增班級成果的基本步驟：
+
+1. 確認素材來源、公開範圍及必要授權，不以取得班級群組檔案代替公開同意。
+2. 將確認可用的素材放入另行規劃的班級成果圖片資料夾，不覆蓋活動照片。
+3. 在 `data/class-results.json` 新增資料；未完成確認時使用 `pending` 或 `private`。
+4. 執行 `node tools/sync-static-data.mjs` 產生 `data/class-results-data.js`。
+5. 檢查 `#/showcase/class-results`，確認只有 `approved` 資料顯示，且沒有未授權姓名或影像。
+
+舊路由 `#/showcase/student-works` 保留相容，會顯示同一個班級成果分類。
+
+## 活動照片
+
+- 活動照片位於 `public/images/activities/活動ID/`。
+- 目前資料夾內共有 371 張圖片，但這不代表 371 張都已作為前台成果卡片上架。
+- 活動資料目前引用 356 個不同圖片路徑，引用檔案均存在。
+- 成果展示每個活動最多使用 3 張，依序先為所有活動取第 1 張，再取第 2 張、最後取第 3 張，並在 120 張上限截取。
+- 分散取樣可避免前段活動耗盡上限；精選成果則直接從完整活動資料查找，不受一般 120 張限制。
+
+## 其他資料位置
 
 - LOGO：`public/images/yimi-logo.png`
 - Placeholder：`public/images/placeholder.svg`
-- 活動照片：`public/images/activities/活動ID/`
-- 活動封面：`public/images/activities/活動ID/cover.jpg`
 - SDGs 圖標：`public/images/sdgs/1.png` 到 `public/images/sdgs/17.png`
-- 赤蘭溪早年生活速寫：`public/images/digital/early-life/`
-- 赤蘭溪早年生活音檔：`public/audio/early-life/`
-
-## 四年成果總覽
-
-目前四年成果總覽提供兩種瀏覽方式：
-
-- 依地區分類：同一活動若填寫多個鄉鎮市區，會同時出現在各自地區，不會合併成單一頁籤。
-- 依 SDGs 分類：同一活動若對應多個 SDGs，會同時出現在各 SDG 分類。
-
-點進地區或 SDGs 後，頁面會提供 112、113、114、115 年度標籤。現在 112 年已有測試資料，113-115 年先顯示待補。
+- 地方知識主題：`data/themes.json` 與 `data/themes-data.js`
+- 地方探索：`data/exploration-modules.json`、`local-exploration-data.js` 與 `local-exploration.js`
+- 社團紀錄：`data/clubs.json`
+- 平台首頁：`data/platform-home.json` 與 `data/platform-home-data.js`

@@ -1,4 +1,5 @@
-{
+// Generated from data/showcase.json by tools/sync-static-data.mjs. Do not edit by hand.
+window.SHOWCASE_DATA = {
   "categories": [
     {
       "id": "activity-photos",
@@ -64,4 +65,4 @@
   "photoLimit": 120,
   "maxPhotosPerActivity": 3,
   "placeholderImage": "public/images/placeholder.svg"
-}
+};
