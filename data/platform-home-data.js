@@ -127,7 +127,7 @@ window.PLATFORM_HOME_DATA = {
     {
       "id": "result-showcase",
       "category": "成果展示",
-      "title": "活動與班級成果展示",
+      "title": "活動照片與班級花絮與成果展示",
       "description": "以活動照片、班級共同成果與影像素材，保存地方學習的精彩片段。",
       "image": "public/images/activities/112-006/03.jpg",
       "link": "index.html#/showcase",

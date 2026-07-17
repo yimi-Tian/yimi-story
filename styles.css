@@ -2272,6 +2272,10 @@ code {
   box-shadow: 0 12px 30px rgba(6, 75, 107, 0.06);
 }
 
+.showcase-filter-panel.is-class-results-filter {
+  grid-template-columns: minmax(180px, 0.75fr) minmax(260px, 1.25fr);
+}
+
 .showcase-filter-control {
   display: grid;
   gap: 0.35rem;
@@ -2279,7 +2283,8 @@ code {
   font-weight: 800;
 }
 
-.showcase-filter-control select {
+.showcase-filter-control select,
+.showcase-filter-control input {
   width: 100%;
   min-height: 44px;
   padding: 0.65rem 0.85rem;
@@ -2386,6 +2391,10 @@ code {
   }
 
   .showcase-filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-filter-panel.is-class-results-filter {
     grid-template-columns: 1fr;
   }
 

@@ -2,7 +2,7 @@
 window.CLASS_RESULTS_DATA = [
   {
     "id": "CR-115-001",
-    "title": "木材再生創作班成果",
+    "title": "木材再生創作班花絮與成果",
     "periodLabel": "歷年成果",
     "className": "木材再生創作",
     "instructor": "陳嘉雄",

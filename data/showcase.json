@@ -11,12 +11,12 @@
     },
     {
       "id": "class-results",
-      "title": "班級成果",
-      "description": "呈現各課程的學習歷程、班級共同作品與經確認可公開的成果紀錄。",
+      "title": "班級花絮與成果",
+      "description": "呈現各地班級的學習花絮、課程實作與共同成果，記錄邑米社區大學多元而持續的學習風景。",
       "icon": "CLASS",
       "status": "0 筆素材",
-      "emptyMessage": "班級成果資料整理中，後續將呈現各課程的學習歷程與共同成果。",
-      "buttonText": "瀏覽班級成果"
+      "emptyMessage": "班級花絮與成果資料整理中，後續將呈現各課程的學習花絮與共同成果。",
+      "buttonText": "瀏覽班級花絮與成果"
     },
     {
       "id": "walking-records",
