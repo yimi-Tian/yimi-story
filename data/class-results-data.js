@@ -97,5 +97,57 @@ window.CLASS_RESULTS_DATA = [
     "featured": false,
     "displayOrder": 2,
     "publishedDate": "2026-07-17"
+  },
+  {
+    "id": "CR-XG-YOGA-001",
+    "title": "新港哈達瑜珈班花絮與成果",
+    "periodLabel": "歷年花絮",
+    "className": "哈達瑜珈",
+    "instructor": "童玲玲",
+    "classCount": 2,
+    "summary": "新港哈達瑜珈由童玲玲老師帶領2個班級，透過呼吸、基礎伸展與體位練習，引導學員認識身體狀態、培養柔軟度與放鬆能力，逐步建立規律運動及自我照顧的生活習慣。",
+    "description": "新港哈達瑜珈由童玲玲老師帶領2個班級，課程依學員的身體狀況與練習經驗，循序安排呼吸練習、基礎伸展及不同姿勢的體位練習，並搭配瑜珈墊與瑜珈磚，引導學員在穩定、安全的節奏中延展肌群、調整姿勢並增進身體覺察。課堂重視個別差異，不以動作難度為目標，讓學員能依自身狀況調整練習，從持續參與中培養柔軟度、放鬆能力與規律運動習慣，將自我照顧融入日常生活。",
+    "districts": [
+      "新港鄉"
+    ],
+    "venue": "新港國小",
+    "resultType": "wellness",
+    "relatedActivityId": "",
+    "sourceType": "staff",
+    "sourceLabel": "邑米社區大學行政人員拍攝提供",
+    "coverImage": "public/images/class-results/CR-XG-YOGA-001/cover.jpg",
+    "coverImageAlt": "新港哈達瑜珈班學員在瑜珈墊上進行坐姿伸展",
+    "images": [
+      "public/images/class-results/CR-XG-YOGA-001/01.jpg",
+      "public/images/class-results/CR-XG-YOGA-001/02.jpg",
+      "public/images/class-results/CR-XG-YOGA-001/03.jpg",
+      "public/images/class-results/CR-XG-YOGA-001/04.jpg",
+      "public/images/class-results/CR-XG-YOGA-001/05.jpg"
+    ],
+    "imageAlts": [
+      "新港哈達瑜珈班學員進行坐姿手臂伸展",
+      "新港哈達瑜珈班學員共同進行坐姿前彎練習",
+      "新港哈達瑜珈班學員搭配瑜珈磚進行弓箭步體位練習",
+      "新港哈達瑜珈班學員進行坐姿上身伸展",
+      "新港哈達瑜珈班學員進行坐姿腿部伸展"
+    ],
+    "publicationStatus": "approved",
+    "containsPortrait": true,
+    "rightsNote": "照片包含可辨識人像，已確認可於「邑米地方知識探索平台」公開使用；網站不標示個別學員姓名，僅作為班級學習花絮與課程紀錄。",
+    "credits": "照片由邑米社區大學提供",
+    "tags": [
+      "身心健康",
+      "瑜珈伸展",
+      "身體覺察",
+      "自我照顧",
+      "持續學習"
+    ],
+    "sdgs": [
+      "SDG 3",
+      "SDG 4"
+    ],
+    "featured": false,
+    "displayOrder": 3,
+    "publishedDate": "2026-07-17"
   }
 ];
