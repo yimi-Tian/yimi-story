@@ -1,2 +1,53 @@
 // Generated from data/class-results.json by tools/sync-static-data.mjs. Do not edit by hand.
-window.CLASS_RESULTS_DATA = [];
+window.CLASS_RESULTS_DATA = [
+  {
+    "id": "CR-115-001",
+    "title": "木材再生創作班成果",
+    "year": 115,
+    "term": "秋季班",
+    "className": "木材再生創作",
+    "courseCode": "B04",
+    "instructor": "陳嘉雄",
+    "summary": "學員運用回收木料，從測量、裁切、打磨到組裝，完成木椅、木盒與生活用品，實踐材料再利用與永續生活。",
+    "description": "木材再生創作班以回收木料與生活木工為學習主軸，學員從材料整理、測量、裁切、打磨到結構組裝，逐步完成木椅、木盒及生活收納用品。課程透過共同操作與實作練習，培養工具使用與木作能力，也讓學員理解材料再利用、延長物件生命週期及永續生活的實踐方式。",
+    "districts": [
+      "朴子市"
+    ],
+    "venue": "嘉義縣立田徑場",
+    "resultType": "craft",
+    "relatedActivityId": "",
+    "sourceType": "teacher",
+    "coverImage": "public/images/class-results/CR-115-001/cover.jpg",
+    "coverImageAlt": "木材再生創作班製作的木製面紙盒成品",
+    "images": [
+      "public/images/class-results/CR-115-001/01.jpg",
+      "public/images/class-results/CR-115-001/02.jpg",
+      "public/images/class-results/CR-115-001/03.jpg",
+      "public/images/class-results/CR-115-001/04.jpg",
+      "public/images/class-results/CR-115-001/05.jpg"
+    ],
+    "imageAlts": [
+      "木材再生創作班製作中的木椅",
+      "學員進行木盒組裝與打磨",
+      "學員共同操作木工工具製作作品",
+      "學員進行木椅結構測量與組裝",
+      "木材再生創作班學員共同進行木作實作"
+    ],
+    "publicationStatus": "approved",
+    "containsPortrait": true,
+    "rightsNote": "照片由授課教師提供，並已確認可於邑米地方知識探索平台公開使用。",
+    "credits": "照片由木材再生創作班提供",
+    "tags": [
+      "木材再利用",
+      "環境永續",
+      "生活工藝"
+    ],
+    "sdgs": [
+      "SDG 4",
+      "SDG 12"
+    ],
+    "featured": true,
+    "displayOrder": 1,
+    "publishedDate": "2026-07-17"
+  }
+];

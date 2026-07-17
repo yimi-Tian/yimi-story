@@ -883,6 +883,11 @@ function renderClubs(detail) {
 function renderShowcase() {
   const app = document.querySelector("#app");
   const route = getRoute();
+  const classResultId = (route.detail === "class-results" || route.detail === "student-works") ? route.id : "";
+  if (classResultId) {
+    renderClassResultDetail(classResultId);
+    return;
+  }
   const activities = getActivities();
   const photoItems = buildShowcasePhotoItems(activities);
   const approvedClassResults = getApprovedClassResults();
@@ -1930,31 +1935,137 @@ function getApprovedClassResults() {
     .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0));
 }
 
+function getClassResultImages(result) {
+  const entries = [];
+  if (result.coverImage) {
+    entries.push({
+      src: result.coverImage,
+      alt: result.coverImageAlt || `${result.title || result.className || "班級成果"}封面照片`,
+    });
+  }
+  (Array.isArray(result.images) ? result.images : []).forEach((image, index) => {
+    const src = typeof image === "string" ? image : image?.src;
+    if (!src) return;
+    entries.push({
+      src,
+      alt: (typeof image === "object" ? image?.alt : "")
+        || result.imageAlts?.[index]
+        || `${result.title || result.className || "班級成果"}成果照片 ${index + 1}`,
+    });
+  });
+  return entries.filter((entry, index) => entries.findIndex((item) => item.src === entry.src) === index);
+}
+
 function buildClassResultItems(results) {
   return results.map((result, index) => {
-    const images = unique([
-      result.coverImage,
-      ...(Array.isArray(result.images)
-        ? result.images.map((image) => typeof image === "string" ? image : image?.src)
-        : []),
-    ].filter(Boolean));
+    const imageEntries = getClassResultImages(result);
+    const images = imageEntries.map((entry) => entry.src);
     const image = images[0] || showcaseData.placeholderImage || PLACEHOLDER;
     return {
       id: result.id || `class-result-${index + 1}`,
       type: "class-results",
       image,
+      imageAlt: imageEntries[0]?.alt || `${result.title || result.className || "班級成果"}封面照片`,
+      lazyImage: true,
       fallbacks: images.filter((item) => item !== image).concat(showcaseData.placeholderImage || PLACEHOLDER),
       activityId: result.relatedActivityId || "",
       activityName: result.title || result.className || "班級成果",
       year: String(result.year || ""),
+      yearLabel: `${result.year || ""} 年${result.term || ""}`.trim(),
       districts: Array.isArray(result.districts) ? result.districts : [],
       activityType: "班級成果",
       topic: result.summary || "",
-      sdgs: [],
-      href: result.relatedActivityId
-        ? `#/overview/activity/${encodeURIComponent(result.relatedActivityId)}/${result.year || ""}`
-        : "#/showcase/class-results",
+      tags: Array.isArray(result.tags) ? result.tags : [],
+      sdgs: Array.isArray(result.sdgs) ? result.sdgs : [],
+      href: `#/showcase/class-results/${encodeURIComponent(result.id || `class-result-${index + 1}`)}`,
     };
+  });
+}
+
+function renderClassResultDetail(classResultId) {
+  const app = document.querySelector("#app");
+  const result = getApprovedClassResults().find((item) => item.id === classResultId);
+  if (!result) {
+    app.innerHTML = `${pageHeader("找不到班級成果", "這筆班級成果目前不存在或尚未公開，請返回成果展示重新選擇。")}`;
+    return;
+  }
+
+  const images = getClassResultImages(result);
+  const cover = images[0] || {
+    src: showcaseData.placeholderImage || PLACEHOLDER,
+    alt: `${result.title || result.className || "班級成果"}封面照片`,
+  };
+  const gallery = images.slice(1);
+  const tags = Array.isArray(result.tags) ? result.tags.filter(Boolean) : [];
+  const sdgs = Array.isArray(result.sdgs) ? result.sdgs.filter(Boolean) : [];
+  const description = result.description || result.summary || "";
+
+  app.innerHTML = `
+    <section class="activity-detail-head class-result-detail-head">
+      <div class="detail-back-links">
+        <button class="text-link history-back-link" type="button">回到上一頁</button>
+        <a class="text-link" href="#/showcase/class-results">返回班級成果</a>
+      </div>
+      <div>
+        <div class="page-kicker">${result.year} 年${result.term || ""} · 班級成果</div>
+        <h1>${result.title}</h1>
+      </div>
+    </section>
+    <section class="activity-detail-layout class-result-detail-layout">
+      <div class="activity-detail-photo">
+        <img src="${cover.src}" alt="${cover.alt}" loading="lazy">
+      </div>
+      <div class="activity-detail-info">
+        ${detailInfo("課程名稱", result.className)}
+        ${detailInfo("課程編號", result.courseCode)}
+        ${detailInfo("授課教師", result.instructor)}
+        ${detailInfo("年度", result.year ? `${result.year} 年` : "")}
+        ${detailInfo("學期", result.term)}
+        ${detailInfo("地區", result.districts)}
+        ${detailInfo("上課地點", result.venue)}
+      </div>
+    </section>
+    ${description ? `
+      <section class="detail-section">
+        <h2>成果介紹</h2>
+        <p>${description}</p>
+      </section>
+    ` : ""}
+    ${tags.length ? `
+      <section class="detail-section">
+        <h2>成果標籤</h2>
+        <div class="showcase-sdg-tags class-result-detail-tags">
+          ${tags.map((tag) => `<span>${tag}</span>`).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${sdgs.length ? `
+      <section class="detail-section">
+        <h2>SDGs 對應</h2>
+        <div class="activity-sdg-tags">
+          ${sdgs.map((sdg) => `<span>${sdg} ${SDG_INFO[sdg] || ""}</span>`).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${gallery.length ? `
+      <section class="detail-section">
+        <h2>成果照片</h2>
+        <div class="detail-gallery class-result-detail-gallery">
+          ${gallery.map((image) => `<img src="${image.src}" alt="${image.alt}" loading="lazy">`).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${result.credits ? `
+      <section class="detail-section class-result-credits">
+        <h2>照片署名</h2>
+        <p>${result.credits}</p>
+      </section>
+    ` : ""}
+  `;
+
+  app.querySelector(".history-back-link")?.addEventListener("click", () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.hash = "#/showcase/class-results";
   });
 }
 
@@ -1994,19 +2105,20 @@ function showcaseReservedCard(category) {
 function showcasePhotoCard(item) {
   const districts = item.districts?.length ? item.districts.join("、") : "";
   const meta = [
-    item.year ? `${item.year} 年` : "",
+    item.yearLabel || (item.year ? `${item.year} 年` : ""),
     districts,
     item.activityType,
   ].filter(Boolean);
+  const cardTags = item.tags?.length ? item.tags : item.sdgs;
   const fallbacks = unique(item.fallbacks || []).filter((path) => path && path !== item.image).join("|");
   return `
     <a class="showcase-photo-card" href="${item.href || `#/overview/activity/${encodeURIComponent(item.activityId)}/${item.year || ""}`}" data-showcase-type="${item.type}" data-showcase-year="${item.year || ""}" data-showcase-districts="${(item.districts || []).join("|")}">
-      <img src="${item.image}" data-image-fallbacks="${fallbacks}" alt="${item.activityName}成果照片">
+      <img src="${item.image}" data-image-fallbacks="${fallbacks}" alt="${item.imageAlt || `${item.activityName}成果照片`}"${item.lazyImage ? ' loading="lazy"' : ""}>
       <div class="showcase-photo-body">
         ${meta.length ? `<div class="showcase-photo-meta">${meta.map((value) => `<span>${value}</span>`).join("")}</div>` : ""}
         <h3>${item.activityName}</h3>
         ${item.topic ? `<p>${item.topic}</p>` : ""}
-        ${item.sdgs?.length ? `<div class="showcase-sdg-tags">${item.sdgs.slice(0, 4).map((sdg) => `<span>${sdg}</span>`).join("")}</div>` : ""}
+        ${cardTags?.length ? `<div class="showcase-sdg-tags">${cardTags.slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}</div>` : ""}
         <span class="showcase-view-link">查看成果 →</span>
       </div>
     </a>
