@@ -2133,6 +2133,15 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
 }
 
+#showcase-photo-results {
+  scroll-margin-top: 7rem;
+}
+
+.showcase-photo-grid.is-class-results {
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: start;
+}
+
 .showcase-reserved-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
@@ -2309,6 +2318,20 @@ code {
   object-fit: cover;
   display: block;
   background: var(--color-bg-soft, #e6f4f8);
+}
+
+.showcase-photo-grid.is-class-results .showcase-photo-card img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.class-result-detail-head h1 {
+  font-size: clamp(1.75rem, 5vw, 2.6rem);
+}
+
+.class-result-detail-layout .activity-detail-photo img {
+  max-height: 320px;
+  object-fit: cover;
 }
 
 .showcase-photo-body {
@@ -3429,6 +3452,34 @@ a.theme-representative-card:focus-visible {
 
   .theme-related-activity-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 720px) {
+  .showcase-photo-grid.is-class-results {
+    grid-template-columns: repeat(2, minmax(0, 340px));
+  }
+
+  .class-result-detail-layout {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
+
+  .class-result-detail-layout .activity-detail-photo img {
+    max-height: 420px;
+  }
+}
+
+@media (min-width: 720px) and (max-width: 1119px) {
+  body:has(.app.class-result-page) .nav-item:nth-last-child(2) .nav-menu {
+    right: 0;
+    left: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .showcase-photo-grid.is-class-results {
+    grid-template-columns: repeat(3, minmax(0, 340px));
   }
 }
 
