@@ -272,6 +272,7 @@ function render() {
   const route = getRoute();
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
+  app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
   stopHomeCarousel();
   updateNav(route.page);
   if (route.page === "overview") renderOverview();
@@ -284,7 +285,15 @@ function render() {
   else renderHome();
   initCategoryExpanders();
   bindImageFallbacks();
-  requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+  requestAnimationFrame(() => {
+    const showcaseListTarget = route.page === "showcase"
+      && !route.id
+      && (route.detail === "class-results" || route.detail === "student-works")
+      ? document.querySelector("#showcase-photo-results")
+      : null;
+    if (showcaseListTarget) showcaseListTarget.scrollIntoView({ block: "start", behavior: "auto" });
+    else window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  });
 }
 
 function updateNav(page) {
@@ -952,9 +961,9 @@ function renderShowcase() {
       <div class="section-heading showcase-filter-heading">
         <div>
           <span class="section-label">PHOTO GALLERY</span>
-          <h2 id="showcase-photo-title">照片成果</h2>
+          <h2 id="showcase-photo-title">${selectedCategoryId === "class-results" ? "班級成果" : "照片成果"}</h2>
         </div>
-        <p>照片卡片會導回成果故事館正式活動詳細頁。</p>
+        <p>${selectedCategoryId === "class-results" ? "選擇班級成果卡片可查看完整成果內容。" : "照片卡片會導回成果故事館正式活動詳細頁。"}</p>
       </div>
       <div class="showcase-filter-panel" aria-label="成果展示篩選">
         ${showcaseSelect("showcase-type-filter", "素材類型", [{ value: "", label: "全部素材" }, ...showcaseData.categories.map((category) => ({ value: category.id, label: isBrowsableShowcaseCategory(category.id) ? category.title : `${category.title}（整理中）` }))])}
@@ -1961,6 +1970,8 @@ function buildClassResultItems(results) {
     const imageEntries = getClassResultImages(result);
     const images = imageEntries.map((entry) => entry.src);
     const image = images[0] || showcaseData.placeholderImage || PLACEHOLDER;
+    const periodLabel = result.periodLabel
+      || [result.year ? `${result.year} 年` : "", result.term || ""].filter(Boolean).join(" ");
     return {
       id: result.id || `class-result-${index + 1}`,
       type: "class-results",
@@ -1971,7 +1982,7 @@ function buildClassResultItems(results) {
       activityId: result.relatedActivityId || "",
       activityName: result.title || result.className || "班級成果",
       year: String(result.year || ""),
-      yearLabel: `${result.year || ""} 年${result.term || ""}`.trim(),
+      yearLabel: periodLabel,
       districts: Array.isArray(result.districts) ? result.districts : [],
       activityType: "班級成果",
       topic: result.summary || "",
@@ -1999,6 +2010,8 @@ function renderClassResultDetail(classResultId) {
   const tags = Array.isArray(result.tags) ? result.tags.filter(Boolean) : [];
   const sdgs = Array.isArray(result.sdgs) ? result.sdgs.filter(Boolean) : [];
   const description = result.description || result.summary || "";
+  const periodLabel = result.periodLabel
+    || [result.year ? `${result.year} 年` : "", result.term || ""].filter(Boolean).join(" ");
 
   app.innerHTML = `
     <section class="activity-detail-head class-result-detail-head">
@@ -2007,7 +2020,7 @@ function renderClassResultDetail(classResultId) {
         <a class="text-link" href="#/showcase/class-results">返回班級成果</a>
       </div>
       <div>
-        <div class="page-kicker">${result.year} 年${result.term || ""} · 班級成果</div>
+        <div class="page-kicker">${periodLabel ? `${periodLabel} · ` : ""}班級成果</div>
         <h1>${result.title}</h1>
       </div>
     </section>
@@ -2017,10 +2030,7 @@ function renderClassResultDetail(classResultId) {
       </div>
       <div class="activity-detail-info">
         ${detailInfo("課程名稱", result.className)}
-        ${detailInfo("課程編號", result.courseCode)}
         ${detailInfo("授課教師", result.instructor)}
-        ${detailInfo("年度", result.year ? `${result.year} 年` : "")}
-        ${detailInfo("學期", result.term)}
         ${detailInfo("地區", result.districts)}
         ${detailInfo("上課地點", result.venue)}
       </div>
@@ -2163,6 +2173,7 @@ function bindShowcaseFilters(photoItems, initialType = "") {
     const category = showcaseData.categories.find((item) => item.id === type);
     const isReservedCategory = category && !isBrowsableShowcaseCategory(category.id);
     const emptyMessage = category?.emptyMessage || "目前沒有符合條件的成果素材。";
+    grid.classList.toggle("is-class-results", type === "class-results");
     grid.innerHTML = isReservedCategory
       ? showcaseEmptyState("此類素材目前為內容整理中，尚未上架正式資料。")
       : filtered.length

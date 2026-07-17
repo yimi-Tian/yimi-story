@@ -17,7 +17,7 @@ window.SHOWCASE_DATA = {
       "icon": "CLASS",
       "status": "0 筆素材",
       "emptyMessage": "班級成果資料整理中，後續將呈現各課程的學習歷程與共同成果。",
-      "buttonText": "查看班級成果"
+      "buttonText": "瀏覽班級成果"
     },
     {
       "id": "walking-records",
