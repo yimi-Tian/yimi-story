@@ -468,7 +468,7 @@ function renderYearOverview(selectedYear) {
           <section class="year-filter-section" aria-label="活動篩選">
             <div class="filter-section-heading">
               <h2>篩選成果</h2>
-              <button class="filter-mobile-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="year-filter-toolbar">篩選成果</button>
+              <button class="filter-mobile-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="year-filter-toolbar">展開篩選</button>
             </div>
             <div class="year-filter-toolbar" id="year-filter-toolbar">
               <label class="filter-control">
@@ -478,14 +478,14 @@ function renderYearOverview(selectedYear) {
                 </select>
               </label>
               <details class="filter-disclosure">
-                <summary><span>地區</span><strong data-filter-district-label>全部地區</strong></summary>
+                <summary><span>地區：</span><strong data-filter-district-label>全部</strong></summary>
                 <div class="filter-options-panel district-filter-list" role="group" aria-label="地區篩選">
                   ${filterPill("全部地區", activities.length, "district", "", true)}
                   ${districtGroups.map(([district, items]) => filterPill(district, items.length, "district", district)).join("")}
                 </div>
               </details>
               <details class="filter-disclosure">
-                <summary><span>SDGs</span><strong data-filter-sdg-label>全部 SDGs</strong></summary>
+                <summary><span>SDGs：</span><strong data-filter-sdg-label>全部</strong></summary>
                 <div class="filter-options-panel sdg-filter-list" role="group" aria-label="SDGs 篩選">
                   ${sdgFilterButton("全部 SDGs", activities.length, "", true)}
                   ${sdgGroups.map(([sdg, items]) => sdgFilterButton(sdg, items.length, sdg)).join("")}
@@ -493,7 +493,7 @@ function renderYearOverview(selectedYear) {
               </details>
               <label class="filter-control filter-search-control">
                 <span>關鍵字搜尋</span>
-                <input type="search" data-filter-keyword placeholder="搜尋活動名稱、主題或地點" autocomplete="off">
+                <input type="search" data-filter-keyword aria-label="搜尋活動名稱、主題或地點" placeholder="搜尋活動名稱、主題或地點" autocomplete="off">
               </label>
               <button class="clear-filter-button" type="button" data-clear-filters>清除篩選</button>
             </div>
@@ -2170,19 +2170,35 @@ function initYearOverviewFilters(activities) {
 
   function renderActiveFilters() {
     if (!activeSummary) return;
-    const filters = [`<span class="active-filter-chip is-year">${currentYear} 年</span>`];
+    const filters = [];
     if (selectedDistrict) {
-      filters.push(`<button class="active-filter-chip" type="button" data-remove-filter="district">${escapeFilterText(selectedDistrict)}<span aria-hidden="true">×</span></button>`);
+      const safeDistrict = escapeFilterText(selectedDistrict);
+      filters.push(`<button class="active-filter-chip" type="button" data-remove-filter="district" aria-label="移除地區條件：${safeDistrict}">${safeDistrict}<span aria-hidden="true">×</span></button>`);
     }
     if (selectedSdg) {
-      filters.push(`<button class="active-filter-chip has-icon" type="button" data-remove-filter="sdg"><img src="${sdgIconPath(selectedSdg)}" alt="">${selectedSdg}<span aria-hidden="true">×</span></button>`);
+      const safeSdg = escapeFilterText(selectedSdg);
+      filters.push(`<button class="active-filter-chip has-icon" type="button" data-remove-filter="sdg" aria-label="移除 SDGs 條件：${safeSdg}"><img src="${sdgIconPath(selectedSdg)}" alt="">${safeSdg}<span aria-hidden="true">×</span></button>`);
     }
     if (selectedKeyword) {
-      filters.push(`<button class="active-filter-chip" type="button" data-remove-filter="keyword">關鍵字：${escapeFilterText(selectedKeyword)}<span aria-hidden="true">×</span></button>`);
+      const safeKeyword = escapeFilterText(selectedKeyword);
+      filters.push(`<button class="active-filter-chip" type="button" data-remove-filter="keyword" aria-label="移除關鍵字條件：${safeKeyword}">關鍵字：${safeKeyword}<span aria-hidden="true">×</span></button>`);
     }
-    activeSummary.innerHTML = `<span class="active-filter-label">目前顯示：</span>${filters.join("")}`;
-    if (districtLabel) districtLabel.textContent = selectedDistrict || "全部地區";
-    if (sdgLabel) sdgLabel.textContent = selectedSdg || "全部 SDGs";
+    const visibleConditions = [
+      `${currentYear} 年`,
+      selectedDistrict,
+      selectedSdg,
+      selectedKeyword ? `關鍵字：${selectedKeyword}` : "",
+    ].filter(Boolean);
+    if (!filters.length) visibleConditions[0] = `${currentYear} 年全部成果`;
+    activeSummary.innerHTML = `
+      <span class="active-filter-label">目前顯示：</span>
+      <span class="active-filter-year">${currentYear} 年${filters.length ? "" : "全部成果"}</span>
+      ${filters.join("")}
+    `;
+    activeSummary.setAttribute("aria-label", `目前顯示：${visibleConditions.join("、")}`);
+    if (districtLabel) districtLabel.textContent = selectedDistrict || "全部";
+    if (sdgLabel) sdgLabel.textContent = selectedSdg || "全部";
+    if (clearButton) clearButton.disabled = filters.length === 0;
   }
 
   function updateActivities() {
@@ -2218,21 +2234,29 @@ function initYearOverviewFilters(activities) {
 
   districtButtons.forEach((button) => {
     button.addEventListener("click", () => {
+      const disclosure = button.closest("details");
       const value = button.dataset.filterDistrict;
       selectedDistrict = value === selectedDistrict && value ? "" : value;
       updateButtons(districtButtons, selectedDistrict, "filterDistrict");
       updateActivities();
-      button.closest("details")?.removeAttribute("open");
+      if (disclosure) {
+        disclosure.open = false;
+        disclosure.querySelector("summary")?.focus();
+      }
     });
   });
 
   sdgButtons.forEach((button) => {
     button.addEventListener("click", () => {
+      const disclosure = button.closest("details");
       const value = button.dataset.filterSdg;
       selectedSdg = value === selectedSdg && value ? "" : value;
       updateButtons(sdgButtons, selectedSdg, "filterSdg");
       updateActivities();
-      button.closest("details")?.removeAttribute("open");
+      if (disclosure) {
+        disclosure.open = false;
+        disclosure.querySelector("summary")?.focus();
+      }
     });
   });
 
@@ -2275,6 +2299,10 @@ function initYearOverviewFilters(activities) {
   toolbarToggle?.addEventListener("click", () => {
     const expanded = toolbar?.classList.toggle("is-open") || false;
     toolbarToggle.setAttribute("aria-expanded", String(expanded));
+    toolbarToggle.textContent = expanded ? "收合篩選" : "展開篩選";
+    if (!expanded) {
+      document.querySelectorAll(".filter-disclosure[open]").forEach((item) => item.removeAttribute("open"));
+    }
   });
 
   document.querySelectorAll(".filter-disclosure").forEach((disclosure) => {
