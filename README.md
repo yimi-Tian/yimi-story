@@ -37,7 +37,7 @@ node tools/sync-static-data.mjs
 
 ## 班級成果資料
 
-- `data/class-results.json` 是班級成果的正式資料來源，目前為空陣列，尚未上架任何班級成果。
+- `data/class-results.json` 是班級成果的正式資料來源；目前已上架第一筆經確認可公開的正式班級成果。
 - `data/class-results-data.js` 是由 JSON 產生的靜態備援，提供 `window.CLASS_RESULTS_DATA`；不要直接手動修改。
 - 前台只顯示 `publicationStatus` 完全等於 `approved` 的項目；`pending`、`private`、未填或其他值都不顯示。
 - 班級群組照片、通訊軟體群組素材或含可辨識個人的影像，不可因已取得檔案就自動視為具有公開授權。
@@ -53,16 +53,22 @@ node tools/sync-static-data.mjs
 - `courseCode`
 - `instructor`
 - `summary`
+- `description`
 - `districts`
 - `venue`
+- `resultType`
 - `relatedActivityId`
 - `sourceType`
 - `coverImage`
+- `coverImageAlt`
 - `images`
+- `imageAlts`
 - `publicationStatus`：`approved`、`pending` 或 `private`
+- `containsPortrait`
 - `rightsNote`
 - `credits`
 - `tags`
+- `sdgs`
 - `featured`
 - `displayOrder`
 - `publishedDate`
