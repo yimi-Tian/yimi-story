@@ -149,5 +149,52 @@ window.CLASS_RESULTS_DATA = [
     "featured": false,
     "displayOrder": 3,
     "publishedDate": "2026-07-17"
+  },
+  {
+    "id": "CR-PUZ-SAX-001",
+    "title": "朴子薩克斯風班花絮與成果",
+    "periodLabel": "歷年花絮",
+    "className": "薩克斯風",
+    "instructor": "吳昭志",
+    "classCount": 1,
+    "summary": "朴子薩克斯風班透過樂譜閱讀、節奏練習、教師示範與班級合奏，引導學員逐步熟悉樂器操作與吹奏技巧，在共同練習中培養音樂表達、聆聽能力與班級共學默契。",
+    "description": "朴子薩克斯風班以樂譜閱讀、節奏訓練及實際吹奏為主要學習內容，吳昭志老師透過黑板講解、樂器示範與個別指導，協助學員理解音符、節奏及薩克斯風的基本操作。課堂安排個人練習與班級合奏，讓學員在反覆聆聽、吹奏與配合中，逐步培養穩定的節奏感、樂曲表達能力與共同學習的默契，享受音樂融入日常生活的樂趣。",
+    "districts": [
+      "朴子市"
+    ],
+    "venue": "大同國小",
+    "resultType": "performing-art",
+    "relatedActivityId": "",
+    "sourceType": "staff",
+    "sourceLabel": "邑米社區大學行政人員拍攝",
+    "coverImage": "public/images/class-results/CR-PUZ-SAX-001/cover.jpg",
+    "coverImageAlt": "朴子薩克斯風班教師在黑板前帶領學員進行課堂練習",
+    "images": [
+      "public/images/class-results/CR-PUZ-SAX-001/01.jpg",
+      "public/images/class-results/CR-PUZ-SAX-001/02.jpg",
+      "public/images/class-results/CR-PUZ-SAX-001/03.jpg"
+    ],
+    "imageAlts": [
+      "教師在黑板書寫節奏與音符，學員持薩克斯風聽講",
+      "吳昭志老師示範薩克斯風吹奏，學員在座位聆聽講解",
+      "朴子薩克斯風班學員依樂譜進行合奏練習"
+    ],
+    "publicationStatus": "approved",
+    "containsPortrait": true,
+    "rightsNote": "照片包含可辨識人像，已確認可於「邑米地方知識探索平台」公開使用；網站不標示個別學員姓名，僅作為班級學習花絮與課程紀錄。",
+    "credits": "照片由邑米社區大學提供",
+    "tags": [
+      "音樂學習",
+      "薩克斯風",
+      "樂器演奏",
+      "班級共學",
+      "藝文生活"
+    ],
+    "sdgs": [
+      "SDG 4"
+    ],
+    "featured": false,
+    "displayOrder": 4,
+    "publishedDate": "2026-07-17"
   }
 ];
