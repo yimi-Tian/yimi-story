@@ -19,7 +19,7 @@
 - `activities.csv` 是 62 筆活動的正式維護來源，目前包含 112、113、114 年資料；115 年保留為後續年度入口。
 - `activities-data.js` 將同一份 CSV 內容包裝為 `window.ACTIVITIES_CSV`，讓網站直接開啟 HTML 或部署為靜態網站時都能載入。
 - 更新活動資料時必須維持活動 ID 不重複，並同步產生 `activities-data.js`。不可只修改其中一份。
-- 班級成果不得寫入活動 CSV，以免改變既有活動統計與成果故事館內容。
+- 班級花絮與成果不得寫入活動 CSV，以免改變既有活動統計與成果故事館內容。
 
 ## 成果展示設定
 
@@ -35,15 +35,15 @@ node tools/sync-static-data.mjs
 
 這會由正式 JSON 重新產生靜態備援檔，避免在程式與 JSON 之間維護兩份獨立設定。
 
-## 班級成果資料
+## 班級花絮與成果資料
 
-- `data/class-results.json` 是班級成果的正式資料來源；目前已上架第一筆經確認可公開的正式班級成果。
+- `data/class-results.json` 是班級花絮與成果的正式資料來源；目前已上架第一筆經確認可公開的正式資料。
 - `data/class-results-data.js` 是由 JSON 產生的靜態備援，提供 `window.CLASS_RESULTS_DATA`；不要直接手動修改。
 - 前台只顯示 `publicationStatus` 完全等於 `approved` 的項目；`pending`、`private`、未填或其他值都不顯示。
 - 班級群組照片、通訊軟體群組素材或含可辨識個人的影像，不可因已取得檔案就自動視為具有公開授權。
 - 不應填寫或顯示未經同意的個別學員姓名。
 
-班級成果支援欄位：
+班級花絮與成果支援欄位：
 
 - `id`
 - `title`
@@ -73,15 +73,15 @@ node tools/sync-static-data.mjs
 - `displayOrder`
 - `publishedDate`
 
-新增班級成果的基本步驟：
+新增班級花絮與成果的基本步驟：
 
 1. 確認素材來源、公開範圍及必要授權，不以取得班級群組檔案代替公開同意。
-2. 將確認可用的素材放入另行規劃的班級成果圖片資料夾，不覆蓋活動照片。
+2. 將確認可用的素材放入另行規劃的班級花絮與成果圖片資料夾，不覆蓋活動照片。
 3. 在 `data/class-results.json` 新增資料；未完成確認時使用 `pending` 或 `private`。
 4. 執行 `node tools/sync-static-data.mjs` 產生 `data/class-results-data.js`。
 5. 檢查 `#/showcase/class-results`，確認只有 `approved` 資料顯示，且沒有未授權姓名或影像。
 
-舊路由 `#/showcase/student-works` 保留相容，會顯示同一個班級成果分類。
+舊路由 `#/showcase/student-works` 保留相容，會顯示同一個班級花絮與成果分類。
 
 ## 活動照片
 
