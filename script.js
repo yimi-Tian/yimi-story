@@ -31,6 +31,9 @@ const showcaseData = {
 const classResultsData = typeof window !== "undefined" && Array.isArray(window.CLASS_RESULTS_DATA)
   ? window.CLASS_RESULTS_DATA
   : [];
+const digitalWalksData = typeof window !== "undefined" && Array.isArray(window.DIGITAL_WALKS_DATA?.routes)
+  ? window.DIGITAL_WALKS_DATA
+  : { routes: [] };
 const clubData = {
   clubs: [
     {
@@ -273,12 +276,16 @@ function render() {
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
   app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
+  app.classList.toggle(
+    "digital-walk-draft-page",
+    route.page === "digital" && (route.detail === "draft" || getDraftDigitalWalks().some((item) => item.id === route.detail)),
+  );
   stopHomeCarousel();
   updateNav(route.page);
   if (route.page === "overview") renderOverview();
   else if (route.page === "themes") renderThemes(route.detail);
   else if (route.page === "explore" && window.LocalExploration) window.LocalExploration.render(route.detail);
-  else if (route.page === "digital" || route.page === "chilan") renderDigitalTours(route.detail);
+  else if (route.page === "digital" || route.page === "chilan") renderDigitalTours(route.detail, route.id);
   else if (route.page === "clubs") renderClubs(route.detail);
   else if (route.page === "showcase") renderShowcase();
   else if (route.page === "about") renderAbout();
@@ -727,8 +734,20 @@ function renderThemes(detail) {
   });
 }
 
-function renderDigitalTours(detail) {
+function renderDigitalTours(detail, stopId = "") {
   const app = document.querySelector("#app");
+  if (detail === "draft") {
+    renderDigitalWalkDraftList();
+    return;
+  }
+
+  const draftRoute = getDraftDigitalWalks().find((route) => route.id === detail);
+  if (draftRoute) {
+    if (stopId) renderDigitalWalkStopDetail(draftRoute, stopId);
+    else renderDigitalWalkRouteDetail(draftRoute);
+    return;
+  }
+
   if (detail === "game") {
     renderChilanGame();
     return;
@@ -759,6 +778,222 @@ function renderDigitalTours(detail) {
     <section class="digital-tour-grid">
       ${siteData.digitalTours.map(digitalTourCard).join("")}
     </section>
+  `;
+}
+
+function getDraftDigitalWalks() {
+  return digitalWalksData.routes.filter((route) => (
+    route?.publicationStatus === "draft"
+    && route.publiclyListed === false
+  ));
+}
+
+function renderDigitalWalkDraftList() {
+  const app = document.querySelector("#app");
+  const routes = getDraftDigitalWalks();
+  app.innerHTML = `
+    ${pageHeader("線上數位走讀草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
+    ${digitalWalkDraftNotice()}
+    <section class="digital-walk-draft-grid" aria-label="草稿路線列表">
+      ${routes.map((route) => `
+        <article class="digital-walk-draft-card">
+          <img src="${route.coverImage || PLACEHOLDER}" alt="${route.title}路線封面" loading="lazy">
+          <div class="digital-walk-draft-card-body">
+            <span class="digital-walk-draft-badge">草稿／未公開</span>
+            <h2>${route.title}</h2>
+            <dl class="digital-walk-meta-list">
+              <div><dt>地區</dt><dd>${route.district || "待補"}</dd></div>
+              <div><dt>路線主題</dt><dd>${route.theme || "待補"}</dd></div>
+              <div><dt>站點</dt><dd>${Number(route.stopCount) || route.stops?.length || 0} 站</dd></div>
+              <div><dt>建議時間</dt><dd>約 ${Number(route.estimatedMinutes) || 0} 分鐘</dd></div>
+            </dl>
+            <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}">進入草稿預覽</a>
+          </div>
+        </article>
+      `).join("") || `<div class="showcase-empty-state">目前沒有可預覽的數位走讀草稿。</div>`}
+    </section>
+  `;
+}
+
+function renderDigitalWalkRouteDetail(route) {
+  const app = document.querySelector("#app");
+  const stops = [...(Array.isArray(route.stops) ? route.stops : [])]
+    .filter((stop) => stop.publicationStatus === "draft")
+    .sort((a, b) => Number(a.order) - Number(b.order));
+  app.innerHTML = `
+    ${pageHeader(route.title, route.summary)}
+    ${digitalWalkDraftNotice()}
+    <section class="digital-walk-route-hero">
+      <img src="${route.coverImage || PLACEHOLDER}" alt="${route.title}路線封面">
+      <div>
+        <span class="digital-walk-draft-badge">草稿／未公開</span>
+        <h2>${route.theme}</h2>
+        <p>${route.summary}</p>
+        <dl class="digital-walk-meta-list">
+          <div><dt>地區</dt><dd>${route.district}</dd></div>
+          <div><dt>站點</dt><dd>共 ${stops.length} 站</dd></div>
+          <div><dt>建議時間</dt><dd>約 ${route.estimatedMinutes} 分鐘</dd></div>
+          <div><dt>交通方式</dt><dd>${(route.transportModes || []).join("、")}</dd></div>
+          <div><dt>適合對象</dt><dd>${(route.audiences || []).join("、")}</dd></div>
+        </dl>
+      </div>
+    </section>
+    <section class="digital-walk-map-section" aria-labelledby="digital-walk-map-title">
+      <div>
+        <h2 id="digital-walk-map-title">路線圖建置中</h2>
+        <p>正式路線圖與站點位置將於現地確認後補充。</p>
+      </div>
+    </section>
+    <section class="digital-walk-stops-section" aria-labelledby="digital-walk-stops-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="digital-walk-stops-title">路線站點</h2>
+        </div>
+        <p>共 ${stops.length} 站，依建議順序瀏覽。</p>
+      </div>
+      <div class="digital-walk-stop-grid">
+        ${stops.map((stop) => digitalWalkStopCard(route, stop)).join("")}
+      </div>
+    </section>
+    <div class="digital-walk-return-row">
+      <a class="text-link" href="#/digital/draft">返回草稿列表</a>
+    </div>
+  `;
+}
+
+function digitalWalkStopCard(route, stop) {
+  return `
+    <article class="digital-walk-stop-card">
+      ${stop.coverImage
+        ? `<img src="${stop.coverImage}" alt="${stop.name}站點主圖" loading="lazy">`
+        : digitalWalkPhotoPlaceholder("福仙宮完整外觀照片待補", "正式照片補拍完成後更新。")}
+      <div class="digital-walk-stop-card-body">
+        <span class="digital-walk-stop-order">第 ${stop.order} 站</span>
+        <h3>${stop.name}</h3>
+        ${stop.localName ? `<p class="digital-walk-local-name">地方慣用名稱：${stop.localName}</p>` : ""}
+        ${stop.locationDescription ? `<p>${stop.locationDescription}</p>` : ""}
+        <span class="digital-walk-stop-time">建議停留約 ${stop.recommendedMinutes} 分鐘</span>
+        <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(stop.id)}">查看站點</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderDigitalWalkStopDetail(route, stopId) {
+  const app = document.querySelector("#app");
+  const stops = [...(Array.isArray(route.stops) ? route.stops : [])]
+    .filter((stop) => stop.publicationStatus === "draft")
+    .sort((a, b) => Number(a.order) - Number(b.order));
+  const stopIndex = stops.findIndex((stop) => stop.id === stopId);
+  const stop = stops[stopIndex];
+  if (!stop) {
+    app.innerHTML = `
+      ${pageHeader("找不到數位走讀站點", "這個草稿站點不存在，請返回路線總覽重新選擇。")}
+      <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}">返回路線總覽</a>
+    `;
+    return;
+  }
+
+  const previousStop = stops[stopIndex - 1];
+  const nextStop = stops[stopIndex + 1];
+  const gallery = Array.isArray(stop.images) ? stop.images.filter(Boolean) : [];
+  app.innerHTML = `
+    <section class="activity-detail-head digital-walk-detail-head">
+      <div class="detail-back-links">
+        <button class="text-link history-back-link" type="button">回到上一頁</button>
+        <a class="text-link" href="#/digital/${encodeURIComponent(route.id)}">返回路線總覽</a>
+      </div>
+      <div>
+        <div class="page-kicker">第 ${stop.order} 站／共 ${stops.length} 站</div>
+        <h1>${stop.name}</h1>
+        ${stop.localName ? `<p>地方慣用名稱：${stop.localName}</p>` : ""}
+      </div>
+    </section>
+    ${digitalWalkDraftNotice()}
+    <section class="activity-detail-layout digital-walk-stop-layout">
+      <div class="activity-detail-photo digital-walk-stop-main">
+        ${stop.coverImage
+          ? `<img src="${stop.coverImage}" alt="${stop.name}站點主圖" loading="lazy">`
+          : digitalWalkPhotoPlaceholder("福仙宮完整外觀照片待補", "正式照片補拍完成後更新。")}
+      </div>
+      <div class="activity-detail-info">
+        ${detailInfo("位置描述", stop.locationDescription)}
+        ${detailInfo("建議停留時間", `約 ${stop.recommendedMinutes} 分鐘`)}
+        ${detailInfo("現場辨識物", stop.landmarks)}
+      </div>
+    </section>
+    ${gallery.length ? `
+      <section class="detail-section">
+        <h2>補充照片</h2>
+        <div class="detail-gallery digital-walk-detail-gallery">
+          ${gallery.map((src, index) => `<img src="${src}" alt="${stop.name}補充照片 ${index + 1}" loading="lazy">`).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${digitalWalkDetailSection("故事重點", stop.storyPoints, "list")}
+    ${digitalWalkDetailSection("完整介紹", stop.description, "prose")}
+    ${digitalWalkDetailSection("觀察提示", stop.observationPrompt, "prose")}
+    ${digitalWalkDetailSection("安全提醒", stop.safetyNotes, "list")}
+    ${digitalWalkDetailSection("資料來源", stop.sources, "list")}
+    ${digitalWalkDetailSection("公開授權說明", stop.rights ? `${stop.rights.status}：${stop.rights.note}` : "", "prose")}
+    ${digitalWalkDetailSection("私人土地或進入提醒", stop.privateLand ? `${stop.privateLand.status}：${stop.privateLand.note}` : "", "prose")}
+    ${stop.googleMapsUrl ? `
+      <section class="detail-section digital-walk-map-action">
+        <h2>位置導航</h2>
+        ${stop.googleMapsNote ? `<p>${stop.googleMapsNote}</p>` : ""}
+        <a class="button secondary" href="${stop.googleMapsUrl}" target="_blank" rel="noopener noreferrer">${stop.googleMapsButtonText || "開啟 Google Maps"}</a>
+      </section>
+    ` : ""}
+    ${(stop.pendingItems || []).length ? `
+      <section class="detail-section digital-walk-pending">
+        <span class="digital-walk-pending-label">資料補充中</span>
+        <ul>${stop.pendingItems.map((item) => `<li>${item}</li>`).join("")}</ul>
+      </section>
+    ` : ""}
+    <nav class="digital-walk-stop-nav" aria-label="站點導覽">
+      ${previousStop ? `<a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(previousStop.id)}">← 上一站：${previousStop.name}</a>` : "<span></span>"}
+      ${nextStop ? `<a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(nextStop.id)}">下一站：${nextStop.name} →</a>` : "<span></span>"}
+    </nav>
+    <div class="digital-walk-return-row">
+      <a class="text-link" href="#/digital/${encodeURIComponent(route.id)}">返回路線總覽</a>
+    </div>
+  `;
+
+  app.querySelector(".history-back-link")?.addEventListener("click", () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.hash = `#/digital/${route.id}`;
+  });
+}
+
+function digitalWalkDetailSection(title, value, type) {
+  const values = Array.isArray(value) ? value.filter(Boolean) : [];
+  if (type === "list" && !values.length) return "";
+  if (type !== "list" && !value) return "";
+  return `
+    <section class="detail-section digital-walk-copy-section">
+      <h2>${title}</h2>
+      ${type === "list"
+        ? `<ul>${values.map((item) => `<li>${item}</li>`).join("")}</ul>`
+        : String(value).split(/\n{2,}/).filter(Boolean).map((paragraph) => `<p>${paragraph}</p>`).join("")}
+    </section>
+  `;
+}
+
+function digitalWalkPhotoPlaceholder(title, description) {
+  return `
+    <div class="digital-walk-photo-placeholder" role="img" aria-label="${title}">
+      <strong>${title}</strong>
+      <span>${description}</span>
+    </div>
+  `;
+}
+
+function digitalWalkDraftNotice() {
+  return `
+    <aside class="digital-walk-draft-notice" aria-label="草稿狀態">
+      <span class="digital-walk-draft-badge">草稿／未公開</span>
+      <p>本頁僅供內容與版面檢查，尚未列入平台公開入口。</p>
+    </aside>
   `;
 }
 
