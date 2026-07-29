@@ -825,6 +825,7 @@ function renderDigitalWalkRouteDetail(route) {
     <section class="digital-walk-route-summary">
       <div class="digital-walk-route-summary-heading">
         <span class="digital-walk-draft-badge">草稿／未公開</span>
+        <span class="digital-walk-route-feature-label">路線特色</span>
         <h2>${route.theme}</h2>
       </div>
       <dl class="digital-walk-meta-list is-route-meta">
@@ -923,7 +924,11 @@ function renderDigitalWalkStopDetail(route, stopId) {
       <section class="detail-section">
         <h2>補充照片</h2>
         <div class="detail-gallery digital-walk-detail-gallery${gallery.length === 2 ? " is-two-items" : ""}">
-          ${gallery.map((src, index) => `<img src="${src}" alt="${stop.name}補充照片 ${index + 1}" loading="lazy">`).join("")}
+          ${gallery.map((src, index) => `
+            <figure class="digital-walk-gallery-item${isDigitalWalkTextImage(src) ? " is-text-content" : ""}">
+              <img src="${src}" alt="${stop.name}補充照片 ${index + 1}" loading="lazy">
+            </figure>
+          `).join("")}
         </div>
       </section>
     ` : ""}
@@ -951,6 +956,13 @@ function getDigitalWalkDisplayGallery(stop) {
   const images = Array.isArray(stop.images) ? stop.images.filter(Boolean) : [];
   if (stop.id !== "YG-07") return images;
   return images.filter((src) => !/\/02\.jpg$/i.test(src));
+}
+
+function isDigitalWalkTextImage(src) {
+  return [
+    "public/images/digital/digital-walks/DW-YG-001/YG-01/02.JPG",
+    "public/images/digital/digital-walks/DW-YG-001/YG-02/01.JPG",
+  ].includes(src);
 }
 
 function digitalWalkDetailSection(title, value, type) {
@@ -1001,20 +1013,28 @@ function digitalWalkReminderSection(stop) {
 
 function digitalWalkDataNotesSection(stop) {
   const sources = Array.isArray(stop.sources) ? stop.sources.filter(Boolean) : [];
-  const rightsNote = stop.rights ? `${stop.rights.status}：${stop.rights.note}` : "";
+  const isDraftPreview = stop.publicationStatus === "draft";
+  const displayedSources = isDraftPreview
+    ? sources
+    : sources.filter((source) => !/(待整理|待確認|待補)/.test(source));
+  const rightsNote = stop.rights
+    ? isDraftPreview
+      ? `${stop.rights.status}：${stop.rights.note}`
+      : "本站僅呈現已確認可公開使用的照片與資料。"
+    : "";
   const pendingItems = Array.isArray(stop.pendingItems) ? stop.pendingItems.filter(Boolean) : [];
-  if (!sources.length && !rightsNote && !pendingItems.length) return "";
-  const pendingContent = stop.publicationStatus === "draft"
-    ? `<ul>${pendingItems.map((item) => `<li>${item}</li>`).join("")}</ul>`
-    : "<p>部分資料仍在整理與補充中。</p>";
+  if (!displayedSources.length && !rightsNote && !pendingItems.length) return "";
+  const pendingContent = isDraftPreview
+    ? `<ul>${pendingItems.map((item) => `<li>${formatDigitalWalkPendingItem(item)}</li>`).join("")}</ul>`
+    : "<p>本站部分照片、年代及地方口述資料仍持續查證與補充中。</p>";
   return `
     <section class="detail-section digital-walk-grouped-section is-data-notes" aria-labelledby="digital-walk-data-title">
       <h2 id="digital-walk-data-title">資料說明</h2>
       <div class="digital-walk-grouped-grid">
-        ${sources.length ? `
+        ${displayedSources.length ? `
           <div class="digital-walk-grouped-item">
             <h3>資料來源</h3>
-            <ul>${sources.map((item) => `<li>${item}</li>`).join("")}</ul>
+            <ul>${displayedSources.map((item) => `<li>${item}</li>`).join("")}</ul>
           </div>
         ` : ""}
         ${rightsNote ? `
@@ -1032,6 +1052,23 @@ function digitalWalkDataNotesSection(stop) {
       </div>
     </section>
   `;
+}
+
+function formatDigitalWalkPendingItem(item) {
+  const text = String(item || "").trim();
+  if (text === "需自行補拍福仙宮完整橫式正面照") {
+    return "福仙宮完整外觀照片將於後續田野拍攝後補充。";
+  }
+  if (text.startsWith("補拍")) {
+    return `${text.slice(2)}將於後續田野拍攝後補充。`;
+  }
+  if (text.startsWith("補充")) {
+    return `${text.slice(2)}將於後續資料整理後補充。`;
+  }
+  if (text.startsWith("確認")) {
+    return `${text.slice(2)}仍待進一步確認。`;
+  }
+  return text;
 }
 
 function digitalWalkTextHeader(title, description) {
