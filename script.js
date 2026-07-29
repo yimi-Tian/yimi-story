@@ -792,8 +792,7 @@ function renderDigitalWalkDraftList() {
   const app = document.querySelector("#app");
   const routes = getDraftDigitalWalks();
   app.innerHTML = `
-    ${pageHeader("線上數位走讀草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
-    ${digitalWalkDraftNotice()}
+    ${digitalWalkTextHeader("線上數位走讀草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
     <section class="digital-walk-draft-grid" aria-label="草稿路線列表">
       ${routes.map((route) => `
         <article class="digital-walk-draft-card">
@@ -821,22 +820,20 @@ function renderDigitalWalkRouteDetail(route) {
     .filter((stop) => stop.publicationStatus === "draft")
     .sort((a, b) => Number(a.order) - Number(b.order));
   app.innerHTML = `
-    ${pageHeader(route.title, route.summary)}
+    ${digitalWalkRouteHeader(route)}
     ${digitalWalkDraftNotice()}
-    <section class="digital-walk-route-hero">
-      <img src="${route.coverImage || PLACEHOLDER}" alt="${route.title}路線封面">
-      <div>
+    <section class="digital-walk-route-summary">
+      <div class="digital-walk-route-summary-heading">
         <span class="digital-walk-draft-badge">草稿／未公開</span>
         <h2>${route.theme}</h2>
-        <p>${route.summary}</p>
-        <dl class="digital-walk-meta-list">
-          <div><dt>地區</dt><dd>${route.district}</dd></div>
-          <div><dt>站點</dt><dd>共 ${stops.length} 站</dd></div>
-          <div><dt>建議時間</dt><dd>約 ${route.estimatedMinutes} 分鐘</dd></div>
-          <div><dt>交通方式</dt><dd>${(route.transportModes || []).join("、")}</dd></div>
-          <div><dt>適合對象</dt><dd>${(route.audiences || []).join("、")}</dd></div>
-        </dl>
       </div>
+      <dl class="digital-walk-meta-list is-route-meta">
+        <div><dt>地區</dt><dd>${route.district}</dd></div>
+        <div><dt>站點</dt><dd>共 ${stops.length} 站</dd></div>
+        <div><dt>建議時間</dt><dd>約 ${route.estimatedMinutes} 分鐘</dd></div>
+        <div><dt>交通方式</dt><dd>${(route.transportModes || []).join("、")}</dd></div>
+        <div><dt>適合對象</dt><dd>${(route.audiences || []).join("、")}</dd></div>
+      </dl>
     </section>
     <section class="digital-walk-map-section" aria-labelledby="digital-walk-map-title">
       <div>
@@ -896,7 +893,7 @@ function renderDigitalWalkStopDetail(route, stopId) {
 
   const previousStop = stops[stopIndex - 1];
   const nextStop = stops[stopIndex + 1];
-  const gallery = Array.isArray(stop.images) ? stop.images.filter(Boolean) : [];
+  const gallery = getDigitalWalkDisplayGallery(stop);
   app.innerHTML = `
     <section class="activity-detail-head digital-walk-detail-head">
       <div class="detail-back-links">
@@ -925,7 +922,7 @@ function renderDigitalWalkStopDetail(route, stopId) {
     ${gallery.length ? `
       <section class="detail-section">
         <h2>補充照片</h2>
-        <div class="detail-gallery digital-walk-detail-gallery">
+        <div class="detail-gallery digital-walk-detail-gallery${gallery.length === 2 ? " is-two-items" : ""}">
           ${gallery.map((src, index) => `<img src="${src}" alt="${stop.name}補充照片 ${index + 1}" loading="lazy">`).join("")}
         </div>
       </section>
@@ -933,23 +930,8 @@ function renderDigitalWalkStopDetail(route, stopId) {
     ${digitalWalkDetailSection("故事重點", stop.storyPoints, "list")}
     ${digitalWalkDetailSection("完整介紹", stop.description, "prose")}
     ${digitalWalkDetailSection("觀察提示", stop.observationPrompt, "prose")}
-    ${digitalWalkDetailSection("安全提醒", stop.safetyNotes, "list")}
-    ${digitalWalkDetailSection("資料來源", stop.sources, "list")}
-    ${digitalWalkDetailSection("公開授權說明", stop.rights ? `${stop.rights.status}：${stop.rights.note}` : "", "prose")}
-    ${digitalWalkDetailSection("私人土地或進入提醒", stop.privateLand ? `${stop.privateLand.status}：${stop.privateLand.note}` : "", "prose")}
-    ${stop.googleMapsUrl ? `
-      <section class="detail-section digital-walk-map-action">
-        <h2>位置導航</h2>
-        ${stop.googleMapsNote ? `<p>${stop.googleMapsNote}</p>` : ""}
-        <a class="button secondary" href="${stop.googleMapsUrl}" target="_blank" rel="noopener noreferrer">${stop.googleMapsButtonText || "開啟 Google Maps"}</a>
-      </section>
-    ` : ""}
-    ${(stop.pendingItems || []).length ? `
-      <section class="detail-section digital-walk-pending">
-        <span class="digital-walk-pending-label">資料補充中</span>
-        <ul>${stop.pendingItems.map((item) => `<li>${item}</li>`).join("")}</ul>
-      </section>
-    ` : ""}
+    ${digitalWalkReminderSection(stop)}
+    ${digitalWalkDataNotesSection(stop)}
     <nav class="digital-walk-stop-nav" aria-label="站點導覽">
       ${previousStop ? `<a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(previousStop.id)}">← 上一站：${previousStop.name}</a>` : "<span></span>"}
       ${nextStop ? `<a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(nextStop.id)}">下一站：${nextStop.name} →</a>` : "<span></span>"}
@@ -965,6 +947,12 @@ function renderDigitalWalkStopDetail(route, stopId) {
   });
 }
 
+function getDigitalWalkDisplayGallery(stop) {
+  const images = Array.isArray(stop.images) ? stop.images.filter(Boolean) : [];
+  if (stop.id !== "YG-07") return images;
+  return images.filter((src) => !/\/02\.jpg$/i.test(src));
+}
+
 function digitalWalkDetailSection(title, value, type) {
   const values = Array.isArray(value) ? value.filter(Boolean) : [];
   if (type === "list" && !values.length) return "";
@@ -975,6 +963,98 @@ function digitalWalkDetailSection(title, value, type) {
       ${type === "list"
         ? `<ul>${values.map((item) => `<li>${item}</li>`).join("")}</ul>`
         : String(value).split(/\n{2,}/).filter(Boolean).map((paragraph) => `<p>${paragraph}</p>`).join("")}
+    </section>
+  `;
+}
+
+function digitalWalkReminderSection(stop) {
+  const safetyNotes = Array.isArray(stop.safetyNotes) ? stop.safetyNotes.filter(Boolean) : [];
+  const privateLandNote = stop.privateLand ? `${stop.privateLand.status}：${stop.privateLand.note}` : "";
+  if (!safetyNotes.length && !privateLandNote && !stop.googleMapsUrl) return "";
+  return `
+    <section class="detail-section digital-walk-grouped-section" aria-labelledby="digital-walk-reminder-title">
+      <h2 id="digital-walk-reminder-title">走讀提醒</h2>
+      <div class="digital-walk-grouped-grid">
+        ${safetyNotes.length ? `
+          <div class="digital-walk-grouped-item">
+            <h3>安全提醒</h3>
+            <ul>${safetyNotes.map((item) => `<li>${item}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${privateLandNote ? `
+          <div class="digital-walk-grouped-item">
+            <h3>私人土地或進入提醒</h3>
+            <p>${privateLandNote}</p>
+          </div>
+        ` : ""}
+        ${stop.googleMapsUrl ? `
+          <div class="digital-walk-grouped-item digital-walk-map-action">
+            <h3>位置導航</h3>
+            ${stop.googleMapsNote ? `<p>${stop.googleMapsNote}</p>` : ""}
+            <a class="button secondary" href="${stop.googleMapsUrl}" target="_blank" rel="noopener noreferrer">${stop.googleMapsButtonText || "開啟 Google Maps"}</a>
+          </div>
+        ` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function digitalWalkDataNotesSection(stop) {
+  const sources = Array.isArray(stop.sources) ? stop.sources.filter(Boolean) : [];
+  const rightsNote = stop.rights ? `${stop.rights.status}：${stop.rights.note}` : "";
+  const pendingItems = Array.isArray(stop.pendingItems) ? stop.pendingItems.filter(Boolean) : [];
+  if (!sources.length && !rightsNote && !pendingItems.length) return "";
+  const pendingContent = stop.publicationStatus === "draft"
+    ? `<ul>${pendingItems.map((item) => `<li>${item}</li>`).join("")}</ul>`
+    : "<p>部分資料仍在整理與補充中。</p>";
+  return `
+    <section class="detail-section digital-walk-grouped-section is-data-notes" aria-labelledby="digital-walk-data-title">
+      <h2 id="digital-walk-data-title">資料說明</h2>
+      <div class="digital-walk-grouped-grid">
+        ${sources.length ? `
+          <div class="digital-walk-grouped-item">
+            <h3>資料來源</h3>
+            <ul>${sources.map((item) => `<li>${item}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+        ${rightsNote ? `
+          <div class="digital-walk-grouped-item">
+            <h3>公開授權說明</h3>
+            <p>${rightsNote}</p>
+          </div>
+        ` : ""}
+        ${pendingItems.length ? `
+          <div class="digital-walk-grouped-item digital-walk-pending">
+            <h3>資料補充中</h3>
+            ${pendingContent}
+          </div>
+        ` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function digitalWalkTextHeader(title, description) {
+  return `
+    <section class="digital-walk-text-header">
+      <div class="page-kicker">地方探索館</div>
+      <h1>${title}</h1>
+      <p>${description}</p>
+    </section>
+  `;
+}
+
+function digitalWalkRouteHeader(route) {
+  return `
+    <section class="page-title platform-hall-banner digital-walk-route-header">
+      <div class="platform-hall-copy">
+        <div class="page-kicker">地方探索館</div>
+        <h1>${route.title}</h1>
+        <p>${route.summary}</p>
+      </div>
+      <div class="platform-hall-media">
+        <img src="${route.coverImage || PLACEHOLDER}" alt="${route.title}路線封面">
+      </div>
     </section>
   `;
 }

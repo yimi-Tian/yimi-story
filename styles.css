@@ -478,7 +478,7 @@ button {
 }
 
 .digital-walk-draft-card,
-.digital-walk-route-hero,
+.digital-walk-route-summary,
 .digital-walk-stop-card {
   overflow: hidden;
   border: 1px solid var(--cream-line);
@@ -488,7 +488,6 @@ button {
 }
 
 .digital-walk-draft-card > img,
-.digital-walk-route-hero > img,
 .digital-walk-stop-card > img {
   width: 100%;
   display: block;
@@ -496,9 +495,8 @@ button {
   background: var(--sand);
 }
 
-.digital-walk-draft-card > img,
 .digital-walk-stop-card > img {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
 }
 
 .digital-walk-draft-card-body,
@@ -511,11 +509,51 @@ button {
 
 .digital-walk-draft-card h2,
 .digital-walk-draft-card p,
-.digital-walk-route-hero h2,
-.digital-walk-route-hero p,
+.digital-walk-route-summary h2,
 .digital-walk-stop-card h3,
 .digital-walk-stop-card p {
   margin: 0;
+}
+
+.digital-walk-text-header {
+  max-width: 760px;
+  margin: 2rem auto 1.1rem;
+  text-align: center;
+}
+
+.digital-walk-text-header .page-kicker {
+  margin: 0 auto 0.7rem;
+  padding: 0;
+  color: var(--stream-dark);
+  background: transparent;
+  border-radius: 0;
+}
+
+.digital-walk-text-header h1 {
+  margin: 0;
+  color: var(--stream-dark);
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.3;
+}
+
+.digital-walk-text-header p {
+  margin: 0.65rem 0 0;
+  color: var(--muted);
+}
+
+.digital-walk-draft-grid {
+  grid-template-columns: minmax(0, 960px);
+  justify-content: center;
+}
+
+.digital-walk-draft-card .digital-walk-draft-badge,
+.digital-walk-route-summary .digital-walk-draft-badge {
+  padding: 0.22rem 0.5rem;
+  color: var(--stream-dark);
+  background: rgba(230, 244, 248, 0.88);
+  border: 1px solid rgba(11, 111, 164, 0.18);
+  font-size: 0.72rem;
 }
 
 .digital-walk-meta-list {
@@ -544,26 +582,60 @@ button {
   color: var(--muted);
 }
 
-.digital-walk-route-hero {
-  display: grid;
-  margin-top: 1rem;
+.app.digital-walk-draft-page .digital-walk-route-header {
+  grid-template-columns: minmax(0, 58%) minmax(0, 42%);
+  min-height: 230px;
+  margin: 24px 0 18px;
 }
 
-.digital-walk-route-hero > img {
-  height: 100%;
-  min-height: 240px;
+.app.digital-walk-draft-page .digital-walk-route-header .platform-hall-copy {
+  padding: 24px 32px;
 }
 
-.digital-walk-route-hero > div {
+.app.digital-walk-draft-page .digital-walk-route-header .platform-hall-media {
+  min-height: 230px;
+  max-height: 230px;
+}
+
+.app.digital-walk-draft-page .digital-walk-route-header h1 {
+  font-size: clamp(2rem, 3.5vw, 2.65rem);
+}
+
+.app.digital-walk-draft-page .digital-walk-route-header p {
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.digital-walk-route-summary {
   display: grid;
-  align-content: center;
-  gap: 0.9rem;
-  padding: clamp(1rem, 3vw, 1.5rem);
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+  padding: 1rem 1.1rem;
+}
+
+.digital-walk-route-summary-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.digital-walk-route-summary-heading h2 {
+  font-size: 1.15rem;
+}
+
+.digital-walk-meta-list.is-route-meta {
+  gap: 0;
+}
+
+.digital-walk-meta-list.is-route-meta > div {
+  padding: 0.42rem 0;
 }
 
 .digital-walk-map-section {
   display: grid;
-  min-height: 230px;
+  min-height: 240px;
   place-items: center;
   margin-top: 1rem;
   padding: 1.25rem;
@@ -596,10 +668,15 @@ button {
 }
 
 .digital-walk-stop-card .digital-walk-photo-placeholder {
-  aspect-ratio: 16 / 10;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
   border: 0;
   border-bottom: 1px dashed rgba(11, 111, 164, 0.28);
   border-radius: 0;
+}
+
+.digital-walk-stop-card-body {
+  flex: 1;
 }
 
 .digital-walk-stop-order,
@@ -608,6 +685,15 @@ button {
   color: var(--stream-dark);
   font-size: 0.84rem;
   font-weight: 800;
+}
+
+.digital-walk-stop-time {
+  width: fit-content;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(230, 244, 248, 0.72);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .digital-walk-stop-card .button {
@@ -650,19 +736,62 @@ button {
   aspect-ratio: 4 / 3;
 }
 
+.digital-walk-detail-gallery.is-two-items {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .digital-walk-map-action .button {
   width: fit-content;
 }
 
-.digital-walk-pending {
-  border-color: rgba(11, 111, 164, 0.2);
-  background: rgba(230, 244, 248, 0.5);
+.digital-walk-grouped-section {
+  gap: 0.85rem;
 }
 
-.digital-walk-pending-label {
-  width: fit-content;
+.digital-walk-grouped-grid {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--cream-line);
+}
+
+.digital-walk-grouped-item {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--cream-line);
+}
+
+.digital-walk-grouped-item h3,
+.digital-walk-grouped-item p {
+  margin: 0;
+}
+
+.digital-walk-grouped-item h3 {
   color: var(--stream-dark);
-  font-weight: 900;
+  font-size: 0.98rem;
+}
+
+.digital-walk-grouped-item p,
+.digital-walk-grouped-item ul {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.digital-walk-grouped-item ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.digital-walk-grouped-section.is-data-notes {
+  border-color: rgba(11, 111, 164, 0.16);
+  background: rgba(247, 251, 252, 0.76);
+}
+
+.digital-walk-pending {
+  background: rgba(230, 244, 248, 0.42);
 }
 
 .digital-walk-stop-nav {
@@ -900,13 +1029,11 @@ button {
 }
 
 @media (min-width: 720px) {
-  .digital-walk-draft-grid,
   .digital-walk-stop-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .digital-walk-draft-card,
-  .digital-walk-route-hero {
+  .digital-walk-draft-card {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   }
 
@@ -917,6 +1044,21 @@ button {
   .digital-walk-draft-card > img {
     height: 100%;
     aspect-ratio: auto;
+  }
+
+  .digital-walk-route-summary {
+    grid-template-columns: minmax(15rem, 0.75fr) minmax(0, 1.25fr);
+    align-items: start;
+  }
+
+  .digital-walk-meta-list.is-route-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.2rem;
+  }
+
+  .digital-walk-grouped-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.25rem;
   }
 }
 
@@ -945,9 +1087,39 @@ button {
     flex-direction: column;
   }
 
-  .digital-walk-route-hero > img {
+  .digital-walk-text-header {
+    margin-top: 1.35rem;
+    text-align: left;
+  }
+
+  .digital-walk-text-header .page-kicker {
+    margin-left: 0;
+  }
+
+  .app.digital-walk-draft-page .digital-walk-route-header {
+    grid-template-columns: 1fr;
     min-height: 0;
-    aspect-ratio: 16 / 10;
+    margin: 18px 0 16px;
+  }
+
+  .app.digital-walk-draft-page .digital-walk-route-header .platform-hall-copy {
+    order: 2;
+    padding: 20px 18px 22px;
+  }
+
+  .app.digital-walk-draft-page .digital-walk-route-header .platform-hall-media {
+    order: 1;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+  }
+
+  .app.digital-walk-draft-page .digital-walk-route-header h1 {
+    font-size: 1.9rem;
+  }
+
+  .digital-walk-route-summary {
+    padding: 0.9rem;
   }
 
   .digital-walk-stop-nav {
