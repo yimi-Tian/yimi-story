@@ -151,6 +151,30 @@ async function validateClubs(data) {
   if (/112\s*年.{0,4}成立|成立.{0,4}112\s*年/.test(JSON.stringify(danceClub))) {
     throw new Error("多元文化運動舞蹈社不得寫成 112 年成立。");
   }
+  const expectedCardTags = ["社區健康推廣", "地方文化與信仰活動", "公益與長者關懷", "公共活動展演"];
+  if (JSON.stringify(danceClub.cardTags) !== JSON.stringify(expectedCardTags)) {
+    throw new Error("多元文化運動舞蹈社列表卡片必須維持指定的 4 個代表標籤。");
+  }
+  if (
+    danceClub.coverImageRightsStatus !== "approved"
+    || !Array.isArray(danceClub.gallery)
+    || danceClub.gallery.length !== 4
+    || danceClub.gallery.some((item) => item?.rightsStatus !== "approved")
+  ) {
+    throw new Error("多元文化運動舞蹈社目前使用的 5 張照片必須標示為 approved。");
+  }
+  const expectedSourceLabels = [
+    "112年社團活動紀錄",
+    "113年社團活動紀錄",
+    "114年社團活動紀錄",
+    "邑米社區大學社團影像紀錄",
+  ];
+  if (JSON.stringify(danceClub.sources?.map((item) => item.displayLabel)) !== JSON.stringify(expectedSourceLabels)) {
+    throw new Error("多元文化運動舞蹈社前台資料來源名稱不正確。");
+  }
+  if (!Array.isArray(danceClub.pendingItems) || danceClub.pendingItems.length !== 6) {
+    throw new Error("多元文化運動舞蹈社草稿必須保留 6 項待確認資料。");
+  }
 }
 
 function walkClubData(value, visitor, key = "") {
