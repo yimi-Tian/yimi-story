@@ -87,6 +87,12 @@
         "公共活動展演",
         "跨團體合作"
       ],
+      "cardTags": [
+        "社區健康推廣",
+        "地方文化與信仰活動",
+        "公益與長者關懷",
+        "公共活動展演"
+      ],
       "milestones": [
         {
           "year": 112,
@@ -154,63 +160,68 @@
       "serviceRecords": [],
       "relatedActivityIds": [],
       "coverImage": "public/images/clubs/Dance/114-01.jpg",
-      "coverImageRightsStatus": "pending",
+      "coverImageRightsStatus": "approved",
+      "galleryNote": "以下照片為社團活動紀錄，拍攝年度與個別活動對應仍持續整理中。",
       "gallery": [
         {
           "src": "public/images/clubs/Dance/114-03.jpg",
           "alt": "多元文化運動舞蹈社參與戶外舞蹈展演",
-          "caption": "社團代表照片，拍攝年度與活動對應待確認。",
-          "rightsStatus": "pending"
+          "caption": "地方文化活動中的舞蹈展演",
+          "rightsStatus": "approved"
         },
         {
           "src": "public/images/clubs/Dance/114-06.jpg",
           "alt": "多元文化運動舞蹈社進行室內舞蹈演出",
-          "caption": "社團代表照片，拍攝年度與活動對應待確認。",
-          "rightsStatus": "pending"
+          "caption": "社區或關懷場域中的演出紀錄",
+          "rightsStatus": "approved"
         },
         {
           "src": "public/images/clubs/Dance/114-08.jpg",
           "alt": "多元文化運動舞蹈社參與舞台展演",
-          "caption": "社團代表照片，拍攝年度與活動對應待確認。",
-          "rightsStatus": "pending"
+          "caption": "公共活動舞台展演",
+          "rightsStatus": "approved"
         },
         {
           "src": "public/images/clubs/Dance/114-11.jpg",
           "alt": "多元文化運動舞蹈社參與夜間舞台演出",
-          "caption": "社團代表照片，拍攝年度與活動對應待確認。",
-          "rightsStatus": "pending"
+          "caption": "地方節慶或社區晚會演出",
+          "rightsStatus": "approved"
         }
       ],
       "sources": [
         {
           "label": "112年多元運動舞蹈社文件",
+          "displayLabel": "112年社團活動紀錄",
           "type": "internal-document",
           "publiclyDownloadable": false
         },
         {
           "label": "113年多元文化運動舞蹈社文件",
+          "displayLabel": "113年社團活動紀錄",
           "type": "internal-document",
           "publiclyDownloadable": false
         },
         {
           "label": "114年多元舞蹈社文件",
+          "displayLabel": "114年社團活動紀錄",
           "type": "internal-document",
           "publiclyDownloadable": false
         },
         {
           "label": "public/images/clubs/Dance照片資料夾",
+          "displayLabel": "邑米社區大學社團影像紀錄",
           "type": "internal-photo-folder",
           "publiclyDownloadable": false
         }
       ],
-      "rightsNote": "所有人像照片的公開授權仍需逐張確認；目前僅供草稿內部預覽。",
+      "rightsNote": "目前5張社團照片已確認可公開；拍攝年度與個別活動對應仍持續核對中。",
       "pendingItems": [
         "113年幸福社區舞蹈課日期仍需確認",
         "113年輕安居中秋關懷活動地點與合作單位仍需確認",
         "114年聯合晚會正式場地待補",
         "114年火燈夜巡詳細地點待補",
-        "Dance照片檔名前綴與Word內嵌來源年度需重新確認",
-        "所有人像照片公開授權仍需逐張確認"
+        "Dance照片檔名前綴所示年度仍需重新確認",
+        "5張公開照片與個別活動的對應仍需逐張確認"
       ],
       "publicationStatus": "draft",
       "publiclyListed": false,

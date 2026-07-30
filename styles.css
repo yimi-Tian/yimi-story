@@ -3317,6 +3317,13 @@ code {
   line-height: 1.55;
 }
 
+.club-gallery-note {
+  max-width: 640px;
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted, #5f6f76);
+  line-height: 1.7;
+}
+
 @media (max-width: 760px) {
   .club-record-intro {
     grid-template-columns: 1fr;

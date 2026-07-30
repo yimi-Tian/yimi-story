@@ -1233,8 +1233,13 @@ function getDraftClubs() {
 
 function renderClubDraftList(clubs) {
   const app = document.querySelector("#app");
+  const leadClub = clubs[0];
   app.innerHTML = `
-    ${pageHeader("社團紀錄草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
+    ${pageHeader(
+      "社團紀錄草稿預覽",
+      "此頁僅供內部檢查，草稿內容尚未公開。",
+      { image: leadClub?.coverImage || PLACEHOLDER },
+    )}
     <section class="club-page-section club-draft-notice" aria-label="草稿狀態說明">
       <span class="club-status is-draft">草稿／未公開</span>
       <p>以下社團不會出現在公開社團列表、首頁、導覽或公開統計。</p>
@@ -1485,7 +1490,7 @@ function renderAbout() {
   `;
 }
 
-function pageHeader(title, subtitle) {
+function pageHeader(title, subtitle, options = {}) {
   const route = getRoute();
   const routePage = route.page;
   const hallHeaders = {
@@ -1527,6 +1532,7 @@ function pageHeader(title, subtitle) {
     },
   };
   const hall = hallHeaders[routePage] || hallHeaders.overview;
+  const headerImage = options.image || hall.image;
   const hallIntroductions = {
     overview: "112–115 年成果故事館，從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡。",
     themes: "依地方議題整理課程成果、社區故事與長期行動。",
@@ -1546,7 +1552,7 @@ function pageHeader(title, subtitle) {
         <p>${displaySubtitle}</p>
       </div>
       <div class="platform-hall-media">
-        <img src="${hall.image}" alt="">
+        <img src="${headerImage}" alt="">
       </div>
     </section>
   `;
@@ -2067,7 +2073,7 @@ function clubCard(item) {
         <h2>${name}</h2>
         ${hasThemeValue(item.tagline) ? `<strong>${item.tagline}</strong>` : ""}
         <p>${getClubDescription(item)}</p>
-        ${renderClubTags(item.actionTypes)}
+        ${renderClubTags(getClubCardTags(item))}
         <span class="club-view-link">查看紀錄 →</span>
       </div>
     </a>
@@ -2112,7 +2118,7 @@ function renderClubDetail(club) {
         <h1>${name}</h1>
         ${hasThemeValue(club.tagline) ? `<p>${club.tagline}</p>` : ""}
         <div class="club-detail-meta">
-          <span>${club.status || "內容整理中"}</span>
+          ${isDraft ? "" : `<span>${club.status || "內容整理中"}</span>`}
           ${metaItems.map((item) => `<span>${item}</span>`).join("")}
         </div>
         ${renderClubTags(club.actionTypes)}
@@ -2188,7 +2194,10 @@ function renderClubDetail(club) {
     ${
       gallery.length
         ? `<section class="club-page-section">
-            <div class="section-heading"><div><span class="section-label">PHOTOS</span><h2>相關照片</h2></div></div>
+            <div class="section-heading">
+              <div><span class="section-label">PHOTOS</span><h2>相關照片</h2></div>
+              ${hasThemeValue(club.galleryNote) ? `<p class="club-gallery-note">${club.galleryNote}</p>` : ""}
+            </div>
             <div class="theme-photo-grid club-gallery-grid">${gallery.map((photo) => `
               <figure>
                 <img src="${photo.src}" data-image-fallbacks="${PLACEHOLDER}" alt="${photo.alt || `${name}相關照片`}" loading="lazy">
@@ -2226,6 +2235,11 @@ function getClubDescription(club) {
   return club?.description || club?.introduction || "社團資料整理中。";
 }
 
+function getClubCardTags(club) {
+  const tags = Array.isArray(club?.cardTags) && club.cardTags.length ? club.cardTags : club?.actionTypes;
+  return Array.isArray(tags) ? tags.filter(hasThemeValue).slice(0, 4) : [];
+}
+
 function clubRepresentativeActivityCard(item) {
   if (!item || typeof item !== "object") return `<article class="club-representative-card"><h3>${item}</h3></article>`;
   return `
@@ -2249,7 +2263,7 @@ function renderClubSources(club, isDraft) {
   return `
     <section class="club-page-section club-information-panel" aria-labelledby="club-source-title">
       <div class="section-heading"><div><span class="section-label">SOURCES</span><h2 id="club-source-title">資料說明</h2></div></div>
-      ${sources.length ? `<div class="club-source-list">${sources.map((item) => `<span>${item.label}${isDraft && item.publiclyDownloadable === false ? "（內部來源，不提供下載）" : ""}</span>`).join("")}</div>` : ""}
+      ${sources.length ? `<div class="club-source-list">${sources.map((item) => `<span>${item.displayLabel || item.label}${isDraft && item.publiclyDownloadable === false ? "（內部來源，不提供下載）" : ""}</span>`).join("")}</div>` : ""}
       ${rightsNote ? `<p>${rightsNote}</p>` : ""}
     </section>
   `;
