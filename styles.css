@@ -3124,6 +3124,32 @@ code {
   color: var(--color-accent, #d98b45);
 }
 
+.club-status.is-draft {
+  border-color: rgba(217, 139, 69, 0.35);
+  background: rgba(217, 139, 69, 0.12);
+  color: #9b5a20;
+}
+
+.club-draft-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(217, 139, 69, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 248, 238, 0.72);
+}
+
+.club-draft-notice p {
+  margin: 0;
+  color: var(--color-text-muted, #5f6f76);
+}
+
+.club-draft-grid {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
 .club-record-card h2,
 .club-record-card p,
 .club-record-card strong,
@@ -3187,8 +3213,122 @@ code {
   aspect-ratio: 16 / 10;
 }
 
+.club-milestone-grid,
+.club-representative-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.club-milestone-grid article,
+.club-representative-card,
+.club-information-panel,
+.club-pending-panel {
+  border: 1px solid var(--color-border, #d3e7ef);
+  border-radius: 16px;
+  background: var(--color-card, #fff);
+  box-shadow: 0 8px 22px rgba(6, 75, 107, 0.06);
+}
+
+.club-milestone-grid article,
+.club-representative-card {
+  padding: 1.05rem;
+}
+
+.club-milestone-grid strong {
+  color: var(--color-primary, #0b6fa4);
+  font-size: 1.1rem;
+}
+
+.club-milestone-grid p,
+.club-representative-card p,
+.club-information-panel p,
+.club-pending-panel p {
+  margin: 0.55rem 0 0;
+  color: var(--color-text-muted, #5f6f76);
+  line-height: 1.75;
+}
+
+.club-representative-card {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+}
+
+.club-representative-card h3 {
+  margin: 0;
+  color: var(--color-primary-dark, #064b6b);
+}
+
+.club-representative-card p {
+  margin: 0;
+}
+
+.club-representative-meta,
+.club-source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.club-representative-meta span,
+.club-source-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: var(--color-bg-soft, #e6f4f8);
+  color: var(--color-primary, #0b6fa4);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.club-information-panel,
+.club-pending-panel {
+  padding: 1.2rem;
+}
+
+.club-information-panel .section-heading,
+.club-pending-panel .section-heading {
+  margin-bottom: 0.85rem;
+}
+
+.club-pending-panel {
+  border-color: rgba(217, 139, 69, 0.25);
+  background: rgba(255, 248, 238, 0.52);
+}
+
+.club-pending-panel ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-text-muted, #5f6f76);
+  line-height: 1.8;
+}
+
+.club-gallery-grid figure {
+  margin: 0;
+}
+
+.club-gallery-grid figcaption {
+  padding-top: 0.45rem;
+  color: var(--color-text-muted, #5f6f76);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 @media (max-width: 760px) {
   .club-record-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .club-draft-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .club-milestone-grid,
+  .club-representative-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -34,50 +34,9 @@ const classResultsData = typeof window !== "undefined" && Array.isArray(window.C
 const digitalWalksData = typeof window !== "undefined" && Array.isArray(window.DIGITAL_WALKS_DATA?.routes)
   ? window.DIGITAL_WALKS_DATA
   : { routes: [] };
-const clubData = {
-  clubs: [
-    {
-      id: "wood-repair",
-      title: "木工修繕社",
-      subtitle: "以修繕代替汰換，讓木工學習回到社區需要。",
-      description: "木工修繕社由木工課程延伸而來，學員透過家具修繕、木材再利用與公益服務，將課堂所學轉化為社區行動，協助弱勢機構與地方場域改善生活空間。",
-      status: "持續行動中",
-      tags: ["木工修繕", "木材再利用", "社區服務", "永續行動"],
-      coverImage: "public/images/activities/113-002/01.JPG",
-      relatedActivityIds: ["113-002", "114-022"],
-      relatedThemeIds: ["environmental-education"],
-      detailContent: {
-        intro: "木工修繕社由木工課程延伸而來，學員透過持續練習與社區服務，將木工技術應用於家具修繕、木材再利用與公益行動，讓課堂學習回到地方需求。",
-        principle: "以修繕代替汰換，減少資源浪費；以學習回應地方需要，讓社大課程成果轉化為社區服務。",
-        development: "從老屋修繕、地方空間再利用到社福機構家具修繕，逐步累積木工課程連結社區服務的行動脈絡。",
-        representativeResults: ["六腳復興咱ㄟ厝", "永續木作共好計畫"],
-      },
-      serviceRecords: ["家具修繕與木材再利用", "社福機構服務與生活空間改善", "地方空間修繕與老屋保存學習"],
-    },
-    {
-      id: "multi-dance",
-      title: "多元舞蹈社團",
-      subtitle: "以舞蹈陪伴社區，讓表演成為關懷與交流。",
-      description: "多元舞蹈社團由學員自主練習與展演延伸，透過節慶關懷、社區演出與老人服務，讓學習成果走入社區，陪伴不同年齡與族群的居民。",
-      status: "持續行動中",
-      tags: ["舞蹈展演", "社區關懷", "高齡陪伴", "學員社團"],
-      relatedActivityIds: [],
-      detailContent: {
-        intro: "多元舞蹈社團由學員課後自主練習與展演延伸，透過社區表演、節慶關懷與高齡陪伴，讓學習成果走入社區生活。",
-        principle: "以表演作為陪伴與交流，讓課程成果延伸為社區關懷行動。",
-      },
-    },
-    {
-      id: "club-records-preparing",
-      title: "社團紀錄資料整理中",
-      subtitle: "更多學員社團與公共參與行動將逐步整理。",
-      description: "後續可逐步整理歌唱、舞蹈、手作、志工服務、成果展演與其他社團行動紀錄，呈現邑米社大學員自主學習與公共參與的累積。",
-      status: "內容整理中",
-      tags: ["學員社團", "公共參與", "成果展演"],
-      relatedActivityIds: [],
-    },
-  ],
-};
+const clubData = typeof window !== "undefined" && Array.isArray(window.CLUBS_DATA?.clubs)
+  ? window.CLUBS_DATA
+  : { clubs: [] };
 let homeCarouselTimer = null;
 const warnedMissingThemeActivityIds = new Set();
 const SDG_INFO = {
@@ -277,6 +236,10 @@ function render() {
     (route.page === "themes" || route.page === "theme") && route.detail === "wood-repair";
   if (isLegacyWoodRepairTheme) {
     window.location.replace("#/clubs/wood-repair");
+    return;
+  }
+  if (route.page === "clubs" && route.detail === "multi-dance") {
+    window.location.replace("#/clubs");
     return;
   }
   const app = document.querySelector("#app");
@@ -1171,14 +1134,28 @@ function renderEarlyLifePodcast() {
 
 function renderClubs(detail) {
   const app = document.querySelector("#app");
-  const clubs = Array.isArray(clubData.clubs) ? clubData.clubs.filter(Boolean) : [];
-  const selected = clubs.find((item) => item.id === detail);
+  const allClubs = getAllClubs();
+  const clubs = getPublicClubs();
+  if (detail === "draft") {
+    renderClubDraftList(getDraftClubs());
+    return;
+  }
+
+  const selected = allClubs.find((item) => item.id === detail);
   if (selected) {
-    renderClubDetail(selected);
+    const canPreview = selected.publicationStatus === "draft" || selected.publiclyListed === true;
+    if (canPreview) {
+      renderClubDetail(selected);
+      return;
+    }
+  }
+  if (detail) {
+    window.location.replace("#/clubs");
     return;
   }
 
   const totalRelated = clubs.reduce((sum, club) => sum + getClubActivities(club).length, 0);
+  const ongoingCount = clubs.filter((club) => club.status === "持續行動中").length;
   app.innerHTML = `
     ${pageHeader("社團紀錄", "讓學習走出教室，陪伴地方一起前進。")}
     <section class="club-record-intro" aria-label="社團紀錄說明">
@@ -1194,7 +1171,7 @@ function renderClubs(detail) {
       <div class="showcase-quick-stats">
         <article><strong>${clubs.length}</strong><span>個社團入口</span></article>
         <article><strong>${totalRelated}</strong><span>筆正式成果串接</span></article>
-        <article><strong>2</strong><span>個持續行動中</span></article>
+        <article><strong>${ongoingCount}</strong><span>個持續行動中</span></article>
       </div>
     </section>
 
@@ -1204,7 +1181,7 @@ function renderClubs(detail) {
           <span class="section-label">CLUBS</span>
           <h2 id="club-list-title">社團列表</h2>
         </div>
-        <p>第一版先整理木工修繕社、多元舞蹈社團與後續資料整理入口。</p>
+        <p>第一版先整理木工修繕社與後續資料整理入口。</p>
       </div>
       <div class="club-record-grid">
         ${clubs.map(clubCard).join("")}
@@ -1234,6 +1211,43 @@ function renderClubs(detail) {
       </div>
       <div class="club-service-grid">
         ${clubServiceCards(clubs)}
+      </div>
+    </section>
+  `;
+}
+
+function getAllClubs() {
+  return (Array.isArray(clubData.clubs) ? clubData.clubs : [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => Number(a.displayOrder || 999) - Number(b.displayOrder || 999));
+}
+
+function getPublicClubs() {
+  return getAllClubs().filter((club) => club.publicationStatus === "approved" && club.publiclyListed === true);
+}
+
+function getDraftClubs() {
+  return getAllClubs().filter((club) => club.publicationStatus === "draft" && club.publiclyListed === false);
+}
+
+function renderClubDraftList(clubs) {
+  const app = document.querySelector("#app");
+  app.innerHTML = `
+    ${pageHeader("社團紀錄草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
+    <section class="club-page-section club-draft-notice" aria-label="草稿狀態說明">
+      <span class="club-status is-draft">草稿／未公開</span>
+      <p>以下社團不會出現在公開社團列表、首頁、導覽或公開統計。</p>
+    </section>
+    <section class="club-page-section" aria-labelledby="club-draft-list-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">DRAFT PREVIEW</span>
+          <h2 id="club-draft-list-title">內部草稿</h2>
+        </div>
+      </div>
+      <div class="club-record-grid club-draft-grid">
+        ${clubs.length ? clubs.map(clubCard).join("") : clubEmptyState("目前沒有社團草稿。")}
       </div>
     </section>
   `;
@@ -2031,22 +2045,29 @@ function clubCard(item) {
   const cover = selectClubCover(item, activities);
   const coverFallbacks = selectClubCoverCandidates(item, activities).filter((path) => path !== cover).concat(PLACEHOLDER).join("|");
   const hasRealCover = cover && cover !== PLACEHOLDER;
+  const name = getClubName(item);
+  const representativeCount = Array.isArray(item.representativeActivities) ? item.representativeActivities.length : 0;
+  const countLabel = activities.length
+    ? `${activities.length} 筆相關成果`
+    : representativeCount
+      ? `${representativeCount} 項代表活動`
+      : "資料整理中";
   return `
     <a class="club-record-card" href="#/clubs/${item.id}">
       ${
         hasRealCover
-          ? `<img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${item.title}代表圖片">`
-          : `<div class="club-preparing-visual" aria-label="${item.title}資料整理中"><strong>資料整理中</strong><span>後續將補上社團照片與行動紀錄</span></div>`
+          ? `<img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${name}代表圖片" loading="lazy">`
+          : `<div class="club-preparing-visual" aria-label="${name}資料整理中"><strong>資料整理中</strong><span>後續將補上社團照片與行動紀錄</span></div>`
       }
       <div class="club-record-card-body">
         <div class="club-record-card-head">
-          <span class="club-status ${item.status === "內容整理中" ? "is-preparing" : ""}">${item.status || "內容整理中"}</span>
-          <span class="club-related-count">${activities.length ? `${activities.length} 筆相關成果` : "資料整理中"}</span>
+          <span class="club-status ${item.publicationStatus === "draft" ? "is-draft" : item.status === "內容整理中" ? "is-preparing" : ""}">${item.status || "內容整理中"}</span>
+          <span class="club-related-count">${countLabel}</span>
         </div>
-        <h2>${item.title}</h2>
-        ${hasThemeValue(item.subtitle) ? `<strong>${item.subtitle}</strong>` : ""}
-        <p>${item.description}</p>
-        ${renderClubTags(item.tags)}
+        <h2>${name}</h2>
+        ${hasThemeValue(item.tagline) ? `<strong>${item.tagline}</strong>` : ""}
+        <p>${getClubDescription(item)}</p>
+        ${renderClubTags(item.actionTypes)}
         <span class="club-view-link">查看紀錄 →</span>
       </div>
     </a>
@@ -2058,40 +2079,82 @@ function renderClubDetail(club) {
   const activities = getClubActivities(club);
   const cover = selectClubCover(club, activities);
   const coverFallbacks = selectClubCoverCandidates(club, activities).filter((path) => path !== cover).concat(PLACEHOLDER).join("|");
-  const detail = club.detailContent || {};
-  const representative = Array.isArray(detail.representativeResults) ? detail.representativeResults.filter(hasThemeValue) : [];
-  const gallery = unique(activities.flatMap((activity) => [activity.cover, ...(activity.photos || [])]).filter(hasThemeValue)).slice(0, 6);
+  const name = getClubName(club);
+  const isDraft = club.publicationStatus === "draft";
+  const milestones = Array.isArray(club.milestones) ? club.milestones.filter((item) => hasThemeValue(item?.description)) : [];
+  const timelineMilestones = milestones.filter((item) => hasThemeValue(item?.year));
+  const developmentText = milestones.length === 1 && !hasThemeValue(milestones[0]?.year) ? milestones[0].description : "";
+  const representative = Array.isArray(club.representativeActivities)
+    ? club.representativeActivities.filter((item) => hasThemeValue(typeof item === "string" ? item : item?.title))
+    : [];
+  const directGallery = (Array.isArray(club.gallery) ? club.gallery : [])
+    .map((item) => typeof item === "string" ? { src: item, alt: `${name}相關照片` } : item)
+    .filter((item) => hasThemeValue(item?.src));
+  const linkedGallery = unique(activities.flatMap((activity) => [activity.cover, ...(activity.photos || [])]).filter(hasThemeValue))
+    .slice(0, 6)
+    .map((src) => ({ src, alt: `${name}相關照片` }));
+  const gallery = directGallery.length ? directGallery : linkedGallery;
+  const metaItems = isDraft
+    ? [
+        hasThemeValue(club.earliestRecordYear) ? `現有最早紀錄為 ${club.earliestRecordYear} 年` : "",
+        hasThemeValue(club.memberCount?.value) ? `${club.memberCount.note || "申請時人數"}：${club.memberCount.value} 人` : "",
+        representative.length ? `${representative.length} 項代表活動` : "",
+      ].filter(Boolean)
+    : [activities.length ? `${activities.length} 筆正式成果` : "資料整理中"];
   app.innerHTML = `
     <div class="theme-detail-back">
-      <a class="theme-back-link" href="#/clubs">← 返回社團紀錄</a>
+      <a class="theme-back-link" href="${isDraft ? "#/clubs/draft" : "#/clubs"}">← ${isDraft ? "返回社團草稿" : "返回社團紀錄"}</a>
     </div>
     <section class="page-title platform-hall-banner club-detail-banner">
       <div class="platform-hall-copy">
         <div class="page-kicker">社團紀錄</div>
-        <h1>${club.title}</h1>
-        ${hasThemeValue(club.subtitle) ? `<p>${club.subtitle}</p>` : ""}
+        ${isDraft ? `<span class="club-status is-draft">草稿／未公開</span>` : ""}
+        <h1>${name}</h1>
+        ${hasThemeValue(club.tagline) ? `<p>${club.tagline}</p>` : ""}
         <div class="club-detail-meta">
           <span>${club.status || "內容整理中"}</span>
-          <span>${activities.length ? `${activities.length} 筆正式成果` : "資料整理中"}</span>
+          ${metaItems.map((item) => `<span>${item}</span>`).join("")}
         </div>
-        ${renderClubTags(club.tags)}
+        ${renderClubTags(club.actionTypes)}
       </div>
       <div class="platform-hall-media">
-        <img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${club.title}代表圖片">
+        <img src="${cover}" data-image-fallbacks="${coverFallbacks}" alt="${name}代表圖片">
       </div>
     </section>
 
     <section class="club-page-section club-detail-grid">
-      ${clubDetailBlock("社團介紹", detail.intro || club.description)}
-      ${clubDetailBlock("行動理念", detail.principle)}
-      ${clubDetailBlock("發展脈絡", detail.development)}
+      ${clubDetailBlock("社團介紹", club.introduction || club.description)}
+      ${clubDetailBlock("行動理念", club.actionConcept)}
+      ${clubDetailBlock("發展脈絡", developmentText)}
     </section>
+
+    ${
+      isDraft && Array.isArray(club.actionTypes) && club.actionTypes.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">ACTIONS</span><h2>主要行動類型</h2></div></div>
+            ${renderClubTags(club.actionTypes)}
+          </section>`
+        : ""
+    }
+
+    ${
+      timelineMilestones.length
+        ? `<section class="club-page-section">
+            <div class="section-heading"><div><span class="section-label">MILESTONES</span><h2>發展脈絡</h2></div></div>
+            <div class="club-milestone-grid">
+              ${timelineMilestones.map((item) => `<article><strong>${item.year} 年</strong><p>${item.description}</p></article>`).join("")}
+            </div>
+          </section>`
+        : ""
+    }
 
     ${
       representative.length
         ? `<section class="club-page-section">
-            <div class="section-heading"><div><span class="section-label">RESULTS</span><h2>代表成果</h2></div></div>
-            <div class="club-result-list">${representative.map((item) => `<article>${item}</article>`).join("")}</div>
+            <div class="section-heading"><div><span class="section-label">RESULTS</span><h2>${isDraft ? "代表活動" : "代表成果"}</h2></div></div>
+            <div class="${isDraft ? "club-representative-grid" : "club-result-list"}">
+              ${representative.map((item) => isDraft ? clubRepresentativeActivityCard(item) : `<article>${typeof item === "string" ? item : item.title}</article>`).join("")}
+            </div>
           </section>`
         : ""
     }
@@ -2105,27 +2168,39 @@ function renderClubDetail(club) {
         : ""
     }
 
-    <section class="club-page-section">
-      <div class="section-heading">
-        <div>
-          <span class="section-label">ACTIVITIES</span>
-          <h2>相關成果活動</h2>
-        </div>
-        <p>活動卡片會導回成果故事館正式活動詳細頁。</p>
-      </div>
-      <div class="club-action-grid">
-        ${activities.length ? activities.map(clubActivityCard).join("") : clubEmptyState("此社團相關成果活動目前為資料整理中。")}
-      </div>
-    </section>
+    ${
+      activities.length || !isDraft
+        ? `<section class="club-page-section">
+            <div class="section-heading">
+              <div>
+                <span class="section-label">ACTIVITIES</span>
+                <h2>相關成果活動</h2>
+              </div>
+              <p>活動卡片會導回成果故事館正式活動詳細頁。</p>
+            </div>
+            <div class="club-action-grid">
+              ${activities.length ? activities.map(clubActivityCard).join("") : clubEmptyState("此社團相關成果活動目前為資料整理中。")}
+            </div>
+          </section>`
+        : ""
+    }
 
     ${
       gallery.length
         ? `<section class="club-page-section">
             <div class="section-heading"><div><span class="section-label">PHOTOS</span><h2>相關照片</h2></div></div>
-            <div class="theme-photo-grid">${gallery.map((photo) => `<img src="${photo}" data-image-fallbacks="${PLACEHOLDER}" alt="${club.title}相關照片">`).join("")}</div>
+            <div class="theme-photo-grid club-gallery-grid">${gallery.map((photo) => `
+              <figure>
+                <img src="${photo.src}" data-image-fallbacks="${PLACEHOLDER}" alt="${photo.alt || `${name}相關照片`}" loading="lazy">
+                ${hasThemeValue(photo.caption) ? `<figcaption>${photo.caption}</figcaption>` : ""}
+              </figure>`).join("")}
+            </div>
           </section>`
         : ""
     }
+
+    ${renderClubSources(club, isDraft)}
+    ${renderClubPendingItems(club, isDraft)}
 
     ${
       Array.isArray(club.relatedThemeIds) && club.relatedThemeIds.length
@@ -2140,6 +2215,58 @@ function renderClubDetail(club) {
           </section>`
         : ""
     }
+  `;
+}
+
+function getClubName(club) {
+  return club?.name || club?.title || "社團紀錄";
+}
+
+function getClubDescription(club) {
+  return club?.description || club?.introduction || "社團資料整理中。";
+}
+
+function clubRepresentativeActivityCard(item) {
+  if (!item || typeof item !== "object") return `<article class="club-representative-card"><h3>${item}</h3></article>`;
+  return `
+    <article class="club-representative-card">
+      <div class="club-representative-meta">
+        ${hasThemeValue(item.year) ? `<span>${item.year} 年</span>` : ""}
+        ${hasThemeValue(item.type) ? `<span>${item.type}</span>` : ""}
+      </div>
+      <h3>${item.title}</h3>
+      ${hasThemeValue(item.summary) ? `<p>${item.summary}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderClubSources(club, isDraft) {
+  const sources = Array.isArray(club.sources)
+    ? club.sources.filter((item) => hasThemeValue(item?.label) && (isDraft || !String(item.type || "").startsWith("internal-")))
+    : [];
+  const rightsNote = hasThemeValue(club.rightsNote) ? club.rightsNote : "";
+  if (!sources.length && !rightsNote) return "";
+  return `
+    <section class="club-page-section club-information-panel" aria-labelledby="club-source-title">
+      <div class="section-heading"><div><span class="section-label">SOURCES</span><h2 id="club-source-title">資料說明</h2></div></div>
+      ${sources.length ? `<div class="club-source-list">${sources.map((item) => `<span>${item.label}${isDraft && item.publiclyDownloadable === false ? "（內部來源，不提供下載）" : ""}</span>`).join("")}</div>` : ""}
+      ${rightsNote ? `<p>${rightsNote}</p>` : ""}
+    </section>
+  `;
+}
+
+function renderClubPendingItems(club, isDraft) {
+  const pendingItems = Array.isArray(club.pendingItems) ? club.pendingItems.filter(hasThemeValue) : [];
+  if (!pendingItems.length) return "";
+  return `
+    <section class="club-page-section club-pending-panel" aria-labelledby="club-pending-title">
+      <div class="section-heading"><div><span class="section-label">IN PROGRESS</span><h2 id="club-pending-title">資料補充中</h2></div></div>
+      ${
+        isDraft
+          ? `<ul>${pendingItems.map((item) => `<li>${item}</li>`).join("")}</ul>`
+          : "<p>部分活動日期、場地與照片來源仍持續查證與補充中。</p>"
+      }
+    </section>
   `;
 }
 
@@ -2232,7 +2359,7 @@ function clubActivityImageCandidates(activity) {
 function clubServiceCards(clubs) {
   const records = clubs.flatMap((club) =>
     Array.isArray(club.serviceRecords)
-      ? club.serviceRecords.map((record) => ({ club: club.title, record }))
+      ? club.serviceRecords.map((record) => ({ club: getClubName(club), record }))
       : []
   );
   return records.length
