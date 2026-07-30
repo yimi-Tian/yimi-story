@@ -45,7 +45,7 @@ const clubData = {
       tags: ["木工修繕", "木材再利用", "社區服務", "永續行動"],
       coverImage: "public/images/activities/113-002/01.JPG",
       relatedActivityIds: ["113-002", "114-022"],
-      relatedThemeIds: ["wood-repair", "environmental-education"],
+      relatedThemeIds: ["environmental-education"],
       detailContent: {
         intro: "木工修繕社由木工課程延伸而來，學員透過持續練習與社區服務，將木工技術應用於家具修繕、木材再利用與公益行動，讓課堂學習回到地方需求。",
         principle: "以修繕代替汰換，減少資源浪費；以學習回應地方需要，讓社大課程成果轉化為社區服務。",
@@ -273,6 +273,12 @@ function getRoute() {
 
 function render() {
   const route = getRoute();
+  const isLegacyWoodRepairTheme =
+    (route.page === "themes" || route.page === "theme") && route.detail === "wood-repair";
+  if (isLegacyWoodRepairTheme) {
+    window.location.replace("#/clubs/wood-repair");
+    return;
+  }
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
   app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
@@ -1689,7 +1695,6 @@ function getThemeActivities(theme) {
 
 function selectThemeActivityImageCandidates(theme, activities, preferredActivityIds = []) {
   const termsByTheme = {
-    "wood-repair": ["木工", "木作", "修繕", "家具", "敏道"],
     "food-agriculture": ["食農", "農產", "農場", "田間", "農業", "加工"],
     "marine-education": ["海洋", "海線", "漁村", "釣魚", "海龜", "貝殼", "海岸", "漁業"],
     "local-culture": ["走讀", "廟宇", "老街", "老照片", "工藝", "文化", "信仰", "古蹟"],
@@ -1732,16 +1737,9 @@ function selectThemeActivityImageCandidates(theme, activities, preferredActivity
 }
 
 function selectThemeCoverCandidates(theme, activities) {
-  const preferredActivityIdsByTheme = {
-    "wood-repair": ["114-022", "113-002"],
-  };
   return unique(
     [
-      ...selectThemeActivityImageCandidates(
-        theme,
-        activities,
-        preferredActivityIdsByTheme[theme?.id] || []
-      ),
+      ...selectThemeActivityImageCandidates(theme, activities),
       hasThemeValue(theme?.coverImage) ? theme.coverImage : "",
       PLACEHOLDER,
     ].filter(hasThemeValue)
@@ -1750,7 +1748,6 @@ function selectThemeCoverCandidates(theme, activities) {
 
 function selectFeaturedThemeCoverCandidates(item, theme, activities) {
   const preferredActivityIdsByFeatured = {
-    "sustainable-woodwork": ["114-022", "113-002"],
     "chilan-river-knowledge": ["114-016", "114-017", "114-033"],
     "coastal-learning": ["113-014", "114-026", "114-027", "114-031", "114-032"],
   };
@@ -2134,7 +2131,12 @@ function renderClubDetail(club) {
       Array.isArray(club.relatedThemeIds) && club.relatedThemeIds.length
         ? `<section class="club-page-section">
             <div class="section-heading"><div><span class="section-label">THEMES</span><h2>相關主題</h2></div></div>
-            <div class="club-tag-list">${club.relatedThemeIds.map((id) => `<a href="#/themes/${id}">${id}</a>`).join("")}</div>
+            <div class="club-tag-list">${club.relatedThemeIds
+              .map((id) => {
+                const relatedTheme = themeData.themes.find((theme) => theme.id === id);
+                return `<a href="#/themes/${id}">${relatedTheme?.title || id}</a>`;
+              })
+              .join("")}</div>
           </section>`
         : ""
     }
