@@ -3974,7 +3974,7 @@ a.theme-representative-card:focus-visible {
   }
 
   .featured-theme-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .theme-archive-grid {
@@ -4039,8 +4039,7 @@ a.theme-representative-card:focus-visible {
 }
 
 @media (min-width: 720px) and (max-width: 1119px) {
-  body:has(.app.class-result-page) .nav-item:nth-last-child(2) .nav-menu,
-  body:has(.app.digital-walk-draft-page) .nav-item:nth-last-child(2) .nav-menu {
+  .nav-item:nth-last-child(2) .nav-menu {
     right: 0;
     left: auto;
   }
@@ -4054,7 +4053,7 @@ a.theme-representative-card:focus-visible {
 
 @media (min-width: 1120px) {
   .theme-archive-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

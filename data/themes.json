@@ -1,27 +1,6 @@
 {
   "themes": [
     {
-      "id": "wood-repair",
-      "title": "木工修繕",
-      "subtitle": "修繕代替汰換，讓學習回到地方需要",
-      "description": "透過木材再利用、家具修繕與社區服務，讓學習成果回到地方需要。",
-      "tags": ["木材再利用", "社區服務", "永續行動"],
-      "coverImage": "assets/images/platform-home/latest-work.jpg",
-      "icon": "木",
-      "status": "建置中",
-      "relatedActivityIds": ["113-002", "114-022"],
-      "relatedYears": ["112", "113", "114"],
-      "relatedTownships": ["朴子市", "中埔鄉"],
-      "relatedResults": ["社區家具修繕", "木材再利用實作"],
-      "relatedPhotos": ["assets/images/platform-home/latest-work.jpg"],
-      "sdgs": ["SDG 11", "SDG 12", "SDG 17"],
-      "featured": true,
-      "detailContent": {
-        "background": "從生活中的舊家具與閒置木料出發，透過課程學習修繕技術，也回應社區空間與居民的實際需求。",
-        "purpose": "培養修繕與材料再利用能力，串連學員、社區及在地資源，讓永續行動落實於日常生活。"
-      }
-    },
-    {
       "id": "food-agriculture",
       "title": "食農教育",
       "subtitle": "從餐桌重新認識土地與地方產業",
@@ -86,7 +65,7 @@
     },
     {
       "id": "environmental-education",
-      "title": "環境教育",
+      "title": "環境永續",
       "subtitle": "從流域與生態累積地方環境知識",
       "description": "從河流、生態、流域與永續行動出發，累積地方環境知識。",
       "tags": ["生態", "流域", "SDGs"],
@@ -107,14 +86,6 @@
     }
   ],
   "featured": [
-    {
-      "id": "sustainable-woodwork",
-      "themeId": "wood-repair",
-      "title": "永續木作共好計畫",
-      "description": "以修繕代替汰換，結合木工課程與社區服務，實踐資源再利用與地方陪伴。",
-      "coverImage": "assets/images/platform-home/latest-work.jpg",
-      "badge": "永續行動"
-    },
     {
       "id": "chilan-river-knowledge",
       "themeId": "environmental-education",
