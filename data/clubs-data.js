@@ -1,4 +1,5 @@
-{
+// Generated from data/clubs.json by tools/sync-static-data.mjs. Do not edit by hand.
+window.CLUBS_DATA = {
   "clubs": [
     {
       "id": "wood-repair",
@@ -251,4 +252,4 @@
       "displayOrder": 3
     }
   ]
-}
+};
