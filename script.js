@@ -2135,7 +2135,7 @@ function renderClubDetail(club) {
     </section>
 
     <section class="club-page-section club-detail-grid${isCompact ? " is-compact" : ""}">
-      ${clubDetailBlock("社團介紹", club.introduction || club.description)}
+      ${clubDetailBlock(club.introductionHeading || "社團介紹", club.introduction || club.description)}
       ${clubDetailBlock("行動理念", club.actionConcept)}
       ${clubDetailBlock("發展脈絡", developmentText)}
     </section>

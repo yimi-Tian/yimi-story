@@ -276,6 +276,7 @@ async function validateClubs(data) {
     saxophoneClub.startYear !== null
     || Number(saxophoneClub.earliestRecordYear) !== 114
     || saxophoneClub.earliestRecordLabel !== "現有最早活動紀錄為114年"
+    || saxophoneClub.introductionHeading !== "團體介紹"
     || /114\s*年.{0,4}成立|成立.{0,4}114\s*年/.test(JSON.stringify(saxophoneClub))
   ) {
     throw new Error("薩克斯風學員自主團體只能標示現有最早活動紀錄為 114 年，不得寫成 114 年成立。");
@@ -346,6 +347,8 @@ async function validateClubs(data) {
     ])
     || !Array.isArray(saxophoneClub.pendingItems)
     || saxophoneClub.pendingItems.length !== 6
+    || !saxophoneClub.pendingItems.includes("5張照片的拍攝日期與個別活動對應仍待確認")
+    || saxophoneClub.pendingItems.some((item) => String(item).includes("6張照片"))
     || saxophoneClub.publicPendingNote !== "部分活動照片、團體沿革及公益演出細節仍持續查證與補充中。"
   ) {
     throw new Error("薩克斯風學員自主團體的資料來源、待確認事項或正式模式說明不完整。");
