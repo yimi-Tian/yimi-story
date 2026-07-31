@@ -395,6 +395,171 @@
       "displayOrder": 3
     },
     {
+      "id": "saxophone-group",
+      "name": "薩克斯風學員自主團體",
+      "shortTitle": "薩克斯風團",
+      "tagline": "由吳昭志老師帶領學員自主延伸，以薩克斯風合奏參與社區公益演出。",
+      "category": "performing-art",
+      "status": "草稿／未公開",
+      "pageMode": "compact",
+      "introductionHeading": "團體介紹",
+      "startYear": null,
+      "earliestRecordYear": 114,
+      "earliestRecordLabel": "現有最早活動紀錄為114年",
+      "memberCount": null,
+      "instructor": "吳昭志老師",
+      "mainAreas": [],
+      "description": "薩克斯風學員自主團體由吳昭志老師帶領學員自主延伸組成，透過團體合奏與持續練習，將課堂中的音樂學習帶入社區。團體多次前往新港板頭厝、柴林村等地參與公益演出，也透過節慶音樂活動與居民交流，讓薩克斯風成為連結學習、社區與公益關懷的媒介。",
+      "introduction": "薩克斯風學員自主團體由吳昭志老師帶領學員自主延伸組成，透過團體合奏與持續練習，將課堂中的音樂學習帶入社區。團體多次前往新港板頭厝、柴林村等地參與公益演出，也透過節慶音樂活動與居民交流，讓薩克斯風成為連結學習、社區與公益關懷的媒介。",
+      "actionConcept": "以音樂促進學習交流與社區參與，透過自主合奏、公益演出與節慶活動，分享學員的學習成果，並以音樂陪伴居民、活絡社區生活。",
+      "actionTypes": [
+        "自主練習與合奏",
+        "社區公益演出",
+        "節慶音樂活動",
+        "音樂交流",
+        "學習成果分享"
+      ],
+      "cardTags": [
+        "社區公益演出",
+        "節慶音樂活動",
+        "音樂交流",
+        "學習成果分享"
+      ],
+      "milestones": [
+        {
+          "year": 114,
+          "title": "從課程學習走入社區公益演出",
+          "description": "持續前往新港板頭厝及柴林村進行公益演出，並參與聖誕節草地音樂活動，逐步累積社區演出經驗。"
+        },
+        {
+          "year": 115,
+          "title": "延續板頭厝公益演出",
+          "description": "延續新港板頭厝公益演出，由吳昭志老師帶領學員持續以音樂參與社區交流與關懷行動。"
+        }
+      ],
+      "representativeActivities": [
+        {
+          "year": 114,
+          "date": "114/03/25",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "由吳昭志老師帶領學員前往新港板頭厝參與公益演出，以薩克斯風合奏分享音樂學習成果。"
+        },
+        {
+          "year": 114,
+          "date": "114/04/12",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "由吳昭志老師帶領學員參與新港板頭厝公益演出，透過音樂與居民交流。"
+        },
+        {
+          "year": 114,
+          "date": "114/06/14",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "持續於新港板頭厝進行公益演出，以薩克斯風合奏參與社區關懷與交流。"
+        },
+        {
+          "year": 114,
+          "date": "114/07/16",
+          "title": "柴林村公益演出",
+          "type": "社區公益演出",
+          "summary": "前往柴林村參與公益演出，透過音樂分享學習成果並活絡社區活動。"
+        },
+        {
+          "year": 114,
+          "date": "114/11/08",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "再次前往新港板頭厝參與公益演出，延續學員以音樂投入社區服務的行動。"
+        },
+        {
+          "year": 114,
+          "date": "114/12/14",
+          "title": "蓋婭莊園－聖誕節草地音樂饗宴",
+          "type": "節慶音樂活動",
+          "summary": "參與蓋婭莊園聖誕節草地音樂饗宴，以薩克斯風合奏營造節慶氛圍並與民眾交流。"
+        },
+        {
+          "year": 115,
+          "date": "115/03/07",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "延續新港板頭厝公益演出，由吳昭志老師帶領學員以音樂參與社區交流。"
+        },
+        {
+          "year": 115,
+          "date": "115/06/16",
+          "title": "新港板頭厝公益演出",
+          "type": "社區公益演出",
+          "summary": "持續前往新港板頭厝進行公益演出，分享薩克斯風學習成果並延續社區關懷。"
+        }
+      ],
+      "serviceRecords": [],
+      "relatedActivityIds": [],
+      "coverImage": "public/images/clubs/saxophone/114-4.jpg",
+      "coverImageRightsStatus": "approved",
+      "coverImageActivitySourceStatus": "pending",
+      "galleryNote": "以下照片為薩克斯風學員自主團體活動紀錄，部分拍攝日期及個別活動對應仍持續整理中。",
+      "gallery": [
+        {
+          "src": "public/images/clubs/saxophone/113-1.jpg",
+          "alt": "薩克斯風學員在室內場域進行演出",
+          "caption": "薩克斯風學員參與社區公益演出",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        },
+        {
+          "src": "public/images/clubs/saxophone/114-1.jpg",
+          "alt": "薩克斯風學員與社區參與者在戶外合影",
+          "caption": "團體以薩克斯風分享音樂學習成果",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        },
+        {
+          "src": "public/images/clubs/saxophone/114-2.jpg",
+          "alt": "薩克斯風學員在戶外草地進行演出",
+          "caption": "節慶活動中的薩克斯風演出",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        },
+        {
+          "src": "public/images/clubs/saxophone/114-3.jpg",
+          "alt": "薩克斯風學員與社區參與者在公共場域合影",
+          "caption": "社區或公共場域中的音樂交流",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        }
+      ],
+      "sources": [
+        {
+          "label": "114至115年公益演出補充資料",
+          "displayLabel": "114至115年公益演出補充紀錄",
+          "type": "internal-record",
+          "publiclyDownloadable": false
+        },
+        {
+          "label": "邑米社區大學薩克斯風團體影像資料",
+          "displayLabel": "邑米社區大學社團影像紀錄",
+          "type": "internal-photo-folder",
+          "publiclyDownloadable": false
+        }
+      ],
+      "rightsNote": "本頁使用的5張照片已確認可公開；拍攝日期與個別活動對應仍持續核對中。",
+      "pendingItems": [
+        "團體是否為正式核准社團仍待確認",
+        "正式團體名稱仍待確認，目前以「薩克斯風學員自主團體」整理",
+        "現有最早活動紀錄為114年，但不代表成立年份",
+        "5張照片的拍攝日期與個別活動對應仍待確認",
+        "各次公益演出的合作單位、服務對象及演出內容仍待補充",
+        "成員人數與正式組織資料仍待補充"
+      ],
+      "publicPendingNote": "部分活動照片、團體沿革及公益演出細節仍持續查證與補充中。",
+      "publicationStatus": "draft",
+      "publiclyListed": false,
+      "displayOrder": 4
+    },
+    {
       "id": "club-records-preparing",
       "name": "社團紀錄資料整理中",
       "shortTitle": "社團紀錄資料整理中",
@@ -426,7 +591,7 @@
       "pendingItems": [],
       "publicationStatus": "approved",
       "publiclyListed": true,
-      "displayOrder": 4
+      "displayOrder": 5
     }
   ]
 }

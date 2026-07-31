@@ -10,6 +10,7 @@ const WANTAN_MANGO_TREE_STOP_ID = "WT-03";
 const WOOD_REPAIR_CLUB_ID = "wood-repair";
 const DANCE_CLUB_ID = "multi-cultural-dance";
 const ENKA_CLUB_ID = "enka-singing";
+const SAXOPHONE_CLUB_ID = "saxophone-group";
 const targets = [
   { json: "data/showcase.json", js: "data/showcase-data.js", globalName: "SHOWCASE_DATA" },
   { json: "data/class-results.json", js: "data/class-results-data.js", globalName: "CLASS_RESULTS_DATA" },
@@ -259,6 +260,98 @@ async function validateClubs(data) {
     || enkaClub.publicPendingNote !== "部分公益演出的活動名稱、日期、場地與照片對應仍持續查證與補充中。"
   ) {
     throw new Error("日語歌唱社草稿與正式模式的待確認資訊不完整。");
+  }
+
+  const saxophoneClub = clubs.find((club) => club.id === SAXOPHONE_CLUB_ID);
+  if (
+    !saxophoneClub
+    || saxophoneClub.pageMode !== "compact"
+    || saxophoneClub.publicationStatus !== "draft"
+    || saxophoneClub.publiclyListed !== false
+    || Number(saxophoneClub.displayOrder) !== 4
+  ) {
+    throw new Error("薩克斯風學員自主團體必須維持 compact 草稿、publiclyListed false 與 displayOrder 4。");
+  }
+  if (
+    saxophoneClub.startYear !== null
+    || Number(saxophoneClub.earliestRecordYear) !== 114
+    || saxophoneClub.earliestRecordLabel !== "現有最早活動紀錄為114年"
+    || saxophoneClub.introductionHeading !== "團體介紹"
+    || /114\s*年.{0,4}成立|成立.{0,4}114\s*年/.test(JSON.stringify(saxophoneClub))
+  ) {
+    throw new Error("薩克斯風學員自主團體只能標示現有最早活動紀錄為 114 年，不得寫成 114 年成立。");
+  }
+  if (saxophoneClub.memberCount !== null || saxophoneClub.instructor !== "吳昭志老師") {
+    throw new Error("薩克斯風學員自主團體不得填社員人數，帶領老師只能使用「吳昭志老師」。");
+  }
+  const expectedSaxophoneCardTags = ["社區公益演出", "節慶音樂活動", "音樂交流", "學習成果分享"];
+  if (
+    JSON.stringify(saxophoneClub.actionTypes) !== JSON.stringify([
+      "自主練習與合奏",
+      "社區公益演出",
+      "節慶音樂活動",
+      "音樂交流",
+      "學習成果分享",
+    ])
+    || JSON.stringify(saxophoneClub.cardTags) !== JSON.stringify(expectedSaxophoneCardTags)
+  ) {
+    throw new Error("薩克斯風學員自主團體的詳細頁與列表行動類型不正確。");
+  }
+  if (
+    JSON.stringify(saxophoneClub.milestones?.map((item) => item.year)) !== JSON.stringify([114, 115])
+    || !Array.isArray(saxophoneClub.representativeActivities)
+    || saxophoneClub.representativeActivities.length !== 8
+  ) {
+    throw new Error("薩克斯風學員自主團體必須維持 114、115 年兩筆發展脈絡與 8 筆代表活動。");
+  }
+  const expectedSaxophoneDates = [
+    "114/03/25",
+    "114/04/12",
+    "114/06/14",
+    "114/07/16",
+    "114/11/08",
+    "114/12/14",
+    "115/03/07",
+    "115/06/16",
+  ];
+  if (JSON.stringify(saxophoneClub.representativeActivities.map((item) => item.date)) !== JSON.stringify(expectedSaxophoneDates)) {
+    throw new Error("薩克斯風學員自主團體 8 筆代表活動日期或排序不正確。");
+  }
+  const saxophoneText = JSON.stringify(saxophoneClub);
+  if (saxophoneText.includes("新港板頭村") || saxophoneText.includes("板頭村")) {
+    throw new Error("薩克斯風學員自主團體的板頭地名必須統一為「新港板頭厝」。");
+  }
+  if (saxophoneClub.representativeActivities.some((item) => String(item.type || "").includes("募款"))) {
+    throw new Error("薩克斯風學員自主團體的公益演出不得寫成募款活動。");
+  }
+  const expectedSaxophoneGallery = [
+    "public/images/clubs/saxophone/113-1.jpg",
+    "public/images/clubs/saxophone/114-1.jpg",
+    "public/images/clubs/saxophone/114-2.jpg",
+    "public/images/clubs/saxophone/114-3.jpg",
+  ];
+  if (
+    saxophoneClub.coverImage !== "public/images/clubs/saxophone/114-4.jpg"
+    || saxophoneClub.coverImageRightsStatus !== "approved"
+    || saxophoneClub.coverImageActivitySourceStatus !== "pending"
+    || JSON.stringify(saxophoneClub.gallery?.map((item) => item.src)) !== JSON.stringify(expectedSaxophoneGallery)
+    || saxophoneClub.gallery.some((item) => item.rightsStatus !== "approved" || item.activitySourceStatus !== "pending")
+    || saxophoneText.includes("public/images/clubs/saxophone/113-2.jpg")
+  ) {
+    throw new Error("薩克斯風照片必須使用 114-4.jpg 封面與指定四張圖庫，且排除 113-2.jpg。");
+  }
+  if (
+    JSON.stringify(saxophoneClub.sources?.map((item) => item.displayLabel)) !== JSON.stringify([
+      "114至115年公益演出補充紀錄",
+      "邑米社區大學社團影像紀錄",
+    ])
+    || !Array.isArray(saxophoneClub.pendingItems)
+    || saxophoneClub.pendingItems.length !== 6
+    || !saxophoneClub.pendingItems.includes("5張照片的拍攝日期與個別活動對應仍待確認")
+    || saxophoneClub.pendingItems.some((item) => String(item).includes("6張照片"))
+    || saxophoneClub.publicPendingNote !== "部分活動照片、團體沿革及公益演出細節仍持續查證與補充中。"
+  ) {
+    throw new Error("薩克斯風學員自主團體的資料來源、待確認事項或正式模式說明不完整。");
   }
 }
 
