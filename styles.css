@@ -3182,6 +3182,15 @@ code {
   object-fit: cover;
 }
 
+.club-detail-banner.is-compact .platform-hall-media img {
+  aspect-ratio: 4 / 3;
+  max-height: 420px;
+}
+
+.club-detail-grid.is-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .club-detail-block,
 .club-service-card,
 .club-result-list article {
@@ -3238,6 +3247,11 @@ code {
 .club-milestone-grid strong {
   color: var(--color-primary, #0b6fa4);
   font-size: 1.1rem;
+}
+
+.club-milestone-grid h3 {
+  margin: 0.5rem 0 0;
+  color: var(--color-primary-dark, #064b6b);
 }
 
 .club-milestone-grid p,
@@ -3335,7 +3349,8 @@ code {
   }
 
   .club-milestone-grid,
-  .club-representative-grid {
+  .club-representative-grid,
+  .club-detail-grid.is-compact {
     grid-template-columns: 1fr;
   }
 }

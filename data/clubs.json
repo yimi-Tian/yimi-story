@@ -228,6 +228,160 @@
       "displayOrder": 2
     },
     {
+      "id": "enka-singing",
+      "name": "邑米社區大學日語歌唱社",
+      "shortTitle": "日語歌唱社",
+      "tagline": "以日語演歌學習連結社員交流與公益關懷。",
+      "category": "performing-art",
+      "status": "草稿／未公開",
+      "pageMode": "compact",
+      "startYear": null,
+      "earliestRecordYear": 112,
+      "memberCount": {
+        "value": 13,
+        "asOfYear": 112,
+        "note": "112年申請時人數",
+        "displayLabel": "112年申請時人數：13人"
+      },
+      "instructor": null,
+      "mainAreas": [],
+      "description": "邑米社區大學日語歌唱社由日語歌唱學習者自主組成，透過歌曲練習、社員交流與公益演出，認識日本演歌文化及歌曲所反映的時代背景。社團將共同學習延伸至社區參與，讓歌唱成為交流、陪伴與關懷的媒介。",
+      "introduction": "邑米社區大學日語歌唱社由日語歌唱學習者自主組成，透過歌曲練習、社員交流與公益演出，認識日本演歌文化及歌曲所反映的時代背景。社團將共同學習延伸至社區參與，讓歌唱成為交流、陪伴與關懷的媒介。",
+      "actionConcept": "以日語歌唱增進文化理解與生活樂趣，透過自主團練培養社員的演唱能力與互動情誼，並以公益演出參與社會關懷，將學習成果帶入社區。",
+      "actionTypes": [
+        "日語歌曲學習",
+        "日本演歌文化",
+        "自主團練與交流",
+        "公益募款演出",
+        "社區參與"
+      ],
+      "cardTags": [
+        "日語歌曲學習",
+        "日本演歌文化",
+        "公益募款演出",
+        "社區參與"
+      ],
+      "milestones": [
+        {
+          "year": 112,
+          "title": "從共同練習走向公益演出",
+          "description": "透過日語歌曲團練、社員交流及公益募款表演，將演歌文化學習延伸至社區參與。"
+        }
+      ],
+      "representativeActivities": [
+        {
+          "year": 112,
+          "title": "旅笠道中團練",
+          "type": "日語歌曲學習",
+          "summary": "以《旅笠道中》進行歌曲練習，累積社員共同演唱與日語歌曲學習經驗。"
+        },
+        {
+          "year": 112,
+          "title": "雨の慕情團練",
+          "type": "日本演歌文化",
+          "summary": "透過《雨の慕情》歌曲練習，認識日本演歌的演唱特色與文化背景。"
+        },
+        {
+          "year": 112,
+          "date": "112/05/07",
+          "title": "嘉義市脊髓損傷者協會募款演出",
+          "type": "公益募款演出",
+          "summary": "以歌唱表演參與公益募款活動，將社員的學習成果轉化為社會關懷行動。"
+        },
+        {
+          "year": 112,
+          "date": "112/12/09",
+          "title": "為愛而唱・修緣育幼院募款活動",
+          "type": "公益募款演出",
+          "venue": "嘉義市中央廣場",
+          "summary": "參與修緣育幼院募款活動，以「為愛而唱」慈善表演結合歌唱與公益，喚起民眾關注弱勢族群。"
+        },
+        {
+          "year": 113,
+          "date": "113/06",
+          "title": "6月公益演出紀錄",
+          "type": "公益募款演出",
+          "summary": "社員參與公益演出，延續以日語歌唱投入社會關懷；活動名稱、日期與場地仍待補充。"
+        },
+        {
+          "year": 114,
+          "date": "114/04",
+          "title": "4月公益演出紀錄",
+          "type": "公益募款演出",
+          "summary": "社員參與公益演出，延續以日語歌唱投入社會關懷；活動名稱、日期與場地仍待補充。"
+        },
+        {
+          "year": 114,
+          "date": "114/05",
+          "title": "5月公益演出紀錄",
+          "type": "公益募款演出",
+          "summary": "社員參與公益演出，延續以日語歌唱投入社會關懷；活動名稱、日期與場地仍待補充。"
+        },
+        {
+          "year": 114,
+          "date": "114/12",
+          "title": "12月公益演出紀錄",
+          "type": "公益募款演出",
+          "summary": "社員參與公益演出，延續以日語歌唱投入社會關懷；活動名稱、日期與場地仍待補充。"
+        }
+      ],
+      "serviceRecords": [],
+      "relatedActivityIds": [],
+      "coverImage": "public/images/clubs/enka/02.jpg",
+      "coverImageRightsStatus": "approved",
+      "coverImageActivitySourceStatus": "pending",
+      "galleryNote": "以下照片為日語歌唱社活動紀錄，部分拍攝日期及個別活動對應仍持續整理中。",
+      "gallery": [
+        {
+          "src": "public/images/clubs/enka/01.jpg",
+          "alt": "日語歌唱社社員在戶外舞台合影",
+          "caption": "社員以日語歌曲進行舞台展演",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        },
+        {
+          "src": "public/images/clubs/enka/02.jpg",
+          "alt": "日語歌唱社社員持公益表演布條合影",
+          "caption": "日語歌唱與公益關懷活動紀錄",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        },
+        {
+          "src": "public/images/clubs/enka/04.jpg",
+          "alt": "日語歌唱社社員共同參與歌唱交流活動",
+          "caption": "社員共同參與歌唱交流活動",
+          "rightsStatus": "approved",
+          "activitySourceStatus": "pending"
+        }
+      ],
+      "sources": [
+        {
+          "label": "112年日語歌唱社內部活動文件",
+          "displayLabel": "112年日語歌唱社活動紀錄",
+          "type": "internal-document",
+          "publiclyDownloadable": false
+        },
+        {
+          "label": "邑米社區大學日語歌唱社影像資料",
+          "displayLabel": "邑米社區大學社團影像紀錄",
+          "type": "internal-photo-folder",
+          "publiclyDownloadable": false
+        }
+      ],
+      "namingNote": "部分歷年活動照片沿用當時課程或演出名稱，網站統一依正式社團名稱整理。",
+      "rightsNote": "目前使用的3張照片已確認可公開；拍攝日期與個別活動對應仍持續核對中。",
+      "pendingItems": [
+        "113年6月及114年4月、5月、12月公益演出的活動名稱、日期與場地仍待補充",
+        "4張照片的拍攝日期與個別活動對應仍待確認",
+        "部分照片使用「日語歌唱班」名稱，與正式社團名稱的關係需保留說明",
+        "112年後續公益演出及團練紀錄仍待補充"
+      ],
+      "publicPendingNote": "部分活動日期、照片來源及後續社團紀錄仍持續查證與補充中。",
+      "publicationStatus": "draft",
+      "publiclyListed": false,
+      "displayOrder": 3
+    },
+    {
       "id": "club-records-preparing",
       "name": "社團紀錄資料整理中",
       "shortTitle": "社團紀錄資料整理中",
@@ -259,7 +413,7 @@
       "pendingItems": [],
       "publicationStatus": "approved",
       "publiclyListed": true,
-      "displayOrder": 3
+      "displayOrder": 4
     }
   ]
 }
