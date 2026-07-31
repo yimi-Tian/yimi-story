@@ -205,28 +205,33 @@ async function validateClubs(data) {
   if (enkaClub.instructor !== null) {
     throw new Error("日語歌唱社指導老師未有正式資料，instructor 必須為 null。");
   }
-  const expectedEnkaCardTags = ["日語歌曲學習", "日本演歌文化", "公益募款演出", "社區參與"];
+  const expectedEnkaCardTags = ["日語歌曲學習", "日本演歌文化", "公益演出與關懷", "社區參與"];
   if (
     !Array.isArray(enkaClub.actionTypes)
     || enkaClub.actionTypes.length !== 5
+    || !enkaClub.actionTypes.includes("公益演出與關懷")
+    || enkaClub.actionTypes.includes("公益募款演出")
     || JSON.stringify(enkaClub.cardTags) !== JSON.stringify(expectedEnkaCardTags)
   ) {
     throw new Error("日語歌唱社詳細頁必須保留 5 項行動類型，列表卡片只顯示指定 4 項。");
   }
   if (
     !Array.isArray(enkaClub.milestones)
-    || enkaClub.milestones.length !== 1
+    || JSON.stringify(enkaClub.milestones.map((item) => item.year)) !== JSON.stringify([112, 113, 114])
     || !Array.isArray(enkaClub.representativeActivities)
     || enkaClub.representativeActivities.length !== 8
   ) {
-    throw new Error("日語歌唱社必須維持 1 筆發展脈絡與 8 筆代表活動。");
+    throw new Error("日語歌唱社必須維持 112、113、114 年共 3 筆發展脈絡與 8 筆代表活動。");
   }
   const expectedLaterEnkaDates = ["113/06", "114/04", "114/05", "114/12"];
   if (
     JSON.stringify(enkaClub.representativeActivities.slice(4).map((item) => item.date)) !== JSON.stringify(expectedLaterEnkaDates)
-    || enkaClub.representativeActivities.slice(4).some((item) => item.type !== "公益募款演出" || String(item.venue || "").trim())
+    || enkaClub.representativeActivities.slice(4).some((item) => item.type !== "公益演出" || String(item.venue || "").trim())
+    || enkaClub.representativeActivities.slice(4).some((item) => !String(item.summary || "").includes("老師或學員"))
+    || enkaClub.representativeActivities.slice(4).some((item) => String(item.summary || "").includes("募款"))
+    || enkaClub.representativeActivities.slice(2, 4).some((item) => item.type !== "公益募款演出")
   ) {
-    throw new Error("日語歌唱社 113、114 年公益演出只能保留已確認月份，不得補造場地或精確日期。");
+    throw new Error("日語歌唱社 112 年正式活動維持公益募款演出；113、114 年只能標示公益演出與老師或學員參與。");
   }
   const expectedEnkaGallery = [
     "public/images/clubs/enka/01.jpg",
@@ -249,8 +254,9 @@ async function validateClubs(data) {
   }
   if (
     !Array.isArray(enkaClub.pendingItems)
-    || enkaClub.pendingItems.length !== 4
-    || enkaClub.publicPendingNote !== "部分活動日期、照片來源及後續社團紀錄仍持續查證與補充中。"
+    || enkaClub.pendingItems.length !== 7
+    || !enkaClub.pendingItems.includes("3張相關照片的拍攝日期與個別活動對應仍待確認")
+    || enkaClub.publicPendingNote !== "部分公益演出的活動名稱、日期、場地與照片對應仍持續查證與補充中。"
   ) {
     throw new Error("日語歌唱社草稿與正式模式的待確認資訊不完整。");
   }
