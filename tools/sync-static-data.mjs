@@ -9,6 +9,7 @@ const WANTAN_TOBACCO_BUILDING_STOP_ID = "WT-05";
 const WANTAN_MANGO_TREE_STOP_ID = "WT-03";
 const WOOD_REPAIR_CLUB_ID = "wood-repair";
 const DANCE_CLUB_ID = "multi-cultural-dance";
+const ENKA_CLUB_ID = "enka-singing";
 const targets = [
   { json: "data/showcase.json", js: "data/showcase-data.js", globalName: "SHOWCASE_DATA" },
   { json: "data/class-results.json", js: "data/class-results-data.js", globalName: "CLASS_RESULTS_DATA" },
@@ -174,6 +175,90 @@ async function validateClubs(data) {
   }
   if (!Array.isArray(danceClub.pendingItems) || danceClub.pendingItems.length !== 6) {
     throw new Error("多元文化運動舞蹈社草稿必須保留 6 項待確認資料。");
+  }
+
+  const enkaClub = clubs.find((club) => club.id === ENKA_CLUB_ID);
+  if (
+    !enkaClub
+    || enkaClub.pageMode !== "compact"
+    || enkaClub.publicationStatus !== "draft"
+    || enkaClub.publiclyListed !== false
+    || Number(enkaClub.displayOrder) !== 3
+  ) {
+    throw new Error("日語歌唱社必須維持 compact 草稿、publiclyListed false 與 displayOrder 3。");
+  }
+  if (
+    enkaClub.startYear !== null
+    || Number(enkaClub.earliestRecordYear) !== 112
+    || /112\s*年.{0,4}成立|成立.{0,4}112\s*年/.test(JSON.stringify(enkaClub))
+  ) {
+    throw new Error("日語歌唱社只能標示現有最早紀錄為 112 年，不得寫成 112 年成立。");
+  }
+  if (
+    Number(enkaClub.memberCount?.value) !== 13
+    || Number(enkaClub.memberCount?.asOfYear) !== 112
+    || enkaClub.memberCount?.note !== "112年申請時人數"
+    || enkaClub.memberCount?.displayLabel !== "112年申請時人數：13人"
+  ) {
+    throw new Error("日語歌唱社社員人數必須保留「112年申請時人數：13人」的完整年度語意。");
+  }
+  if (enkaClub.instructor !== null) {
+    throw new Error("日語歌唱社指導老師未有正式資料，instructor 必須為 null。");
+  }
+  const expectedEnkaCardTags = ["日語歌曲學習", "日本演歌文化", "公益演出與關懷", "社區參與"];
+  if (
+    !Array.isArray(enkaClub.actionTypes)
+    || enkaClub.actionTypes.length !== 5
+    || !enkaClub.actionTypes.includes("公益演出與關懷")
+    || enkaClub.actionTypes.includes("公益募款演出")
+    || JSON.stringify(enkaClub.cardTags) !== JSON.stringify(expectedEnkaCardTags)
+  ) {
+    throw new Error("日語歌唱社詳細頁必須保留 5 項行動類型，列表卡片只顯示指定 4 項。");
+  }
+  if (
+    !Array.isArray(enkaClub.milestones)
+    || JSON.stringify(enkaClub.milestones.map((item) => item.year)) !== JSON.stringify([112, 113, 114])
+    || !Array.isArray(enkaClub.representativeActivities)
+    || enkaClub.representativeActivities.length !== 8
+  ) {
+    throw new Error("日語歌唱社必須維持 112、113、114 年共 3 筆發展脈絡與 8 筆代表活動。");
+  }
+  const expectedLaterEnkaDates = ["113/06", "114/04", "114/05", "114/12"];
+  if (
+    JSON.stringify(enkaClub.representativeActivities.slice(4).map((item) => item.date)) !== JSON.stringify(expectedLaterEnkaDates)
+    || enkaClub.representativeActivities.slice(4).some((item) => item.type !== "公益演出" || String(item.venue || "").trim())
+    || enkaClub.representativeActivities.slice(4).some((item) => !String(item.summary || "").includes("老師或學員"))
+    || enkaClub.representativeActivities.slice(4).some((item) => String(item.summary || "").includes("募款"))
+    || enkaClub.representativeActivities.slice(2, 4).some((item) => item.type !== "公益募款演出")
+  ) {
+    throw new Error("日語歌唱社 112 年正式活動維持公益募款演出；113、114 年只能標示公益演出與老師或學員參與。");
+  }
+  const expectedEnkaGallery = [
+    "public/images/clubs/enka/01.jpg",
+    "public/images/clubs/enka/02.jpg",
+    "public/images/clubs/enka/04.jpg",
+  ];
+  if (
+    enkaClub.coverImage !== "public/images/clubs/enka/02.jpg"
+    || enkaClub.coverImageRightsStatus !== "approved"
+    || enkaClub.coverImageActivitySourceStatus !== "pending"
+    || JSON.stringify(enkaClub.gallery?.map((item) => item.src)) !== JSON.stringify(expectedEnkaGallery)
+    || enkaClub.gallery.some((item) => item.rightsStatus !== "approved" || item.activitySourceStatus !== "pending")
+    || JSON.stringify(enkaClub).includes("public/images/clubs/enka/03.jpg")
+  ) {
+    throw new Error("日語歌唱社照片必須使用 02.jpg 封面與 01、02、04 圖庫，公開權利 approved、活動對應 pending。");
+  }
+  const expectedEnkaSourceLabels = ["112年日語歌唱社活動紀錄", "邑米社區大學社團影像紀錄"];
+  if (JSON.stringify(enkaClub.sources?.map((item) => item.displayLabel)) !== JSON.stringify(expectedEnkaSourceLabels)) {
+    throw new Error("日語歌唱社前台資料來源名稱不正確。");
+  }
+  if (
+    !Array.isArray(enkaClub.pendingItems)
+    || enkaClub.pendingItems.length !== 7
+    || !enkaClub.pendingItems.includes("3張相關照片的拍攝日期與個別活動對應仍待確認")
+    || enkaClub.publicPendingNote !== "部分公益演出的活動名稱、日期、場地與照片對應仍持續查證與補充中。"
+  ) {
+    throw new Error("日語歌唱社草稿與正式模式的待確認資訊不完整。");
   }
 }
 
