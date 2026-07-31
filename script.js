@@ -2103,7 +2103,10 @@ function renderClubDetail(club) {
   const gallery = directGallery.length ? directGallery : linkedGallery;
   const metaItems = isDraft
     ? [
-        hasThemeValue(club.earliestRecordYear) ? `現有最早紀錄為 ${club.earliestRecordYear} 年` : "",
+        hasThemeValue(club.earliestRecordYear)
+          ? club.earliestRecordLabel || `現有最早紀錄為 ${club.earliestRecordYear} 年`
+          : "",
+        hasThemeValue(club.instructor) ? `由${club.instructor}帶領` : "",
         hasThemeValue(club.memberCount?.value)
           ? club.memberCount.displayLabel || `${club.memberCount.note || "申請時人數"}：${club.memberCount.value} 人`
           : "",
