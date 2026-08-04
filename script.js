@@ -805,12 +805,7 @@ function renderDigitalWalkRouteDetail(route) {
         <div><dt>適合對象</dt><dd>${(route.audiences || []).join("、")}</dd></div>
       </dl>
     </section>
-    <section class="digital-walk-map-section" aria-labelledby="digital-walk-map-title">
-      <div>
-        <h2 id="digital-walk-map-title">路線圖建置中</h2>
-        <p>正式路線圖與站點位置將於現地確認後補充。</p>
-      </div>
-    </section>
+    ${digitalWalkRouteMap(route)}
     <section class="digital-walk-stops-section" aria-labelledby="digital-walk-stops-title">
       <div class="section-heading">
         <div>
@@ -825,6 +820,27 @@ function renderDigitalWalkRouteDetail(route) {
     <div class="digital-walk-return-row">
       <a class="text-link" href="#/digital/draft">返回草稿列表</a>
     </div>
+  `;
+}
+
+function digitalWalkRouteMap(route) {
+  if (!route.routeMapImage) return "";
+
+  const alt = route.id === "DW-YG-001"
+    ? "鹽館聚落數位走讀路線圖，以五個走讀區段整合七個站點，呈現站點順序與相對位置"
+    : `${route.title}路線圖`;
+  const caption = route.id === "DW-YG-001"
+    ? "本圖為鹽館聚落數位走讀示意圖，主要呈現站點順序與相對位置，實際動線請依現場道路及導航資訊為準。"
+    : "本圖為數位走讀示意圖，實際動線請依現場道路及導航資訊為準。";
+
+  return `
+    <section class="digital-walk-map-section" aria-labelledby="digital-walk-map-title">
+      <h2 id="digital-walk-map-title">路線圖</h2>
+      <figure class="digital-walk-route-map">
+        <img src="${route.routeMapImage}" alt="${alt}" loading="lazy">
+        <figcaption>${caption}</figcaption>
+      </figure>
+    </section>
   `;
 }
 

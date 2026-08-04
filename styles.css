@@ -643,27 +643,34 @@ button {
 }
 
 .digital-walk-map-section {
-  display: grid;
-  min-height: 200px;
-  place-items: center;
   margin-top: 1rem;
   padding: 1.25rem;
-  border: 1px dashed rgba(11, 111, 164, 0.35);
+  border: 1px solid rgba(11, 111, 164, 0.16);
   border-radius: 8px;
-  background:
-    linear-gradient(rgba(230, 244, 248, 0.78), rgba(255, 255, 255, 0.82)),
-    repeating-linear-gradient(45deg, transparent 0 18px, rgba(11, 111, 164, 0.05) 18px 19px);
-  text-align: center;
+  background: #fff;
 }
 
-.digital-walk-map-section h2,
-.digital-walk-map-section p {
+.digital-walk-map-section h2 {
   margin: 0;
 }
 
-.digital-walk-map-section p {
-  margin-top: 0.4rem;
+.digital-walk-route-map {
+  margin: 0.75rem 0 0;
+}
+
+.digital-walk-route-map img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.digital-walk-route-map figcaption {
+  margin-top: 0.65rem;
   color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
 }
 
 .digital-walk-stops-section {
@@ -1179,8 +1186,7 @@ button {
   }
 
   .digital-walk-map-section {
-    min-height: 165px;
-    padding: 1rem;
+    padding: 0.85rem;
   }
 
   .digital-walk-detail-head {
