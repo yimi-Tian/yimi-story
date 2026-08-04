@@ -788,6 +788,7 @@ function renderDigitalWalkRouteDetail(route) {
   const stops = [...(Array.isArray(route.stops) ? route.stops : [])]
     .filter((stop) => stop.publicationStatus === "draft")
     .sort((a, b) => Number(a.order) - Number(b.order));
+  const centerSingleLastStop = route.id === "DW-YG-001" && stops.length === 7;
   app.innerHTML = `
     ${digitalWalkRouteHeader(route)}
     ${digitalWalkDraftNotice()}
@@ -813,13 +814,13 @@ function renderDigitalWalkRouteDetail(route) {
         </div>
         <p>共 ${stops.length} 站，依建議順序瀏覽。</p>
       </div>
-      <div class="digital-walk-stop-grid">
+      <div class="digital-walk-stop-grid${centerSingleLastStop ? " has-centered-single-last" : ""}">
         ${stops.map((stop) => digitalWalkStopCard(route, stop)).join("")}
       </div>
+      <div class="digital-walk-return-row">
+        <a class="text-link" href="#/digital/draft">返回草稿列表</a>
+      </div>
     </section>
-    <div class="digital-walk-return-row">
-      <a class="text-link" href="#/digital/draft">返回草稿列表</a>
-    </div>
   `;
 }
 

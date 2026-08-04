@@ -878,6 +878,11 @@ button {
   margin-top: 1rem;
 }
 
+.digital-walk-stops-section > .digital-walk-return-row {
+  justify-content: flex-start;
+  margin-top: 0.75rem;
+}
+
 .club-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1126,6 +1131,18 @@ button {
 @media (min-width: 1080px) {
   .digital-walk-stop-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .digital-walk-stop-grid.has-centered-single-last > .digital-walk-stop-card:last-child {
+    grid-column: 2;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1079px) {
+  .digital-walk-stop-grid.has-centered-single-last > .digital-walk-stop-card:last-child {
+    width: calc((100% - 1rem) / 2);
+    grid-column: 1 / -1;
+    justify-self: center;
   }
 }
 
