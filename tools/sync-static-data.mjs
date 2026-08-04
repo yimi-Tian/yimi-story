@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const FORBIDDEN_YG01_COVER = "public/images/digital/digital-walks/DW-YG-001/YG-01/cover.jpg";
+const YANGUAN_ROUTE_ID = "DW-YG-001";
+const YANGUAN_ROUTE_MAP = "public/images/digital/digital-walks/DW-YG-001/route-map/route-map.png";
 const WANTAN_ROUTE_ID = "DW-WT-001";
 const WANTAN_TOBACCO_BUILDING_STOP_ID = "WT-05";
 const WANTAN_MANGO_TREE_STOP_ID = "WT-03";
@@ -75,6 +77,9 @@ async function validateDigitalWalks(data) {
     }
 
     if (route.id === WANTAN_ROUTE_ID) validateWantanRoute(route);
+    if (route.id === YANGUAN_ROUTE_ID && route.routeMapImage !== YANGUAN_ROUTE_MAP) {
+      throw new Error(`鹽館路線圖必須使用 ${YANGUAN_ROUTE_MAP}。`);
+    }
 
     const imagePaths = [
       route.coverImage,

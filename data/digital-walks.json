@@ -21,7 +21,7 @@
       ],
       "summary": "鹽館聚落線上數位走讀以地方信仰、生活地景與菸業記憶為主軸，依序認識福仙宮、舊土地公廟、清山寺、夫妻樹、晉南宮、傳統洗衣池及鹽館菸樓。透過現場照片與地方故事，呈現聚落信仰、居民生活及產業發展留下的文化痕跡。",
       "coverImage": "public/images/digital/digital-walks/DW-YG-001/cover.jpg",
-      "routeMapImage": null,
+      "routeMapImage": "public/images/digital/digital-walks/DW-YG-001/route-map/route-map.png",
       "publicationStatus": "draft",
       "publiclyListed": false,
       "stops": [
