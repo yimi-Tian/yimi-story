@@ -2912,6 +2912,40 @@ code {
   object-fit: cover;
 }
 
+.class-result-card-details {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  color: var(--color-text-muted, #5f6f76);
+  font-size: 0.86rem;
+}
+
+.class-result-card-details div {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.class-result-card-details dt {
+  font-weight: 800;
+}
+
+.class-result-card-details dd {
+  min-width: 0;
+  margin: 0;
+}
+
+.showcase-photo-grid.is-class-results .showcase-photo-body > p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.class-result-card-sdgs span {
+  background: rgba(11, 111, 164, 0.08);
+}
+
 .class-result-detail-head h1 {
   font-size: clamp(1.75rem, 5vw, 2.6rem);
 }
