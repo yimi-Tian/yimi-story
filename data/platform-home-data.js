@@ -71,7 +71,7 @@ window.PLATFORM_HOME_DATA = {
     }
   ],
   "platformStats": [
-    { "label": "活動成果", "value": "62", "unit": "筆", "description": "歷年正式活動成果" },
+    { "label": "活動成果", "value": "63", "unit": "筆", "description": "歷年正式活動成果" },
     { "label": "照片素材", "value": "120", "unit": "張", "description": "地方學習影像紀錄" },
     { "label": "地方主題", "value": "5", "unit": "大", "description": "地方議題成果脈絡" },
     { "label": "探索入口", "value": "4", "unit": "個", "description": "地方知識探索模組" },
