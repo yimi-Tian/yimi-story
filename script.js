@@ -2477,7 +2477,11 @@ function selectShowcaseFeaturedItems(activities) {
 function getApprovedClassResults() {
   return classResultsData
     .filter((item) => item && item.publicationStatus === "approved")
-    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0));
+    .sort((a, b) => {
+      const orderA = Number.isFinite(Number(a.displayOrder)) ? Number(a.displayOrder) : Number.MAX_SAFE_INTEGER;
+      const orderB = Number.isFinite(Number(b.displayOrder)) ? Number(b.displayOrder) : Number.MAX_SAFE_INTEGER;
+      return orderA - orderB || String(a.id || "").localeCompare(String(b.id || ""), "en", { numeric: true });
+    });
 }
 
 function getClassResultImages(result) {
@@ -2525,11 +2529,14 @@ function buildClassResultItems(results) {
       fallbacks: images.filter((item) => item !== image).concat(showcaseData.placeholderImage || PLACEHOLDER),
       activityId: result.relatedActivityId || "",
       activityName: result.title || result.className || "班級花絮與成果",
+      className: result.className || "",
+      instructor: result.instructor || "",
+      venue: result.venue || "",
       year: String(result.year || ""),
       yearLabel: "",
       districts: Array.isArray(result.districts) ? result.districts : [],
       activityType: "班級花絮與成果",
-      topic: result.summary || "",
+      topic: result.summary || result.description || "",
       tags: Array.isArray(result.tags) ? result.tags : [],
       sdgs: Array.isArray(result.sdgs) ? result.sdgs : [],
       searchText: searchableValues.flatMap((value) => Array.isArray(value) ? value : [value])
@@ -2611,12 +2618,6 @@ function renderClassResultDetail(classResultId) {
         </div>
       </section>
     ` : ""}
-    ${result.credits ? `
-      <section class="detail-section class-result-credits">
-        <h2>照片署名</h2>
-        <p>${result.credits}</p>
-      </section>
-    ` : ""}
   `;
 
   app.querySelector(".history-back-link")?.addEventListener("click", () => {
@@ -2667,14 +2668,23 @@ function showcasePhotoCard(item) {
   ].filter(Boolean);
   const cardTags = item.tags?.length ? item.tags : item.sdgs;
   const fallbacks = unique(item.fallbacks || []).filter((path) => path && path !== item.image).join("|");
+  const classDetails = item.type === "class-results"
+    ? [
+        ["課程名稱", item.className],
+        ["授課教師", item.instructor],
+        ["上課地點", item.venue],
+      ].filter(([, value]) => value)
+    : [];
   return `
     <a class="showcase-photo-card" href="${item.href || `#/overview/activity/${encodeURIComponent(item.activityId)}/${item.year || ""}`}" data-showcase-type="${item.type}" data-showcase-year="${item.year || ""}" data-showcase-districts="${(item.districts || []).join("|")}">
       <img src="${item.image}" data-image-fallbacks="${fallbacks}" alt="${item.imageAlt || `${item.activityName}成果照片`}"${item.lazyImage ? ' loading="lazy"' : ""}>
       <div class="showcase-photo-body">
         ${meta.length ? `<div class="showcase-photo-meta">${meta.map((value) => `<span>${value}</span>`).join("")}</div>` : ""}
         <h3>${item.activityName}</h3>
+        ${classDetails.length ? `<dl class="class-result-card-details">${classDetails.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("")}</dl>` : ""}
         ${item.topic ? `<p>${item.topic}</p>` : ""}
         ${cardTags?.length ? `<div class="showcase-sdg-tags">${cardTags.slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}</div>` : ""}
+        ${item.type === "class-results" && item.sdgs?.length ? `<div class="showcase-sdg-tags class-result-card-sdgs">${item.sdgs.map((sdg) => `<span>${sdg}</span>`).join("")}</div>` : ""}
         <span class="showcase-view-link">查看成果 →</span>
       </div>
     </a>

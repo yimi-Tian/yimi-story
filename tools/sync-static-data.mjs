@@ -15,7 +15,12 @@ const ENKA_CLUB_ID = "enka-singing";
 const SAXOPHONE_CLUB_ID = "saxophone-group";
 const targets = [
   { json: "data/showcase.json", js: "data/showcase-data.js", globalName: "SHOWCASE_DATA" },
-  { json: "data/class-results.json", js: "data/class-results-data.js", globalName: "CLASS_RESULTS_DATA" },
+  {
+    json: "data/class-results.json",
+    js: "data/class-results-data.js",
+    globalName: "CLASS_RESULTS_DATA",
+    validate: validateClassResults,
+  },
   {
     json: "data/digital-walks.json",
     js: "data/digital-walks-data.js",
@@ -44,6 +49,60 @@ for (const target of loadedTargets) {
   const output = `// Generated from ${target.json} by tools/sync-static-data.mjs. Do not edit by hand.\nwindow.${target.globalName} = ${JSON.stringify(data, null, 2)};\n`;
   await writeFile(jsPath, output, "utf8");
   console.log(`Updated ${target.js}`);
+}
+
+async function validateClassResults(data) {
+  if (!Array.isArray(data)) throw new Error("班級花絮與成果資料必須為陣列。");
+
+  const ids = new Set();
+  const displayOrders = new Set();
+  const forbiddenFields = [
+    "photo_credit",
+    "photo_source",
+    "portrait_status",
+    "public_status",
+    "credits",
+    "sourceType",
+    "sourceLabel",
+    "containsPortrait",
+    "rightsNote",
+  ];
+  const collator = new Intl.Collator("en", { numeric: true, sensitivity: "case" });
+
+  for (const item of data) {
+    assertUnique(ids, item.id, "班級成果 ID");
+    assertUnique(displayOrders, item.displayOrder, "班級成果排序");
+    for (const field of ["title", "className", "instructor", "description", "venue", "photoFolder"]) {
+      if (typeof item[field] !== "string" || !item[field].trim()) {
+        throw new Error(`班級成果 ${item.id} 缺少必要欄位：${field}`);
+      }
+    }
+    if (item.photoFolder !== item.id) throw new Error(`班級成果 ${item.id} 的 photoFolder 必須與 ID 相同。`);
+    if (item.publicationStatus !== "approved") throw new Error(`班級成果 ${item.id} 的 publicationStatus 必須為 approved。`);
+    if (!Array.isArray(item.districts) || item.districts.length !== 1 || !item.districts[0]) {
+      throw new Error(`班級成果 ${item.id} 必須有一個有效地區。`);
+    }
+    if (!Array.isArray(item.tags) || !Array.isArray(item.sdgs) || item.sdgs.some((sdg) => !/^SDG \d{1,2}$/.test(sdg))) {
+      throw new Error(`班級成果 ${item.id} 的標籤或 SDGs 格式不正確。`);
+    }
+    const presentForbidden = forbiddenFields.filter((field) => Object.prototype.hasOwnProperty.call(item, field));
+    if (presentForbidden.length) {
+      throw new Error(`班級成果 ${item.id} 不得包含舊欄位：${presentForbidden.join("、")}`);
+    }
+
+    const expectedPrefix = `public/images/class-results/${item.photoFolder}/`;
+    if (item.coverImage !== `${expectedPrefix}cover.jpg`) {
+      throw new Error(`班級成果 ${item.id} 的封面必須為 ${expectedPrefix}cover.jpg。`);
+    }
+    const images = Array.isArray(item.images) ? item.images : [];
+    if (images.some((image) => !image.startsWith(expectedPrefix) || image === item.coverImage)) {
+      throw new Error(`班級成果 ${item.id} 的相簿路徑不正確或重複加入封面。`);
+    }
+    if (JSON.stringify(images) !== JSON.stringify([...images].sort((a, b) => collator.compare(a, b)))) {
+      throw new Error(`班級成果 ${item.id} 的相簿未依檔名自然排序。`);
+    }
+    for (const imagePath of [item.coverImage, ...images]) await assertExactRelativePath(imagePath);
+  }
 }
 
 async function validateDigitalWalks(data) {
