@@ -470,7 +470,7 @@ function renderYearOverview(selectedYear) {
               </details>
               <label class="filter-control filter-search-control">
                 <span>關鍵字搜尋</span>
-                <input type="search" data-filter-keyword aria-label="搜尋活動名稱、主題或地點" placeholder="搜尋活動名稱、主題或地點" autocomplete="off">
+                <input type="search" data-filter-keyword aria-label="搜尋活動名稱、主題、地點或講師" placeholder="搜尋活動名稱、主題、地點或講師" autocomplete="off">
               </label>
               <button class="clear-filter-button" type="button" data-clear-filters>清除篩選</button>
             </div>
@@ -2926,6 +2926,7 @@ function initYearOverviewFilters(activities) {
         activity.keywords,
         activity.place,
         activity.project,
+        activity.leader,
         ...(activity.districts || []),
       ].filter(Boolean).join(" ").toLocaleLowerCase("zh-Hant");
       return (
