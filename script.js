@@ -3286,7 +3286,8 @@ function parseNumber(value) {
 
 function normalizeImagePath(src, id) {
   if (!src) return "";
-  if (/^(https?:|data:)/.test(src)) return src;
+  if (/^https:\/\//i.test(src)) return src;
+  if (/^(?:http:|data:|blob:|javascript:)/i.test(src)) return "";
   const clean = src.replace(/^\/+/, "");
   if (clean.startsWith("public/")) return clean;
   if (clean.startsWith("images/")) return `public/${clean}`;

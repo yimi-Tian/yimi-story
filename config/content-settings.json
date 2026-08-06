@@ -1,0 +1,18 @@
+{
+  "allowedDistricts": [
+    "朴子市",
+    "中埔鄉",
+    "水上鄉",
+    "新港鄉",
+    "太保市",
+    "鹿草鄉",
+    "布袋鎮",
+    "東石鄉",
+    "義竹鄉",
+    "六腳鄉"
+  ],
+  "allowedExternalImageHosts": [],
+  "maxGalleryImages": 30,
+  "maxImageBytes": 10485760,
+  "maxImageDimension": 6000
+}

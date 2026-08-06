@@ -1,0 +1,26 @@
+export type ActivityData = {
+  id: string;
+  year: number;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  dateLabel: string;
+  districts: string[];
+  venue: string;
+  projectName: string | null;
+  activityType: string;
+  topic: string;
+  sdgs: string[];
+  summary: string;
+  participants: number | null;
+  partnerOrganizations: string | null;
+  leader: string | null;
+  keywords: string[];
+  videoUrl: string | null;
+  relatedUrl: string | null;
+  featured: boolean;
+  internalNotes: string | null;
+  publicNotes: string | null;
+  coverAssetId: string | null;
+  galleryAssetIds: string[];
+};
