@@ -4,6 +4,8 @@ import { read } from "./contract-helpers.mjs";
 
 test(".gitignore 不隱藏既有 public 素材", () => {
   const ignore = read(".gitignore");
+  assert.match(ignore, /(^|\n)supabase\/\.temp\//i);
+  assert.match(ignore, /(^|\n)supabase\/\.branches\//i);
   assert.doesNotMatch(ignore, /(^|\n)\/?public\/(images|docs)\/?(\n|$)/i);
   assert.doesNotMatch(ignore, /(^|\n)\/?public\//i);
 });

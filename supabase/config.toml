@@ -35,7 +35,7 @@ enable_anonymous_sign_ins = false
 enable_refresh_token_rotation = true
 
 [auth.email]
-enable_signup = false
+enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 secure_password_change = true

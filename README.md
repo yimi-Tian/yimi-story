@@ -220,7 +220,7 @@ node --test tests/content/*.test.mjs
 
 ### Auth 與 RLS
 
-- Email/password login 可用，但 `auth.enable_signup`、`auth.email.enable_signup` 與 anonymous sign-in 均關閉。
+- Email/password provider 保持啟用供既有管理員登入；全域 `auth.enable_signup` 與 anonymous sign-in 關閉，因此公開註冊仍不可用。
 - 正式管理員帳號由 Supabase Dashboard 或安全 admin 流程建立；repository 不存放 Email、密碼或預設密碼。
 - `public.is_active_admin()` 是固定 `search_path` 的 `security definer` helper，避免查詢 `admin_users` 時發生 RLS recursion。
 - anonymous、一般登入者與停權管理員無後台資料權限。

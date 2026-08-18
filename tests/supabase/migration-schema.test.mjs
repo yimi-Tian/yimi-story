@@ -88,7 +88,7 @@ test("Auth config 關閉 public signup 且 env 範本沒有真實 secret", () =>
   const config = read("supabase/config.toml");
   const envExample = read(".env.example");
   assert.match(config, /\[auth\][\s\S]*?enable_signup\s*=\s*false/i);
-  assert.match(config, /\[auth\.email\][\s\S]*?enable_signup\s*=\s*false/i);
+  assert.match(config, /\[auth\.email\][\s\S]*?enable_signup\s*=\s*true/i);
   assert.match(config, /enable_anonymous_sign_ins\s*=\s*false/i);
   assert.match(envExample, /SUPABASE_SERVICE_ROLE_KEY=server-only/);
   assert.doesNotMatch(envExample, /gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_|eyJ[A-Za-z0-9_-]{20,}\./);

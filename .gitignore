@@ -6,4 +6,5 @@ node_modules/
 dist/
 .supabase/
 supabase/.temp/
+supabase/.branches/
 coverage/
