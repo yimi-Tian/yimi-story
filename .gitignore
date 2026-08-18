@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.*.local
+!.env.example
+node_modules/
+dist/
+.supabase/
+supabase/.temp/
+supabase/.branches/
+coverage/

@@ -1,0 +1,4 @@
+-- Stage 2 intentionally does not seed auth.users or production content.
+-- Create disposable local Auth users through Supabase Studio or an explicit
+-- test-only admin script, then insert a matching public.admin_users row with
+-- service-role privileges. Never commit real email addresses or passwords.
