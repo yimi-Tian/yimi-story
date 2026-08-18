@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  baselineSql,
   coreSql,
   enumValues,
   migrationFiles,
@@ -12,9 +13,10 @@ test("migration 採穩定順序且不含 destructive drop", () => {
   assert.deepEqual(migrationFiles, [
     "202608180001_admin_foundation.sql",
     "202608180002_storage_policies.sql",
+    "202608180003_baseline_import_support.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }
