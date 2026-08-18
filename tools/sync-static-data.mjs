@@ -1,8 +1,10 @@
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadContentSettings, validateImageReference } from "./content/validate-image-url.mjs";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const contentSettings = await loadContentSettings();
 const FORBIDDEN_YG01_COVER = "public/images/digital/digital-walks/DW-YG-001/YG-01/cover.jpg";
 const YANGUAN_ROUTE_ID = "DW-YG-001";
 const YANGUAN_ROUTE_MAP = "public/images/digital/digital-walks/DW-YG-001/route-map/route-map.png";
@@ -91,17 +93,25 @@ async function validateClassResults(data) {
     }
 
     const expectedPrefix = `public/images/class-results/${item.photoFolder}/`;
-    if (item.coverImage !== `${expectedPrefix}cover.jpg`) {
+    const coverIsExternal = /^https:\/\//i.test(item.coverImage);
+    if (!coverIsExternal && item.coverImage !== `${expectedPrefix}cover.jpg`) {
       throw new Error(`班級成果 ${item.id} 的封面必須為 ${expectedPrefix}cover.jpg。`);
     }
     const images = Array.isArray(item.images) ? item.images : [];
-    if (images.some((image) => !image.startsWith(expectedPrefix) || image === item.coverImage)) {
+    if (images.some((image) => (!/^https:\/\//i.test(image) && !image.startsWith(expectedPrefix)) || image === item.coverImage)) {
       throw new Error(`班級成果 ${item.id} 的相簿路徑不正確或重複加入封面。`);
     }
     if (JSON.stringify(images) !== JSON.stringify([...images].sort((a, b) => collator.compare(a, b)))) {
       throw new Error(`班級成果 ${item.id} 的相簿未依檔名自然排序。`);
     }
-    for (const imagePath of [item.coverImage, ...images]) await assertExactRelativePath(imagePath);
+    for (const imagePath of [item.coverImage, ...images]) {
+      if (/^https:\/\//i.test(imagePath)) {
+        const validation = await validateImageReference(imagePath, { settings: contentSettings, field: `${item.id}.images` });
+        if (!validation.valid) throw new Error(validation.errors.map((issue) => issue.message).join("\n"));
+      } else {
+        await assertExactRelativePath(imagePath);
+      }
+    }
   }
 }
 
