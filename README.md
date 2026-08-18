@@ -274,3 +274,39 @@ v1/activities/{public_id}/{asset_uuid}-{sha256前12碼}.{ext}
 - Draft PR 自動建立
 - 正式圖片遷移
 - 多角色審核或自動合併
+
+## 後台 V1.0 階段 3：既有內容 Supabase 基準匯入
+
+本階段把 GitHub `main` 已公開的 56 筆班級成果與 63 筆活動，映射成 local Supabase 的 baseline published state。GitHub `main` 靜態 JSON、CSV 與 fallback 仍是 production source；公開網站不讀取 Supabase，匯入器也不修改任何正式內容或圖片。
+
+Canonical source 只有 `data/class-results.json` 與 `activities.csv`。fallback 僅由既有回歸測試驗證一致性，不作匯入來源。執行 dry-run 不連線或寫入 DB：
+
+```powershell
+node tools/import-baseline-to-supabase.mjs --dry-run
+```
+
+套用前必須先啟動 local Supabase 並重跑 migrations：
+
+```powershell
+supabase start
+supabase db reset
+node tools/import-baseline-to-supabase.mjs --apply
+```
+
+`--apply` 僅接受 `localhost`、`127.0.0.1` 或 `::1` 的 `54322` port，且會再確認 local DB container port；不提供 production override。匯入以單一 transaction 執行，預期建立 119 個 `content_items`、119 個 `baseline_published` snapshots、714 個 `github_legacy` media metadata，並保持 0 個 drafts、0 個 GitHub publication jobs、0 個 Storage objects。
+
+Baseline snapshot 使用既有 schema version，`snapshot_source = baseline_import`、`source_draft_id = NULL`、`source_revision = 0`。這代表 CMS revision history 之前的已發布起點，不會為滿足 FK 建立假 draft。local integration 使用固定的 `baseline-importer@example.test` system identity，只作 created-by FK；未來 cloud baseline 必須建立 production-specific import identity，不可沿用 local UUID，也不得把它當管理員帳號。
+
+Legacy media 不搬移、不轉檔、不上傳 Storage。metadata 由 tracked 圖片 header 與檔案內容取得 filename、MIME、尺寸、bytes 與 SHA-256；`rights_status = legacy_retained`，未經檢視的 portrait metadata 以 `contains_portrait = NULL` 表示 unknown。新上傳仍要求明確 portrait metadata，不因 legacy 規則而放寬。
+
+每個 snapshot checksum 由固定 schema version、完整 canonical CMS data 與 stable media manifest 產生；object key 排序固定、array 保留正式順序，不包含 UUID、timestamp 或機器路徑。相同來源再次 apply 會略過 119 筆且不新增資料；同一 `content_type + public_id` 的 checksum 或 media metadata 不同時，整筆 transaction 以 `BASELINE_CONFLICT` 中止，不會 silently overwrite 歷史。
+
+既有 63 筆不可安全解析的日期保留原 `dateLabel`，4 筆服務範圍外 district 原值保留，`112-015` 缺封面亦不補造；這 68 筆 legacy warnings 不阻擋 baseline。完整 canonical snapshot 可保留 `internalNotes`，但 public JSON、CSV 與 fallback exporter 仍必須排除內部備註。
+
+一般契約測試不要求 Docker；真正 local integration 必須明確開啟：
+
+```powershell
+node --test tests/supabase/*.test.mjs
+$env:YIMI_RUN_SUPABASE_INTEGRATION = "1"
+node --test tests/supabase/baseline-import.integration.test.mjs
+```

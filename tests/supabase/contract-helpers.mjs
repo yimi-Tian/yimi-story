@@ -17,6 +17,9 @@ export const coreSql = read(
 export const storageSql = read(
   "supabase/migrations/202608180002_storage_policies.sql",
 );
+export const baselineSql = read(
+  "supabase/migrations/202608180003_baseline_import_support.sql",
+);
 
 export function policyBlock(sql, policyName) {
   const escaped = policyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
