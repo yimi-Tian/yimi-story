@@ -176,3 +176,101 @@ node --test tests/content/*.test.mjs
 - 禁止使用 `git clean` 或 `git reset --hard`。
 - 不得搬移、刪除、忽略化或提交既有未追蹤素材。
 - deterministic exporter 不掃描未追蹤目錄，也不修改圖片檔案。
+
+## 後台 V1.0 階段 2：Supabase 基礎架構
+
+本階段加入可版本控制的 Supabase local development 基礎，不建立或連結正式雲端專案。公開網站仍只讀取已合併至 `main` 的靜態資料，Supabase 草稿不會直接進入前台。
+
+### 架構與 migrations
+
+`supabase/config.toml` 定義本機 Auth、Database、Storage 與 Edge Function 設定。兩支 migration 依穩定順序執行：
+
+1. `202608180001_admin_foundation.sql`：9 個 enum、6 張管理 table、foreign keys、updated_at/revision triggers、RLS 與最小 grants。
+2. `202608180002_storage_policies.sql`：`cms-drafts`、`cms-public` buckets 與 Storage policies。
+
+主要 table：
+
+- `admin_users`：Supabase Auth 使用者的 V1 管理員 allow-list；只可由安全 migration、本機管理流程或 service role 維護。
+- `content_items`：班級花絮與活動的穩定公開 ID。
+- `content_drafts`：每個內容一份 active draft；每次 UPDATE 由 DB trigger 自動將 `revision` 加一。
+- `media_assets`：既有 GitHub 圖片及新上傳圖片的 metadata，刪除狀態使用 `deleted_at`。
+- `publication_snapshots`：不可由瀏覽器修改的核准發布快照。
+- `github_publications`：預留未來 Draft PR 發布狀態，本階段不呼叫 GitHub。
+
+### Local development
+
+需要 Supabase CLI 及 Docker-compatible runtime。不要執行 `supabase link`，也不要填入 production project ref：
+
+```powershell
+supabase start
+supabase db reset
+supabase functions serve --env-file .env.local
+```
+
+`supabase db reset` 會從空白本機資料庫重跑 migrations 與 `supabase/seed.sql`。本階段 seed 刻意不建立 `auth.users`、正式內容、真實 Email 或密碼；測試管理員應透過本機 Studio 或明確的 test-only admin 流程建立。
+
+目前 repository 契約測試不需要 Docker：
+
+```powershell
+node --test tests/supabase/*.test.mjs
+node --test tests/content/*.test.mjs
+```
+
+若系統 PATH 沒有 Node，可改用 Codex bundled Node 的完整路徑。完整 migration、RLS 與 Storage 整合測試仍應在具備 Docker 的環境執行 `supabase db reset` 後確認。
+
+### Auth 與 RLS
+
+- Email/password login 可用，但 `auth.enable_signup`、`auth.email.enable_signup` 與 anonymous sign-in 均關閉。
+- 正式管理員帳號由 Supabase Dashboard 或安全 admin 流程建立；repository 不存放 Email、密碼或預設密碼。
+- `public.is_active_admin()` 是固定 `search_path` 的 `security definer` helper，避免查詢 `admin_users` 時發生 RLS recursion。
+- anonymous、一般登入者與停權管理員無後台資料權限。
+- active admin 可 SELECT/INSERT/UPDATE content、draft 與 media，但 V1 不提供 DELETE。
+- active admin 對 `publication_snapshots`、`github_publications` 僅能 SELECT；寫入保留給 service role／Edge Function。
+
+### Storage
+
+`cms-drafts` 是 private bucket，限制 10 MB，接受 JPEG、PNG、WebP。active admin 只能操作以自己 UUID 開頭的路徑：
+
+```text
+{user_id}/{content_type}/{content_uuid}/{asset_uuid}/original.{ext}
+```
+
+V1 允許刪除自己 prefix 下的 draft object；對應 `media_assets` 仍採 `deleted_at` soft delete。後續 UI 預覽應簽發 10 分鐘 signed URL。
+
+`cms-public` 是 public-read bucket，browser role 沒有寫入 policy，只有 service role／Edge Function 可發布：
+
+```text
+v1/class-results/{public_id}/{asset_uuid}-{sha256前12碼}.{ext}
+v1/activities/{public_id}/{asset_uuid}-{sha256前12碼}.{ext}
+```
+
+既有 GitHub 圖片保持原路徑，本階段不搬遷也不上傳正式圖片。
+
+### Edge Functions
+
+- `admin-health`：公開 runtime health check，只回傳 `ok`、service version 與 timestamp。
+- `validate-admin`：要求使用者 JWT，重新向 Supabase Auth 驗證後查詢 `admin_users.is_active`；未登入回 401，非管理員或停權管理員回 403。
+- `_shared`：集中 CORS、JSON response、可測試的 admin handler 與 server-only Supabase 查詢。
+
+允許的瀏覽器 origin 由 `ADMIN_ALLOWED_ORIGIN` 設定，不使用 `*`。Client response 不回傳 stack、env、key、token 或 project secret。
+
+### 環境變數與 secrets
+
+複製 `.env.example` 為本機 `.env.local` 後再填入本機值；`.env.local` 已被忽略：
+
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`：僅 Edge Function/server 使用，禁止進瀏覽器 bundle。
+- `ADMIN_ALLOWED_ORIGIN`
+- GitHub App 變數名稱只為後續階段預留，本階段未使用。
+
+任何真實 key、JWT secret、GitHub private key、production host 或管理員憑證都不得 commit。
+
+### 本階段未包含
+
+- React 後台 UI
+- 56 筆班級與 63 筆活動正式匯入
+- GitHub App 或 GitHub API
+- Draft PR 自動建立
+- 正式圖片遷移
+- 多角色審核或自動合併
