@@ -121,7 +121,10 @@ test("Stage 3 migration 明確區分 baseline snapshot，legacy portrait unknown
 
 test("production/import transaction 的 result temp table 在 pooler backend commit後清除", async () => {
   const source = await readFile(resolve(root, "tools/baseline/baseline-db.mjs"), "utf8");
+  const resultCommitPattern = /\)::text from baseline_import_result;\r?\ncommit;/i;
   assert.match(source, /drop table if exists pg_temp\.baseline_import_result/i);
   assert.match(source, /create temporary table baseline_import_result[\s\S]*on commit drop/i);
-  assert.match(source, /\)::text from baseline_import_result;\ncommit;/i);
+  assert.match(source, resultCommitPattern);
+  assert.match(")::text from baseline_import_result;\ncommit;", resultCommitPattern);
+  assert.match(")::text from baseline_import_result;\r\ncommit;", resultCommitPattern);
 });
