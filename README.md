@@ -310,3 +310,71 @@ node --test tests/supabase/*.test.mjs
 $env:YIMI_RUN_SUPABASE_INTEGRATION = "1"
 node --test tests/supabase/baseline-import.integration.test.mjs
 ```
+
+## 後台 V1.0 階段 4A：Cloud Supabase 正式資料層
+
+Cloud Supabase 是未來 CMS 的正式後端；目前公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證，但不部署 production Edge Functions，也不宣告 managed CORS 驗收完成。本階段沒有 React 後台 UI、GitHub App、Draft PR 自動發布或既有圖片搬遷。
+
+### Production Auth 與 identities
+
+- Email/password 登入啟用，但 public signup、anonymous sign-in 與公開 onboarding 關閉。
+- V1 只有一個 active admin；管理員 Email 不寫入 repository，密碼必須由管理員本人透過安全流程設定。
+- baseline 使用獨立的 production system identity 作為 `created_by` provenance。該 identity 不加入 `admin_users`、禁止一般登入，也不可沿用 local 固定 UUID。
+- Stage 4 migration 使 `content_type`、`public_id` 與 `created_by` 在建立後不可更改；active admin 可編輯 system-owned baseline 的其他允許欄位。
+
+### Migration 與 drift 原則
+
+Cloud schema 只能透過 repository 中依序版本化的 migration 變更。正式套用前須先執行 linked migration list、`db push --dry-run`，確認沒有非預期 drop、truncate 或 delete，再執行 `db push`。已合併的歷史 migration 不回寫修改；需要修正時新增 migration。Dashboard 人工建立的 admin/system identity 是資料差異，不得以未記錄 SQL 造成 schema drift。
+
+### Production baseline 安全模式
+
+一般 `--apply` 仍只接受 local Supabase。正式匯入必須額外指定 `--production-baseline`，且下列條件必須全部成立：
+
+- `ALLOW_PRODUCTION_BASELINE_IMPORT=true`
+- expected、actual 與 confirmation project ref 完全相同
+- expected region 與官方 pooler host 完全相符
+- database URL 只能指向該 project 的 direct database 或官方 shared pooler
+- production system actor UUID 有效且不是 local 固定 identity
+
+缺少任一 gate 就拒絕連線。匯入使用單一 transaction，保留 checksum conflict 與 idempotency；不允許 arbitrary remote host 或 overwrite。正式 baseline 為 56 筆班級、63 筆活動、119 個 published snapshots 與 714 個 `github_legacy` media metadata，drafts 與 GitHub publication jobs 皆為 0。714 張既有圖片不會上傳或搬移。
+
+### Secrets 管理
+
+`.env.example` 只能保存 placeholder。真實 project ref、DB password、管理員 Email 與一次性匯入 gate 應放在 ignored 且限制存取的本機檔案。publishable key 可供未來 browser 使用；service role key、DB password 與 Edge Function privileged operations 永遠只存在 server-side。service role key 不得進 React bundle、log、回覆或 Git。Edge Function secrets 由 Supabase secrets 管理。
+
+### Cloud RLS 與 Storage
+
+- anonymous、一般登入者與 inactive admin 無 CMS table 權限；active admin 只能依 Stage 2 RLS 操作 content、draft 與 media，publication snapshot 與 GitHub publication 仍是唯讀。
+- `cms-drafts` 保持 private、10 MB、JPEG/PNG/WebP，active admin 只能操作自己的 UUID prefix，預覽使用短效 signed URL。
+- `cms-public` 可公開讀取，但 browser admin 不可寫入；只有 service role／Edge Function 可以發布。
+
+Stage 4A 已在 managed Cloud 實測 anonymous、non-admin、inactive admin 與 active admin 的 RLS 邊界，也完成兩個 bucket 的 private/public、prefix、signed URL 與 browser/service-role 寫入邊界。測試帳號、資料列及 Storage objects 已清除。
+
+### Stage 4B：Edge Functions 與 managed CORS
+
+`admin-health` 與 `validate-admin` 的程式及契約測試已存在，但 Stage 4A 不部署至 production。因 React 後台尚未建立，目前沒有可驗證的 production HTTPS admin origin，所以不設定 `ADMIN_ALLOWED_ORIGIN`，也不使用 GitHub Pages 正式網站、localhost、Supabase Dashboard 或假網域替代。
+
+先完成 Stage 5A「React 後台最小骨架與正式 HTTPS 部署」，取得真實 origin 後，再回到 Stage 4B：
+
+1. 以 Supabase secrets 設定精確的 `ADMIN_ALLOWED_ORIGIN`，不使用 wildcard。
+2. 部署 `admin-health` 與 `validate-admin`。
+3. 驗證 allowed origin、unknown origin、OPTIONS、no JWT、non-admin、inactive admin 與 active admin。
+4. managed gateway 驗收通過後，才將 `LOCAL-CORS-001` 標記為 production closed。
+
+正式 Storage host 為該 project 的 `https://<project-ref>.supabase.co`。目前公開網站沒有 Supabase 圖片，因此 `allowedExternalImageHosts` 維持空陣列；等第一張 `cms-public` 圖片確定要發布時，再以獨立變更加入真實 host 並執行前台回歸。
+
+### 安全操作順序
+
+```powershell
+supabase migration list --linked
+supabase db push --dry-run
+supabase db push
+node tools/import-baseline-to-supabase.mjs --dry-run
+node tools/import-baseline-to-supabase.mjs --production-baseline --apply
+```
+
+最後一個指令只有在所有 production gates 由受保護的 process environment 提供時才會執行。不要將含 secret 的 command line、輸出或 `.env` 檔加入版本控制。
+
+### Stage 4A 完成界線
+
+Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。正式 Edge Functions deployment 與 managed CORS 最終驗收保留給 Stage 4B；在此之前不具備開始後台寫入 API production 驗收的條件。
