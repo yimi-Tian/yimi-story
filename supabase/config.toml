@@ -44,4 +44,4 @@ secure_password_change = true
 verify_jwt = false
 
 [functions.validate-admin]
-verify_jwt = true
+verify_jwt = false

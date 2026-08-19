@@ -1,8 +1,13 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 export const BASELINE_IMPORT_USER_ID = "00000000-0000-4000-8000-000000000119";
 export const LOCAL_DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 const DB_CONTAINER = "supabase_db_yimi-story-local";
+const PROJECT_REF_PATTERN = /^[a-z0-9]{20}$/;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function assertLocalDatabaseUrl(value) {
   let url;
@@ -12,6 +17,35 @@ export function assertLocalDatabaseUrl(value) {
   if (url.port !== "54322") throw new Error("基準匯入只允許 Supabase local DB port 54322");
   if (url.hostname.endsWith("supabase.co")) throw new Error("禁止對 managed Supabase 執行基準匯入");
   return url;
+}
+
+export function assertProductionDatabaseTarget(value, options = {}) {
+  const expectedProjectRef = options.expectedProjectRef || process.env.EXPECTED_SUPABASE_PROJECT_REF;
+  const actualProjectRef = options.projectRef || process.env.SUPABASE_PROJECT_REF;
+  const confirmation = options.confirmation || process.env.CONFIRM_PRODUCTION_BASELINE_IMPORT;
+  const allowProduction = options.allowProduction ?? process.env.ALLOW_PRODUCTION_BASELINE_IMPORT;
+  const actorId = options.actorId || process.env.PRODUCTION_BASELINE_ACTOR_ID;
+  const expectedRegion = options.expectedRegion || process.env.EXPECTED_SUPABASE_REGION;
+  if (allowProduction !== true && allowProduction !== "true") throw new Error("缺少 ALLOW_PRODUCTION_BASELINE_IMPORT=true");
+  if (!PROJECT_REF_PATTERN.test(expectedProjectRef || "")) throw new Error("EXPECTED_SUPABASE_PROJECT_REF 格式無效");
+  if (actualProjectRef !== expectedProjectRef) throw new Error("Supabase project ref 不符合 allowlist");
+  if (confirmation !== expectedProjectRef) throw new Error("缺少精確的 production baseline 確認值");
+  if (!UUID_PATTERN.test(actorId || "") || actorId === BASELINE_IMPORT_USER_ID) throw new Error("production baseline actor UUID 無效");
+  let url;
+  try { url = new URL(value); } catch { throw new Error("資料庫 URL 格式無效"); }
+  if (!['postgresql:', 'postgres:'].includes(url.protocol)) throw new Error("只允許 PostgreSQL URL");
+  const username = decodeURIComponent(url.username);
+  const directTarget = url.hostname === `db.${expectedProjectRef}.supabase.co`
+    && url.port === "5432"
+    && username === "postgres";
+  const poolerTarget = /^[a-z]{2}-[a-z]+-\d$/.test(expectedRegion || "")
+    && url.hostname === `aws-0-${expectedRegion}.pooler.supabase.com`
+    && ["5432", "6543"].includes(url.port)
+    && username === `postgres.${expectedProjectRef}`;
+  if (!directTarget && !poolerTarget) throw new Error("production database target 與 project ref/region allowlist 不符");
+  if (url.pathname !== "/postgres") throw new Error("production database 名稱無效");
+  if (!url.password) throw new Error("production database URL 缺少密碼");
+  return { url, expectedProjectRef, expectedRegion, actorId };
 }
 
 function runDocker(args, options = {}) {
@@ -36,7 +70,7 @@ function sqlJson(value) {
   return `${sqlText(JSON.stringify(value))}::jsonb`;
 }
 
-function recordSql(record) {
+function recordSql(record, actorId) {
   const mediaValues = record.media.map((asset) => `(
     v_content_id, null, 'github_legacy', ${sqlText(asset.role)}, ${asset.sortOrder}, ${sqlText(asset.legacyPath)},
     null, null, null, ${sqlText(asset.originalFilename)}, ${sqlText(asset.mimeType)}, ${sqlText(asset.extension)},
@@ -57,7 +91,7 @@ begin
 
   if v_content_id is null then
     insert into public.content_items (content_type, public_id, created_by)
-    values (${sqlText(record.contentType)}, ${sqlText(record.publicId)}, ${sqlText(BASELINE_IMPORT_USER_ID)}::uuid)
+    values (${sqlText(record.contentType)}, ${sqlText(record.publicId)}, ${sqlText(actorId)}::uuid)
     returning id into v_content_id;
 
     insert into public.publication_snapshots (
@@ -65,7 +99,7 @@ begin
       checksum_sha256, status, created_by, snapshot_source
     ) values (
       v_content_id, null, 0, ${sqlText(record.schemaVersion)}, ${sqlJson(record.snapshotData)}, ${sqlJson(record.mediaManifest)},
-      ${sqlText(record.checksumSha256)}, 'baseline_published', ${sqlText(BASELINE_IMPORT_USER_ID)}::uuid, 'baseline_import'
+      ${sqlText(record.checksumSha256)}, 'baseline_published', ${sqlText(actorId)}::uuid, 'baseline_import'
     ) returning id into v_snapshot_id;
 
     ${mediaValues ? `insert into public.media_assets (
@@ -115,9 +149,8 @@ end
 $baseline_record$;`;
 }
 
-function buildApplySql(plan) {
-  return `begin;
-insert into auth.users (
+function localActorSql() {
+  return `insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values (
@@ -132,12 +165,36 @@ begin
     raise exception 'BASELINE_CONFLICT: importer auth user differs';
   end if;
 end
-$baseline_user$;
+$baseline_user$;`;
+}
 
-create temporary table baseline_import_result (inserted integer not null, skipped integer not null, conflicts integer not null);
+function productionActorSql(actorId) {
+  return `do $baseline_user$
+begin
+  if not exists (select 1 from auth.users where id = ${sqlText(actorId)}::uuid) then
+    raise exception 'BASELINE_CONFLICT: production importer auth user is missing';
+  end if;
+  if exists (select 1 from public.admin_users where user_id = ${sqlText(actorId)}::uuid) then
+    raise exception 'BASELINE_CONFLICT: production importer must not be an admin';
+  end if;
+end
+$baseline_user$;`;
+}
+
+function buildApplySql(plan, options = {}) {
+  const actorId = options.actorId || BASELINE_IMPORT_USER_ID;
+  const actorSql = options.production ? productionActorSql(actorId) : localActorSql();
+  return `begin;
+${actorSql}
+
+drop table if exists pg_temp.baseline_import_result;
+create temporary table baseline_import_result (
+  inserted integer not null,
+  skipped integer not null,
+  conflicts integer not null
+) on commit drop;
 insert into baseline_import_result values (0, 0, 0);
-${plan.records.map(recordSql).join("\n")}
-commit;
+${plan.records.map((record) => recordSql(record, actorId)).join("\n")}
 select json_build_object(
   'inserted', inserted, 'skipped', skipped, 'conflicts', conflicts,
   'contentItems', (select count(*) from public.content_items),
@@ -145,7 +202,8 @@ select json_build_object(
   'mediaAssets', (select count(*) from public.media_assets),
   'contentDrafts', (select count(*) from public.content_drafts),
   'githubPublications', (select count(*) from public.github_publications)
-)::text from baseline_import_result;`;
+)::text from baseline_import_result;
+commit;`;
 }
 
 function executePsql(sql) {
@@ -157,6 +215,50 @@ export function applyBaselinePlan(plan, options = {}) {
   verifyLocalContainerPort();
   const lines = executePsql(buildApplySql(plan)).trim().split(/\r?\n/).filter(Boolean);
   return JSON.parse(lines.at(-1));
+}
+
+function executeRemotePsql(sql, target) {
+  const url = target.url;
+  const workDirectory = mkdtempSync(join(tmpdir(), "yimi-production-baseline-"));
+  const sqlPath = join(workDirectory, "baseline.sql");
+  try {
+    writeFileSync(sqlPath, sql, { encoding: "utf8", flag: "wx", mode: 0o600 });
+    const result = spawnSync("docker", [
+      "run", "--rm",
+      "-e", "PGPASSWORD",
+      "-e", "PGSSLMODE=require",
+      "--mount", `type=bind,source=${sqlPath},target=/tmp/baseline.sql,readonly`,
+      "postgres:17-alpine",
+      "psql", "-X", "-qAt", "-v", "ON_ERROR_STOP=1",
+      "-h", url.hostname,
+      "-p", url.port,
+      "-U", decodeURIComponent(url.username),
+      "-d", url.pathname.slice(1),
+      "-f", "/tmp/baseline.sql",
+    ], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+      env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password), PGSSLMODE: "require" },
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error((result.stderr || result.stdout || `docker exit ${result.status}`).trim());
+    return result.stdout;
+  } finally {
+    rmSync(workDirectory, { recursive: true, force: true });
+  }
+}
+
+export function applyProductionBaselinePlan(plan, options = {}) {
+  const target = assertProductionDatabaseTarget(options.databaseUrl, options);
+  const lines = executeRemotePsql(buildApplySql(plan, { production: true, actorId: target.actorId }), target)
+    .trim().split(/\r?\n/).filter(Boolean);
+  return JSON.parse(lines.at(-1));
+}
+
+export function queryProductionJson(sql, options = {}) {
+  const target = assertProductionDatabaseTarget(options.databaseUrl, options);
+  const output = executeRemotePsql(`select coalesce(json_agg(result), '[]'::json)::text from (${sql}) result;`, target).trim();
+  return JSON.parse(output);
 }
 
 export function queryLocalJson(sql, options = {}) {

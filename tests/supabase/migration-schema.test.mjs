@@ -7,6 +7,7 @@ import {
   migrationFiles,
   read,
   storageSql,
+  productionSql,
 } from "./contract-helpers.mjs";
 
 test("migration 採穩定順序且不含 destructive drop", () => {
@@ -14,12 +15,22 @@ test("migration 採穩定順序且不含 destructive drop", () => {
     "202608180001_admin_foundation.sql",
     "202608180002_storage_policies.sql",
     "202608180003_baseline_import_support.sql",
+    "202608180004_production_content_identity.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql, baselineSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql, productionSql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }
+});
+
+test("Stage 4 鎖定 content identity 與 provenance，並允許 active admin 更新 system-owned baseline", () => {
+  assert.match(productionSql, /create function public\.protect_content_item_identity\(\)/i);
+  assert.match(productionSql, /new\.content_type is distinct from old\.content_type/i);
+  assert.match(productionSql, /new\.public_id is distinct from old\.public_id/i);
+  assert.match(productionSql, /new\.created_by is distinct from old\.created_by/i);
+  assert.match(productionSql, /drop policy content_items_update_active_admin/i);
+  assert.match(productionSql, /create policy content_items_update_active_admin[\s\S]*with check \(public\.is_active_admin\(\)\)/i);
 });
 
 test("9 個 enum 與值符合 V1 契約", () => {

@@ -23,7 +23,7 @@ export function createValidateAdminHandler(
   logger: SafeLogger = console,
 ): (request: Request) => Promise<Response> {
   return async (request: Request): Promise<Response> => {
-    const headers = corsHeaders(request, allowedOrigin);
+    const headers = corsHeaders(request, allowedOrigin, ["POST", "OPTIONS"]);
 
     if (!isAllowedOrigin(request, allowedOrigin)) {
       return jsonResponse({ error: "origin_not_allowed" }, 403, headers);

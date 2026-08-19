@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { assertLocalDatabaseUrl } from "../../tools/baseline/baseline-db.mjs";
+import {
+  BASELINE_IMPORT_USER_ID,
+  assertLocalDatabaseUrl,
+  assertProductionDatabaseTarget,
+} from "../../tools/baseline/baseline-db.mjs";
 import { buildBaselinePlan, publicationRecordFromBaseline } from "../../tools/baseline/build-baseline.mjs";
 import { canonicalStringify, snapshotChecksum } from "../../tools/baseline/canonical-json.mjs";
 import { exportActivities } from "../../tools/export-activities.mjs";
@@ -88,6 +92,24 @@ test("資料庫安全閘門拒絕遠端 host 與非 local port", () => {
   assert.throws(() => assertLocalDatabaseUrl("postgresql://postgres:x@localhost:5432/postgres"), /54322/);
 });
 
+test("production baseline 需通過 project allowlist、精確 host、explicit gate 與不同 system actor", () => {
+  const ref = "abcdefghijklmnopqrst";
+  const actorId = "11111111-1111-4111-8111-111111111111";
+  const url = `postgresql://postgres:password@db.${ref}.supabase.co:5432/postgres`;
+  const options = { expectedProjectRef: ref, expectedRegion: "ap-northeast-2", projectRef: ref, confirmation: ref, allowProduction: "true", actorId };
+  assert.doesNotThrow(() => assertProductionDatabaseTarget(url, options));
+  assert.throws(() => assertProductionDatabaseTarget(url, { ...options, projectRef: "bbbbbbbbbbbbbbbbbbbb" }), /allowlist/);
+  assert.throws(() => assertProductionDatabaseTarget(url.replace(ref, "bbbbbbbbbbbbbbbbbbbb"), options), /allowlist/);
+  assert.throws(() => assertProductionDatabaseTarget(url, { ...options, confirmation: "wrong" }), /確認值/);
+  assert.throws(() => assertProductionDatabaseTarget(url, { ...options, allowProduction: "false" }), /ALLOW_PRODUCTION/);
+  assert.throws(() => assertProductionDatabaseTarget(url, { ...options, actorId: BASELINE_IMPORT_USER_ID }), /actor UUID/);
+  assert.throws(() => assertProductionDatabaseTarget(url.replace(":5432", ":6543"), options), /allowlist/);
+  const poolerUrl = `postgresql://postgres.${ref}:password@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres`;
+  assert.doesNotThrow(() => assertProductionDatabaseTarget(poolerUrl, options));
+  assert.throws(() => assertProductionDatabaseTarget(poolerUrl.replace("ap-northeast-2", "ap-southeast-1"), options), /allowlist/);
+  assert.throws(() => assertProductionDatabaseTarget(poolerUrl.replace(`postgres.${ref}`, "postgres.other"), options), /allowlist/);
+});
+
 test("Stage 3 migration 明確區分 baseline snapshot，legacy portrait unknown 不放寬新上傳", async () => {
   const sql = await readFile(resolve(root, "supabase/migrations/202608180003_baseline_import_support.sql"), "utf8");
   assert.match(sql, /snapshot_source.*baseline_import/s);
@@ -95,4 +117,11 @@ test("Stage 3 migration 明確區分 baseline snapshot，legacy portrait unknown
   assert.match(sql, /contains_portrait is null/);
   assert.match(sql, /rights_status <> 'legacy_retained'.*contains_portrait is not null/s);
   assert.match(sql, /legacy_asset_key/);
+});
+
+test("production/import transaction 的 result temp table 在 pooler backend commit後清除", async () => {
+  const source = await readFile(resolve(root, "tools/baseline/baseline-db.mjs"), "utf8");
+  assert.match(source, /drop table if exists pg_temp\.baseline_import_result/i);
+  assert.match(source, /create temporary table baseline_import_result[\s\S]*on commit drop/i);
+  assert.match(source, /\)::text from baseline_import_result;\ncommit;/i);
 });

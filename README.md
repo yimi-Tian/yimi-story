@@ -310,3 +310,121 @@ node --test tests/supabase/*.test.mjs
 $env:YIMI_RUN_SUPABASE_INTEGRATION = "1"
 node --test tests/supabase/baseline-import.integration.test.mjs
 ```
+
+## 後台 V1.0 階段 4A：Cloud Supabase 正式資料層
+
+Cloud Supabase 是 CMS 的正式後端；公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證；Stage 5A 已建立 React 管理介面骨架，Stage 4B 已部署 production Edge Functions 並完成 managed CORS 驗收。目前仍沒有內容 CRUD、GitHub App、Draft PR 自動發布或既有圖片搬遷。
+
+### Production Auth 與 identities
+
+- Email/password 登入啟用，但 public signup、anonymous sign-in 與公開 onboarding 關閉。
+- V1 只有一個 active admin；管理員 Email 不寫入 repository，密碼必須由管理員本人透過安全流程設定。
+- baseline 使用獨立的 production system identity 作為 `created_by` provenance。該 identity 不加入 `admin_users`、禁止一般登入，也不可沿用 local 固定 UUID。
+- Stage 4 migration 使 `content_type`、`public_id` 與 `created_by` 在建立後不可更改；active admin 可編輯 system-owned baseline 的其他允許欄位。
+
+### Migration 與 drift 原則
+
+Cloud schema 只能透過 repository 中依序版本化的 migration 變更。正式套用前須先執行 linked migration list、`db push --dry-run`，確認沒有非預期 drop、truncate 或 delete，再執行 `db push`。已合併的歷史 migration 不回寫修改；需要修正時新增 migration。Dashboard 人工建立的 admin/system identity 是資料差異，不得以未記錄 SQL 造成 schema drift。
+
+### Production baseline 安全模式
+
+一般 `--apply` 仍只接受 local Supabase。正式匯入必須額外指定 `--production-baseline`，且下列條件必須全部成立：
+
+- `ALLOW_PRODUCTION_BASELINE_IMPORT=true`
+- expected、actual 與 confirmation project ref 完全相同
+- expected region 與官方 pooler host 完全相符
+- database URL 只能指向該 project 的 direct database 或官方 shared pooler
+- production system actor UUID 有效且不是 local 固定 identity
+
+缺少任一 gate 就拒絕連線。匯入使用單一 transaction，保留 checksum conflict 與 idempotency；不允許 arbitrary remote host 或 overwrite。正式 baseline 為 56 筆班級、63 筆活動、119 個 published snapshots 與 714 個 `github_legacy` media metadata，drafts 與 GitHub publication jobs 皆為 0。714 張既有圖片不會上傳或搬移。
+
+### Secrets 管理
+
+`.env.example` 只能保存 placeholder。真實 project ref、DB password、管理員 Email 與一次性匯入 gate 應放在 ignored 且限制存取的本機檔案。publishable key 可供未來 browser 使用；service role key、DB password 與 Edge Function privileged operations 永遠只存在 server-side。service role key 不得進 React bundle、log、回覆或 Git。Edge Function secrets 由 Supabase secrets 管理。
+
+### Cloud RLS 與 Storage
+
+- anonymous、一般登入者與 inactive admin 無 CMS table 權限；active admin 只能依 Stage 2 RLS 操作 content、draft 與 media，publication snapshot 與 GitHub publication 仍是唯讀。
+- `cms-drafts` 保持 private、10 MB、JPEG/PNG/WebP，active admin 只能操作自己的 UUID prefix，預覽使用短效 signed URL。
+- `cms-public` 可公開讀取，但 browser admin 不可寫入；只有 service role／Edge Function 可以發布。
+
+Stage 4A 已在 managed Cloud 實測 anonymous、non-admin、inactive admin 與 active admin 的 RLS 邊界，也完成兩個 bucket 的 private/public、prefix、signed URL 與 browser/service-role 寫入邊界。測試帳號、資料列及 Storage objects 已清除。
+
+### Stage 4B：Edge Functions 與 managed CORS
+
+`admin-health` 與 `validate-admin` 已部署至 managed Supabase production。正式 admin origin 固定為 `https://yimi-story-admin.pages.dev`；`ADMIN_ALLOWED_ORIGIN` 透過 Supabase secrets 設定，不寫入 repository，也不使用 GitHub Pages 公開網站、localhost、Supabase Dashboard、假網域或 wildcard 替代。
+
+- `admin-health` 提供不需 JWT 的安全連線檢查，只回傳 `ok`、版本與 timestamp。
+- `validate-admin` 僅接受 POST，在 server 端以 `auth.getUser(token)` 驗證 JWT，再查詢 `admin_users.is_active`；不信任 client role 或 localStorage。
+- 兩個 Functions 都關閉 managed gateway JWT 攔截，由各自 handler 統一處理 CORS 與驗證。這避免 gateway 在 no-JWT error 上覆寫 `Access-Control-Allow-Origin: *`；`validate-admin` 並未因此略過 JWT 或 active-admin 驗證。
+- allowed origin 的 GET／POST 與 OPTIONS 均回傳精確 ACAO；unknown origin 回 403 且不含 ACAO。production 沒有 `Access-Control-Allow-Origin: *`，也不啟用 credentials。
+- no JWT 與 invalid JWT 為 401，active admin 為 200，non-admin 與 inactive admin 為 403；response 不含 UUID、Email、claims、token 或內部錯誤。
+- service role key 只由 Supabase Function runtime 使用，不進入 React bundle。Stage 5A 仍為單一正式管理員，尚未建立內容 CRUD、GitHub App 或 PR 發布流程。
+
+`LOCAL-CORS-001` 狀態為 **Closed for production**，範圍只剩 Supabase CLI local Kong gateway。managed production CORS 已通過，不再阻擋後續 server-side API 開發。
+
+正式 Storage host 為該 project 的 `https://<project-ref>.supabase.co`。目前公開網站沒有 Supabase 圖片，因此 `allowedExternalImageHosts` 維持空陣列；等第一張 `cms-public` 圖片確定要發布時，再以獨立變更加入真實 host 並執行前台回歸。
+
+### 安全操作順序
+
+```powershell
+supabase migration list --linked
+supabase db push --dry-run
+supabase db push
+node tools/import-baseline-to-supabase.mjs --dry-run
+node tools/import-baseline-to-supabase.mjs --production-baseline --apply
+```
+
+最後一個指令只有在所有 production gates 由受保護的 process environment 提供時才會執行。不要將含 secret 的 command line、輸出或 `.env` 檔加入版本控制。
+
+### Stage 4A 完成界線
+
+Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。Stage 4B 已接續完成 production Edge Functions deployment、managed CORS 與 admin auth 邊界驗收；內容寫入 API 與 UI 仍屬後續獨立階段。
+
+## 後台 V1.0 階段 5A：React 管理介面骨架
+
+React 後台位於獨立的 `admin/`，不與既有 GitHub Pages 公開網站混合。正式入口為 `https://yimi-story-admin.pages.dev`，由 Cloudflare Pages 提供固定 HTTPS 與 SPA fallback；直接開啟 `/login` 或 `/dashboard` 都會回到 React router。
+
+### Local development 與 build
+
+Stage 5A 使用 React、TypeScript、Vite、React Router、Supabase JavaScript client 與 Vitest。需要先在 `admin/` 建立 ignored 的 `.env.local`，只提供兩個 browser-safe 值：
+
+```text
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+不得加入 service role key、DB password、Supabase access token、JWT secret、GitHub token 或 private key。安裝、測試與建置：
+
+```powershell
+cd admin
+pnpm install --frozen-lockfile
+pnpm test
+pnpm run build
+pnpm run dev
+```
+
+如果 Node／pnpm 不在系統 PATH，應使用已核准的 bundled runtime，不要全域安裝或修改系統 PATH。Cloudflare direct upload 使用已注入 browser-safe build-time variables 的 `dist/`：
+
+```powershell
+pnpm exec wrangler pages deploy dist --project-name yimi-story-admin --branch main
+```
+
+### Auth、權限與目前界線
+
+- 後台提供 Email/password 登入、登出與最小密碼復原，不提供 signup、邀請或帳號管理介面。
+- 「忘記密碼」使用 Supabase Auth `resetPasswordForEmail`，正式 redirect 回到 `/update-password`；recovery session 成立後才呼叫 `updateUser({ password })`。新密碼不寫入本站資料庫、log、Git 或回覆。
+- Supabase session 成立後，仍須由 `admin_users` 與 RLS 確認 active admin；前端狀態或 localStorage role 不是安全邊界。
+- 無 session 會導向 `/login`；non-admin 與 inactive admin 都不能進入 dashboard。
+- dashboard 的班級、活動、published snapshots 與 media 數量由 Cloud Supabase read-only count query 即時取得，不永久 hard-code。
+- Stage 5A 只提供 dashboard 與未完成功能提示，尚未製作內容編輯、圖片上傳、draft、預覽或 GitHub PR 發布。
+
+Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。正式 origin 保存在 ignored 的本機設定，並已作為 Supabase production secret 提供給 `admin-health`／`validate-admin`；值不進入 Git。Stage 4B managed CORS 與 admin auth 邊界均已完成驗收。
+
+### Stage 5A production 驗收
+
+- 正式管理員 Email/password 登入成功，active admin allow-list 與 RLS 正常。
+- dashboard 即時顯示班級 56、活動 63、published snapshots 119、media metadata 714。
+- 直接重新整理 `/dashboard` 後 SPA routing 與 Supabase session 均保留。
+- Cloud 連線狀態正常；登出會清除 session 並返回登入頁。
+- 密碼復原信、recovery redirect 與新密碼更新流程已由管理員本人完成。
