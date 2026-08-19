@@ -7,7 +7,7 @@ export function createAdminHealthHandler(
   now: () => Date = () => new Date(),
 ): (request: Request) => Promise<Response> {
   return async (request: Request): Promise<Response> => {
-    const headers = corsHeaders(request, allowedOrigin);
+    const headers = corsHeaders(request, allowedOrigin, ["GET", "OPTIONS"]);
 
     if (!isAllowedOrigin(request, allowedOrigin)) {
       return jsonResponse({ error: "origin_not_allowed" }, 403, headers);

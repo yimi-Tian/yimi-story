@@ -6,7 +6,7 @@ import {
   createValidateAdminHandler,
 } from "../../supabase/functions/_shared/validate-admin-handler.ts";
 
-const origin = "http://localhost:5173";
+const origin = "https://yimi-story-admin.pages.dev";
 const request = (authorization, requestOrigin = origin) =>
   new Request("http://localhost/functions/v1/validate-admin", {
     method: "POST",
@@ -44,6 +44,50 @@ test("CORS 不使用 wildcard 且拒絕未知 origin", async () => {
   }));
   assert.equal(response.status, 403);
   assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("admin-health production preflight 只允許精確 origin 與必要 methods", async () => {
+  const handler = createAdminHealthHandler("v1", origin);
+  const response = await handler(new Request("https://function.example/admin-health", {
+    method: "OPTIONS",
+    headers: {
+      origin,
+      "access-control-request-method": "GET",
+      "access-control-request-headers": "apikey, x-client-info",
+    },
+  }));
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get("access-control-allow-origin"), origin);
+  assert.equal(response.headers.get("access-control-allow-methods"), "GET, OPTIONS");
+  assert.equal(response.headers.get("access-control-allow-credentials"), null);
+  assert.notEqual(response.headers.get("access-control-allow-origin"), "*");
+});
+
+test("validate-admin production preflight 允許 POST 且 unknown origin 無 CORS 授權", async () => {
+  const handler = createValidateAdminHandler(async () => "active", origin);
+  const allowed = await handler(new Request("https://function.example/validate-admin", {
+    method: "OPTIONS",
+    headers: {
+      origin,
+      "access-control-request-method": "POST",
+      "access-control-request-headers": "authorization, apikey, content-type, x-client-info",
+    },
+  }));
+  assert.equal(allowed.status, 204);
+  assert.equal(allowed.headers.get("access-control-allow-origin"), origin);
+  assert.equal(allowed.headers.get("access-control-allow-methods"), "POST, OPTIONS");
+  assert.equal(
+    allowed.headers.get("access-control-allow-headers"),
+    "authorization, x-client-info, apikey, content-type",
+  );
+
+  const denied = await handler(new Request("https://function.example/validate-admin", {
+    method: "OPTIONS",
+    headers: { origin: "https://example.invalid" },
+  }));
+  assert.equal(denied.status, 403);
+  assert.equal(denied.headers.get("access-control-allow-origin"), null);
+  assert.notEqual(denied.headers.get("access-control-allow-origin"), "*");
 });
 
 test("bearer parser 僅接受 Bearer token", () => {

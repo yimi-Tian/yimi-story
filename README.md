@@ -313,7 +313,7 @@ node --test tests/supabase/baseline-import.integration.test.mjs
 
 ## 後台 V1.0 階段 4A：Cloud Supabase 正式資料層
 
-Cloud Supabase 是未來 CMS 的正式後端；目前公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證，但不部署 production Edge Functions，也不宣告 managed CORS 驗收完成。本階段沒有 React 後台 UI、GitHub App、Draft PR 自動發布或既有圖片搬遷。
+Cloud Supabase 是 CMS 的正式後端；公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證；Stage 5A 已建立 React 管理介面骨架，Stage 4B 已部署 production Edge Functions 並完成 managed CORS 驗收。目前仍沒有內容 CRUD、GitHub App、Draft PR 自動發布或既有圖片搬遷。
 
 ### Production Auth 與 identities
 
@@ -352,14 +352,16 @@ Stage 4A 已在 managed Cloud 實測 anonymous、non-admin、inactive admin 與 
 
 ### Stage 4B：Edge Functions 與 managed CORS
 
-`admin-health` 與 `validate-admin` 的程式及契約測試已存在，但 Stage 4A 不部署至 production。Stage 5A 已取得並驗證正式 HTTPS admin origin；該 origin 目前只記錄在 ignored 的本機 Stage 4 環境檔，尚未寫入 Supabase Edge Function secrets，也尚未部署 production Functions。GitHub Pages 正式網站、localhost、Supabase Dashboard 或假網域都不可替代此 origin。
+`admin-health` 與 `validate-admin` 已部署至 managed Supabase production。正式 admin origin 固定為 `https://yimi-story-admin.pages.dev`；`ADMIN_ALLOWED_ORIGIN` 透過 Supabase secrets 設定，不寫入 repository，也不使用 GitHub Pages 公開網站、localhost、Supabase Dashboard、假網域或 wildcard 替代。
 
-先完成 Stage 5A「React 後台最小骨架與正式 HTTPS 部署」，取得真實 origin 後，再回到 Stage 4B：
+- `admin-health` 提供不需 JWT 的安全連線檢查，只回傳 `ok`、版本與 timestamp。
+- `validate-admin` 僅接受 POST，在 server 端以 `auth.getUser(token)` 驗證 JWT，再查詢 `admin_users.is_active`；不信任 client role 或 localStorage。
+- 兩個 Functions 都關閉 managed gateway JWT 攔截，由各自 handler 統一處理 CORS 與驗證。這避免 gateway 在 no-JWT error 上覆寫 `Access-Control-Allow-Origin: *`；`validate-admin` 並未因此略過 JWT 或 active-admin 驗證。
+- allowed origin 的 GET／POST 與 OPTIONS 均回傳精確 ACAO；unknown origin 回 403 且不含 ACAO。production 沒有 `Access-Control-Allow-Origin: *`，也不啟用 credentials。
+- no JWT 與 invalid JWT 為 401，active admin 為 200，non-admin 與 inactive admin 為 403；response 不含 UUID、Email、claims、token 或內部錯誤。
+- service role key 只由 Supabase Function runtime 使用，不進入 React bundle。Stage 5A 仍為單一正式管理員，尚未建立內容 CRUD、GitHub App 或 PR 發布流程。
 
-1. 以 Supabase secrets 設定精確的 `ADMIN_ALLOWED_ORIGIN`，不使用 wildcard。
-2. 部署 `admin-health` 與 `validate-admin`。
-3. 驗證 allowed origin、unknown origin、OPTIONS、no JWT、non-admin、inactive admin 與 active admin。
-4. managed gateway 驗收通過後，才將 `LOCAL-CORS-001` 標記為 production closed。
+`LOCAL-CORS-001` 狀態為 **Closed for production**，範圍只剩 Supabase CLI local Kong gateway。managed production CORS 已通過，不再阻擋後續 server-side API 開發。
 
 正式 Storage host 為該 project 的 `https://<project-ref>.supabase.co`。目前公開網站沒有 Supabase 圖片，因此 `allowedExternalImageHosts` 維持空陣列；等第一張 `cms-public` 圖片確定要發布時，再以獨立變更加入真實 host 並執行前台回歸。
 
@@ -377,7 +379,7 @@ node tools/import-baseline-to-supabase.mjs --production-baseline --apply
 
 ### Stage 4A 完成界線
 
-Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。正式 Edge Functions deployment 與 managed CORS 最終驗收保留給 Stage 4B；在此之前不具備開始後台寫入 API production 驗收的條件。
+Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。Stage 4B 已接續完成 production Edge Functions deployment、managed CORS 與 admin auth 邊界驗收；內容寫入 API 與 UI 仍屬後續獨立階段。
 
 ## 後台 V1.0 階段 5A：React 管理介面骨架
 
@@ -417,7 +419,7 @@ pnpm exec wrangler pages deploy dist --project-name yimi-story-admin --branch ma
 - dashboard 的班級、活動、published snapshots 與 media 數量由 Cloud Supabase read-only count query 即時取得，不永久 hard-code。
 - Stage 5A 只提供 dashboard 與未完成功能提示，尚未製作內容編輯、圖片上傳、draft、預覽或 GitHub PR 發布。
 
-Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。正式 origin 已寫入 ignored 的 Stage 4 local secret file，但不 commit。Stage 4B 尚未完成；下一步才會用該精確 origin 設定 Edge Function secret、部署 `admin-health`／`validate-admin`，並完成 managed CORS 驗收。
+Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。正式 origin 保存在 ignored 的本機設定，並已作為 Supabase production secret 提供給 `admin-health`／`validate-admin`；值不進入 Git。Stage 4B managed CORS 與 admin auth 邊界均已完成驗收。
 
 ### Stage 5A production 驗收
 
