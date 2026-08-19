@@ -1,7 +1,11 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
-const futureItems = ["班級花絮", "活動成果", "媒體", "發布"];
+const contentItems = [
+  { to: "/class-results", label: "班級花絮" },
+  { to: "/activities", label: "活動成果" },
+];
+const futureItems = ["媒體", "發布"];
 
 export function AdminLayout() {
   const { user, signOut } = useAuth();
@@ -16,6 +20,7 @@ export function AdminLayout() {
       <div className="brand-copy"><strong>邑米地方知識探索平台</strong><span>後台管理</span></div>
       <nav aria-label="後台主要選單">
         <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-link is-active" : "nav-link"}>總覽</NavLink>
+        {contentItems.map((item) => <NavLink to={item.to} className={({ isActive }) => isActive ? "nav-link is-active" : "nav-link"} key={item.to}>{item.label}</NavLink>)}
         {futureItems.map((item) => <span className="nav-link is-disabled" key={item}>{item}<small>建置中</small></span>)}
       </nav>
     </aside>

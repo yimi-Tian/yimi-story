@@ -5,6 +5,8 @@ export interface DashboardCounts {
   activities: number;
   published: number;
   media: number;
+  drafts: number;
+  needsValidation: number;
 }
 
 async function exactCount(query: PromiseLike<{ count: number | null; error: unknown }>): Promise<number> {
@@ -14,11 +16,13 @@ async function exactCount(query: PromiseLike<{ count: number | null; error: unkn
 }
 
 export async function fetchDashboardCounts(client: SupabaseClient): Promise<DashboardCounts> {
-  const [classResults, activities, published, media] = await Promise.all([
+  const [classResults, activities, published, media, drafts, needsValidation] = await Promise.all([
     exactCount(client.from("content_items").select("id", { count: "exact", head: true }).eq("content_type", "class_result")),
     exactCount(client.from("content_items").select("id", { count: "exact", head: true }).eq("content_type", "activity")),
     exactCount(client.from("publication_snapshots").select("id", { count: "exact", head: true })),
     exactCount(client.from("media_assets").select("id", { count: "exact", head: true })),
+    exactCount(client.from("content_drafts").select("id", { count: "exact", head: true })),
+    exactCount(client.from("content_drafts").select("id", { count: "exact", head: true }).eq("status", "draft")),
   ]);
-  return { classResults, activities, published, media };
+  return { classResults, activities, published, media, drafts, needsValidation };
 }

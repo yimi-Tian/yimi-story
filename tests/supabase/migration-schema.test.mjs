@@ -10,15 +10,20 @@ import {
   productionSql,
 } from "./contract-helpers.mjs";
 
+const contentCrudSql = read(
+  "supabase/migrations/202608190001_content_crud.sql",
+);
+
 test("migration 採穩定順序且不含 destructive drop", () => {
   assert.deepEqual(migrationFiles, [
     "202608180001_admin_foundation.sql",
     "202608180002_storage_policies.sql",
     "202608180003_baseline_import_support.sql",
     "202608180004_production_content_identity.sql",
+    "202608190001_content_crud.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql, baselineSql, productionSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }

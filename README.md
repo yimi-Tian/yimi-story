@@ -313,7 +313,7 @@ node --test tests/supabase/baseline-import.integration.test.mjs
 
 ## 後台 V1.0 階段 4A：Cloud Supabase 正式資料層
 
-Cloud Supabase 是 CMS 的正式後端；公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證；Stage 5A 已建立 React 管理介面骨架，Stage 4B 已部署 production Edge Functions 並完成 managed CORS 驗收。目前仍沒有內容 CRUD、GitHub App、Draft PR 自動發布或既有圖片搬遷。
+Cloud Supabase 是 CMS 的正式後端；公開網站仍只讀取 GitHub `main` 已合併的靜態 JSON、CSV 與 fallback。Cloud 草稿、管理資料或尚未合併的內容不會直接出現在 GitHub Pages。Stage 4A 完成正式資料層、identities 與安全驗證；Stage 5A 已建立 React 管理介面骨架，Stage 4B 已部署 production Edge Functions 並完成 managed CORS 驗收。Stage 5B-1 接續提供文字內容 CRUD；GitHub App、Draft PR 自動發布與既有圖片搬遷仍未建立。
 
 ### Production Auth 與 identities
 
@@ -379,7 +379,7 @@ node tools/import-baseline-to-supabase.mjs --production-baseline --apply
 
 ### Stage 4A 完成界線
 
-Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。Stage 4B 已接續完成 production Edge Functions deployment、managed CORS 與 admin auth 邊界驗收；內容寫入 API 與 UI 仍屬後續獨立階段。
+Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。Stage 4B 已接續完成 production Edge Functions deployment、managed CORS 與 admin auth 邊界驗收；Stage 5B-1 才在此安全基礎上新增 content／draft 寫入流程。
 
 ## 後台 V1.0 階段 5A：React 管理介面骨架
 
@@ -428,3 +428,15 @@ Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。�
 - 直接重新整理 `/dashboard` 後 SPA routing 與 Supabase session 均保留。
 - Cloud 連線狀態正常；登出會清除 session 並返回登入頁。
 - 密碼復原信、recovery redirect 與新密碼更新流程已由管理員本人完成。
+
+## 後台 V1.0 階段 5B-1：班級與活動文字草稿
+
+正式後台新增班級花絮與活動成果的列表、關鍵字搜尋、年度／地區／狀態等篩選，以及新增與編輯頁。表單資料不直接等同資料庫 row，而是經 Stage 1 canonical normalizer 與 validator 後才寫入 `content_drafts`；錯誤與提醒分開呈現，驗證有錯誤時仍可保存為 `draft`。
+
+- 第一次編輯既有 published 內容時，資料庫 RPC 會以 immutable publication snapshot 建立唯一的 revision 1 draft；再次開啟會沿用同一筆 draft。
+- 新內容以單一 transaction 建立 `content_items` 與 draft，`published_snapshot_id` 保持 `NULL`。年度 public ID 由 advisory transaction lock 保護並在資料庫配置；前端顯示的 next ID 只供預覽。
+- 每次儲存由資料庫 trigger 增加 revision 並回傳實際版本與時間。通過明確內容檢查的 draft 可標示為 `validated`，任何後續欄位修改都會立即降回 `draft`。
+- `publicNotes` 與 `internalNotes` 在介面明確分區；公開 exporter 仍會排除 internal notes。既有 legacy date 不推測 ISO 日期，非現行服務區的既有 district 也不會在編輯時遺失。
+- 離開 route、重新整理或關閉有未儲存變更的頁面前會提醒。Stage 5B-1 不提供刪除或 autosave。
+- 圖片區只顯示既有 media metadata 數量，不上傳、排序、刪除或寫入 Storage／`media_assets`。
+- 本階段不建立 publication snapshot、不寫入 GitHub publication、不產生 PR，也不修改 GitHub Pages 的 JSON、CSV、fallback 或既有圖片與文件。公開網站只會繼續讀取已合併至 `main` 的靜態正式資料。
