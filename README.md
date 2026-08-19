@@ -352,7 +352,7 @@ Stage 4A 已在 managed Cloud 實測 anonymous、non-admin、inactive admin 與 
 
 ### Stage 4B：Edge Functions 與 managed CORS
 
-`admin-health` 與 `validate-admin` 的程式及契約測試已存在，但 Stage 4A 不部署至 production。因 React 後台尚未建立，目前沒有可驗證的 production HTTPS admin origin，所以不設定 `ADMIN_ALLOWED_ORIGIN`，也不使用 GitHub Pages 正式網站、localhost、Supabase Dashboard 或假網域替代。
+`admin-health` 與 `validate-admin` 的程式及契約測試已存在，但 Stage 4A 不部署至 production。Stage 5A 已取得並驗證正式 HTTPS admin origin；該 origin 目前只記錄在 ignored 的本機 Stage 4 環境檔，尚未寫入 Supabase Edge Function secrets，也尚未部署 production Functions。GitHub Pages 正式網站、localhost、Supabase Dashboard 或假網域都不可替代此 origin。
 
 先完成 Stage 5A「React 後台最小骨架與正式 HTTPS 部署」，取得真實 origin 後，再回到 Stage 4B：
 
@@ -378,3 +378,51 @@ node tools/import-baseline-to-supabase.mjs --production-baseline --apply
 ### Stage 4A 完成界線
 
 Stage 4A 已完成 Cloud migrations、production admin、不可登入且非管理員的 system import identity、56＋63／119 筆 baseline、119 個 published pointers、714 個 `github_legacy` media metadata、第二次匯入冪等性、Cloud RLS、Cloud Storage、migration drift 核對、secrets scan 與 Stage 1～3 回歸。正式 Edge Functions deployment 與 managed CORS 最終驗收保留給 Stage 4B；在此之前不具備開始後台寫入 API production 驗收的條件。
+
+## 後台 V1.0 階段 5A：React 管理介面骨架
+
+React 後台位於獨立的 `admin/`，不與既有 GitHub Pages 公開網站混合。正式入口為 `https://yimi-story-admin.pages.dev`，由 Cloudflare Pages 提供固定 HTTPS 與 SPA fallback；直接開啟 `/login` 或 `/dashboard` 都會回到 React router。
+
+### Local development 與 build
+
+Stage 5A 使用 React、TypeScript、Vite、React Router、Supabase JavaScript client 與 Vitest。需要先在 `admin/` 建立 ignored 的 `.env.local`，只提供兩個 browser-safe 值：
+
+```text
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+不得加入 service role key、DB password、Supabase access token、JWT secret、GitHub token 或 private key。安裝、測試與建置：
+
+```powershell
+cd admin
+pnpm install --frozen-lockfile
+pnpm test
+pnpm run build
+pnpm run dev
+```
+
+如果 Node／pnpm 不在系統 PATH，應使用已核准的 bundled runtime，不要全域安裝或修改系統 PATH。Cloudflare direct upload 使用已注入 browser-safe build-time variables 的 `dist/`：
+
+```powershell
+pnpm exec wrangler pages deploy dist --project-name yimi-story-admin --branch main
+```
+
+### Auth、權限與目前界線
+
+- 後台提供 Email/password 登入、登出與最小密碼復原，不提供 signup、邀請或帳號管理介面。
+- 「忘記密碼」使用 Supabase Auth `resetPasswordForEmail`，正式 redirect 回到 `/update-password`；recovery session 成立後才呼叫 `updateUser({ password })`。新密碼不寫入本站資料庫、log、Git 或回覆。
+- Supabase session 成立後，仍須由 `admin_users` 與 RLS 確認 active admin；前端狀態或 localStorage role 不是安全邊界。
+- 無 session 會導向 `/login`；non-admin 與 inactive admin 都不能進入 dashboard。
+- dashboard 的班級、活動、published snapshots 與 media 數量由 Cloud Supabase read-only count query 即時取得，不永久 hard-code。
+- Stage 5A 只提供 dashboard 與未完成功能提示，尚未製作內容編輯、圖片上傳、draft、預覽或 GitHub PR 發布。
+
+Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。正式 origin 已寫入 ignored 的 Stage 4 local secret file，但不 commit。Stage 4B 尚未完成；下一步才會用該精確 origin 設定 Edge Function secret、部署 `admin-health`／`validate-admin`，並完成 managed CORS 驗收。
+
+### Stage 5A production 驗收
+
+- 正式管理員 Email/password 登入成功，active admin allow-list 與 RLS 正常。
+- dashboard 即時顯示班級 56、活動 63、published snapshots 119、media metadata 714。
+- 直接重新整理 `/dashboard` 後 SPA routing 與 Supabase session 均保留。
+- Cloud 連線狀態正常；登出會清除 session 並返回登入頁。
+- 密碼復原信、recovery redirect 與新密碼更新流程已由管理員本人完成。
