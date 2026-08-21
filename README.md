@@ -440,3 +440,22 @@ Supabase Auth Redirect URLs 已加入正式 `/update-password` recovery URL。�
 - 離開 route、重新整理或關閉有未儲存變更的頁面前會提醒。Stage 5B-1 不提供刪除或 autosave。
 - 圖片區只顯示既有 media metadata 數量，不上傳、排序、刪除或寫入 Storage／`media_assets`。
 - 本階段不建立 publication snapshot、不寫入 GitHub publication、不產生 PR，也不修改 GitHub Pages 的 JSON、CSV、fallback 或既有圖片與文件。公開網站只會繼續讀取已合併至 `main` 的靜態正式資料。
+
+## 後台 V1.0 階段 5B-2：Private 草稿圖片
+
+Stage 5B-2 在班級與活動草稿編輯器加入封面與相簿圖片管理。新圖只寫入 private `cms-drafts`，不寫入 `cms-public`、publication snapshot、Git repository 或公開網站。
+
+- 接受 JPEG、PNG、WebP；每張上限 `10 * 1024 * 1024` bytes。SVG、GIF、HEIC、TIFF、BMP、magic bytes 不符、損壞圖及任一邊超過 12000px 均拒絕。任一邊低於 300px 只產生提醒。
+- Browser 先檢查 MIME、副檔名、header、尺寸並以 Web Crypto 計算 SHA-256；上傳後 `validate-media-upload` Edge Function 會重新下載 private object，複驗 magic bytes、尺寸、大小與 checksum，成功後才以 server credential 建立 metadata row。
+- Storage key 固定為 `{admin_uid}/{content_item_id}/{media_uuid}/{media_uuid}.{ext}`。原始檔名只保存為顯示用 metadata，不參與路徑，也不允許 `..`、反斜線或任意 path segment。
+- `media_source` 明確區分 `github_legacy`、`cms_draft`、`cms_public`。既有 714 筆 Legacy media 不搬移、不修改且只讀；草稿解除 Legacy 引用不會刪除 Git 圖片或 metadata row。
+- Canonical 內容仍只使用 `coverAssetId`／`galleryAssetIds`。封面最多一張；新草稿相簿最多 20 張，既有超過上限的 Legacy composition 不會被強制刪除。
+- 草稿圖 metadata 包含原始檔名、MIME、bytes、尺寸、SHA-256、alt、人物狀態、權利狀態、content／draft ownership 與 private object path。同一 content 的 active `cms_draft` SHA-256 不得重複。
+- alt 可留空保存，但內容檢查會提醒；人物可選「有／無／尚未確認」，權利可選「社大自有／自行拍攝／已取得授權／尚未確認」。系統不做人臉辨識，也不自動產生 alt。
+- 圖片 metadata、cover／gallery 引用與排序在管理員按「儲存草稿」時由單一 RPC 交易更新，draft revision 只增加一次。Browser 不能直接更新 source、bucket、path、checksum、bytes 或 ownership。
+- `cms-drafts` 預覽使用 900 秒 signed URL，不寫入 localStorage。Legacy 預覽由既有 GitHub Pages 相對路徑產生，不使用 signed URL。
+- Storage 成功但 server validation／DB insert 失敗時會精確刪除該 object；解除引用後才允許刪除 `cms_draft` metadata。未附加的本次上傳可由 UI cleanup utility 清理，production 不設自動 cron。
+- `cms-public` 保持 public-read／browser-write-deny；Stage 5B-2 不發布任何 object。正式發布、圖片轉檔、縮圖、裁切、WebP 轉換與 EXIF removal 延後至 publication 階段評估。
+- `CR-115-xxx` 只作為後台與資料庫識別碼；本階段不修改公開網站顯示規則，也不把該 ID 加到前台。公開端仍以課程名稱／成果名稱作為主要識別資訊。
+
+V1 draft upload 暫不處理 EXIF removal。管理員應避免上傳含敏感定位資料的原始檔，正式發布階段需再次評估 EXIF 清除策略。

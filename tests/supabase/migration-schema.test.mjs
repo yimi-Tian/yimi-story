@@ -13,6 +13,8 @@ import {
 const contentCrudSql = read(
   "supabase/migrations/202608190001_content_crud.sql",
 );
+const mediaEnumSql = read("supabase/migrations/202608190002_media_draft_enums.sql");
+const mediaDraftSql = read("supabase/migrations/202608190003_media_drafts.sql");
 
 test("migration 採穩定順序且不含 destructive drop", () => {
   assert.deepEqual(migrationFiles, [
@@ -21,9 +23,11 @@ test("migration 採穩定順序且不含 destructive drop", () => {
     "202608180003_baseline_import_support.sql",
     "202608180004_production_content_identity.sql",
     "202608190001_content_crud.sql",
+    "202608190002_media_draft_enums.sql",
+    "202608190003_media_drafts.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}\n${mediaEnumSql}\n${mediaDraftSql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql, mediaEnumSql, mediaDraftSql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CanonicalContent, ContentType, DraftStatus, ValidationResult } from "../content/content-contracts";
+import type { MediaMetadataUpdate } from "./media-repository";
 
 export interface ContentListItem {
   contentId: string;
@@ -126,12 +127,16 @@ export async function saveContentDraft(
   data: CanonicalContent,
   validationResult: ValidationResult,
   status: DraftStatus,
+  mediaMetadata: MediaMetadataUpdate[] = [],
 ): Promise<{ revision: number; status: DraftStatus; updatedAt: string }> {
-  const { data: authData, error: authError } = await client.auth.getUser();
-  if (authError || !authData.user) fail("AUTH_REQUIRED");
-  const { data: saved, error } = await client.from("content_drafts")
-    .update({ data, validation_result: validationResult, status, updated_by: authData.user.id })
-    .eq("id", draftId).select("revision, status, updated_at").single();
-  if (error || !saved) fail("DRAFT_SAVE_FAILED");
-  return { revision: saved.revision, status: saved.status as DraftStatus, updatedAt: saved.updated_at };
+  const { data: saved, error } = await client.rpc("save_content_draft_with_media", {
+    p_draft_id: draftId,
+    p_data: data,
+    p_validation_result: validationResult,
+    p_status: status,
+    p_media_metadata: mediaMetadata,
+  });
+  const row = Array.isArray(saved) ? saved[0] : saved;
+  if (error || !row) fail("DRAFT_SAVE_FAILED");
+  return { revision: row.revision, status: row.status as DraftStatus, updatedAt: row.updated_at };
 }
