@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.validate-admin]
 verify_jwt = false
+
+[functions.validate-media-upload]
+verify_jwt = false
