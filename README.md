@@ -459,3 +459,15 @@ Stage 5B-2 在班級與活動草稿編輯器加入封面與相簿圖片管理。
 - `CR-115-xxx` 只作為後台與資料庫識別碼；本階段不修改公開網站顯示規則，也不把該 ID 加到前台。公開端仍以課程名稱／成果名稱作為主要識別資訊。
 
 V1 draft upload 暫不處理 EXIF removal。管理員應避免上傳含敏感定位資料的原始檔，正式發布階段需再次評估 EXIF 清除策略。
+
+## 後台 V1.0 階段 6：管理員草稿預覽
+
+Stage 6 在既有受保護的 Admin SPA 內加入班級與活動預覽；預覽不是發布，也不新增公開網站 route。編輯頁只有在內容及圖片均已儲存後才能前往預覽，未儲存變更會先要求管理員儲存。
+
+- `/class-results/:publicId/preview` 與 `/activities/:publicId/preview` 都受既有 active-admin route guard 與 RLS 保護，不提供匿名或分享型預覽。
+- 資料來源採 draft-first：有 `content_drafts` 時顯示已儲存草稿；沒有 draft 但有 publication snapshot 時唯讀顯示目前正式版本。純預覽不建立 draft、不增加 revision，也不建立 snapshot。
+- canonical data 先經共用 public projection 移除 `internalNotes`，exporter 與預覽共用同一份公開欄位規則。預覽 component 不接收完整 DB row，不顯示 UUID、Storage path、technical source 或 raw validation JSON。
+- `github_legacy` 使用既有公開圖片 URL；`cms_draft` 只使用 900 秒 signed URL。指定封面與顯示層 hero 分開：existing published activity 若 canonical `coverAssetId` 為空，沿用 Public site 的 `public/images/activities/{publicId}/cover.jpg` 慣例，該圖失敗才退到 gallery 第一張；canonical data、snapshot 與 media metadata 不會因此改寫。gallery 仍依 `galleryAssetIds` 排序，單張失敗只顯示 placeholder。
+- 管理控制區清楚標示草稿／新內容／目前正式版本、尚未發布、revision、validation errors 與 warnings；這些資訊不混入模擬民眾內容。
+- 預覽只用 React text rendering 與 HTTPS 連結，不使用 `dangerouslySetInnerHTML`、iframe、localStorage、IndexedDB 或 service worker cache。
+- Stage 6 不寫 `cms-public`、不建立 GitHub publication、PR 或公開 snapshot，也不修改 GitHub Pages 的 JSON、CSV、fallback、圖片或文件。

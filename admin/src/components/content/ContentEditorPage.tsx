@@ -134,6 +134,14 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     } catch { setFailed(true); } finally { setSaving(false); }
   };
   const cancel = async () => { if ((!dirty && !uploading) || window.confirm("尚有未儲存的變更，確定要取消嗎？")) { await mediaRef.current?.cleanupTemporary(); setDirty(false); navigate(basePath); } };
+  const preview = () => {
+    if (dirty || uploading) {
+      window.alert("目前有尚未儲存的變更，請先儲存草稿後再預覽。");
+      return;
+    }
+    if (!record?.publicId) return;
+    navigate(`${basePath}/${encodeURIComponent(record.publicId)}/preview`);
+  };
   const setMediaReferences = useCallback((coverAssetId: string | null, galleryAssetIds: string[]) => {
     setForm((current) => ({ ...current, coverAssetId, galleryAssetIds }) as ContentForm);
   }, []);
@@ -143,7 +151,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   if (loading) return <LoadingState label="正在建立或讀取草稿" />;
   if (failed && !record && !isNew) return <ErrorState message="無法讀取內容，請確認網路連線與管理員權限。" />;
   return <>
-    <div className="page-heading"><div><p className="eyebrow">{isNew ? "New draft" : "Edit draft"}</p><h1>{isNew ? `新增${isClass ? "班級花絮" : "活動成果"}` : String((form as ClassResultForm).title || (form as ActivityForm).name)}</h1><p className="muted">Public ID：<code>{isNew ? previewId : form.id}</code>{isNew && "（預覽；儲存時由資料庫安全配置）"}</p></div><div className="heading-actions"><button className="button button--ghost" type="button" onClick={() => void cancel()}>取消</button><button className="button button--secondary" type="button" disabled={saving || uploading} onClick={runValidation}>檢查內容</button><button className="button button--accent" type="button" disabled={saving || uploading} onClick={() => void save()}>{uploading ? "圖片上傳中…" : saving ? "儲存中…" : "儲存草稿"}</button></div></div>
+    <div className="page-heading"><div><p className="eyebrow">{isNew ? "New draft" : "Edit draft"}</p><h1>{isNew ? `新增${isClass ? "班級花絮" : "活動成果"}` : String((form as ClassResultForm).title || (form as ActivityForm).name)}</h1><p className="muted">Public ID：<code>{isNew ? previewId : form.id}</code>{isNew && "（預覽；儲存時由資料庫安全配置）"}</p></div><div className="heading-actions"><button className="button button--ghost" type="button" onClick={() => void cancel()}>取消</button><button className="button button--secondary" type="button" disabled={isNew || saving} onClick={preview}>預覽</button><button className="button button--secondary" type="button" disabled={saving || uploading} onClick={runValidation}>檢查內容</button><button className="button button--accent" type="button" disabled={saving || uploading} onClick={() => void save()}>{uploading ? "圖片上傳中…" : saving ? "儲存中…" : "儲存草稿"}</button></div></div>
     {failed && <div className="form-error" role="alert">儲存失敗，請確認權限或網路連線後再試。</div>}
     <section className="version-panel"><div><span>目前正式版本</span><strong>{record?.publishedAt ? new Date(record.publishedAt).toLocaleString("zh-TW") : "尚未發布"}</strong></div><div><span>草稿版本</span><strong>{record?.revision ? `r${record.revision}` : "建立後為 r1"}</strong><small>{record?.updatedAt ? `最後更新 ${new Date(record.updatedAt).toLocaleString("zh-TW")}` : "尚未儲存"}</small></div><span className={`record-status ${dirty ? "has-draft" : ""}`}>{dirty ? "有未儲存變更" : status === "validated" ? "已檢查" : "草稿"}</span></section>
     <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>錯誤（{validation.errors.length}）</h2>{validation.errors.length ? <ul>{validation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{validation.warnings.length}）</h2>{validation.warnings.length ? <ul>{validation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證提醒。</p>}</section></div>
