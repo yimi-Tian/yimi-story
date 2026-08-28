@@ -21,6 +21,7 @@ import { getSupabaseClient } from "../../lib/supabase";
 import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning";
 import { ErrorState, LoadingState } from "../States";
 import { DraftMediaEditor, type DraftMediaEditorHandle } from "./DraftMediaEditor";
+import { PublicationPreparationPanel } from "./PublicationPreparationPanel";
 
 const emptyValidation: ValidationResult = { valid: false, errors: [], warnings: [] };
 
@@ -162,6 +163,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     {failed && <div className="form-error" role="alert">儲存失敗，請確認權限或網路連線後再試。</div>}
     <section className="version-panel"><div><span>目前正式版本</span><strong>{record?.publishedAt ? new Date(record.publishedAt).toLocaleString("zh-TW") : "尚未發布"}</strong></div><div><span>草稿版本</span><strong>{record?.revision ? `r${record.revision}` : "建立後為 r1"}</strong><small>{record?.updatedAt ? `最後更新 ${new Date(record.updatedAt).toLocaleString("zh-TW")}` : "尚未儲存"}</small></div><span className={`record-status ${dirty ? "has-draft" : ""}`}>{dirty ? "有未儲存變更" : status === "validated" ? "已檢查" : "草稿"}</span></section>
     <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>錯誤（{validation.errors.length}）</h2>{validation.errors.length ? <ul>{validation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{validation.warnings.length}）</h2>{validation.warnings.length ? <ul>{validation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證提醒。</p>}</section></div>
+    {record?.draftId && record.revision ? <PublicationPreparationPanel client={client} contentId={record.contentId} draftId={record.draftId} revision={record.revision} draftStatus={status} blocked={dirty || saving || uploading || imageEditing} /> : null}
     <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} /> : <ActivityFields form={form as ActivityForm} set={set} />}
       {record?.draftId ? <DraftMediaEditor ref={mediaRef} client={client} contentId={record.contentId} draftId={record.draftId} coverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} onReferences={setMediaReferences} onDirty={markMediaDirty} onUploading={markUploading} onEditing={markImageEditing} onVersionSaved={imageVersionSaved} /> : <section className="form-section media-readonly"><h2>圖片</h2><p className="muted">請先儲存文字草稿，再上傳圖片。</p></section>}
     </form>

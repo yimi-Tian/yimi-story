@@ -123,6 +123,18 @@ button { cursor: pointer; }
 .check-group .legacy-option small { color: #8c682a; }
 .internal-note { border-left: 4px solid #ad7a36; border-radius: 8px; padding: .8rem 0 .8rem 1rem; background: #fff9ea; }
 .media-readonly { border-style: dashed; }
+.publication-panel { display: grid; gap: 1rem; margin-bottom: 1rem; border-color: #bad0c5; background: #f7fbf8; }
+.publication-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.publication-panel__heading h2 { margin-bottom: .35rem; }
+.publication-panel__heading p { margin: 0; }
+.publication-panel .validation-grid { margin: 0; }
+.publication-panel .validation-panel h3 { margin: 0 0 .6rem; font-size: 1rem; }
+.publication-result { display: grid; gap: .35rem; border-left: 4px solid #39715f; border-radius: 8px; padding: .85rem 1rem; color: #315c4c; background: #e8f2ec; }
+.publication-result small { color: #66766f; }
+.publication-history h3 { margin: 0 0 .55rem; font-size: .95rem; }
+.publication-history ul { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+.publication-history li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #dce6e0; padding: .5rem 0; font-size: .8rem; }
+.publication-history li strong { color: #6b5a38; }
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; white-space: nowrap !important; }
 .media-editor { display: grid; gap: 1.25rem; }
 .media-group { display: grid; gap: .8rem; border-top: 1px solid #e5e4dc; padding-top: 1rem; }
@@ -232,6 +244,7 @@ button { cursor: pointer; }
   .coming-soon { align-items: flex-start; }
   .progress-ring { width: 4.6rem; height: 4.6rem; }
   .media-group__heading, .media-card__title { align-items: flex-start; flex-direction: column; }
+  .publication-panel__heading { flex-direction: column; }
   .media-card { grid-template-columns: 1fr; }
   .media-card > img, .media-preview-missing { width: 100%; height: 190px; }
   .media-meta-grid { grid-template-columns: 1fr; }

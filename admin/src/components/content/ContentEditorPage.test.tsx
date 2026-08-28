@@ -6,6 +6,7 @@ import { ContentEditorPage } from "./ContentEditorPage";
 
 const mocks = vi.hoisted(() => ({
   openContentDraft: vi.fn(),
+  fetchPublicationSnapshots: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../../lib/supabase", () => ({ getSupabaseClient: () => ({}) }));
@@ -13,6 +14,10 @@ vi.mock("../../data/content-repository", async (importOriginal) => {
   const original = await importOriginal<typeof import("../../data/content-repository")>();
   return { ...original, openContentDraft: mocks.openContentDraft };
 });
+vi.mock("../../data/publication-repository", () => ({
+  fetchPublicationSnapshots: mocks.fetchPublicationSnapshots,
+  requestPublicationPreparation: vi.fn(),
+}));
 
 test("BrowserRouter 相容 route 可解析 existing class publicId 並顯示編輯表單", async () => {
   mocks.openContentDraft.mockResolvedValue({
