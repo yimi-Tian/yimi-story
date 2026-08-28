@@ -471,3 +471,13 @@ Stage 6 在既有受保護的 Admin SPA 內加入班級與活動預覽；預覽�
 - 管理控制區清楚標示草稿／新內容／目前正式版本、尚未發布、revision、validation errors 與 warnings；這些資訊不混入模擬民眾內容。
 - 預覽只用 React text rendering 與 HTTPS 連結，不使用 `dangerouslySetInnerHTML`、iframe、localStorage、IndexedDB 或 service worker cache。
 - Stage 6 不寫 `cms-public`、不建立 GitHub publication、PR 或公開 snapshot，也不修改 GitHub Pages 的 JSON、CSV、fallback、圖片或文件。
+
+## 後台 V1.0 階段 6.5：草稿圖片旋轉與裁切
+
+Stage 6.5 只允許 active admin 編輯自己內容下的新上傳 `cms_draft` 圖片。影像在瀏覽器使用 Canvas 套用 EXIF orientation、90°／180°／270° 旋轉及原始、自由、4:3、3:4、16:9、1:1 裁切；JPEG 固定以 0.92 品質輸出，PNG 保留透明度，WebP 維持原格式，輸出後仍須通過 Stage 5B-2 的 client 與 Edge 完整驗證。
+
+- 原始 private object 與 media row 永遠保留；編輯結果是不同 UUID path 的新 `cms_draft` object。`original_media_id` 直接指向根原圖，`transformation` 只記錄正規化後的旋轉與裁切，不保存 Canvas 或 signed URL 狀態，也不建立深層版本鏈。
+- attach／restore 由受控 RPC 原子切換 `coverAssetId` 或原 gallery 位置，增加 draft revision、把狀態降回 `draft` 並要求重新驗證。Alt、人物及權利 metadata 預設繼承；新檔重新計算 checksum、bytes、width 與 height。
+- 「恢復原圖」只把草稿引用切回根原圖；無其他引用的編輯版本才可清除。Orphan 判斷會保護仍有編輯版本指向的原圖，Storage／DB／attach 任一步驟失敗均採精確補償，不先破壞既有引用。
+- `github_legacy` 維持唯讀，不顯示圖片編輯或恢復功能，714 筆既有 metadata 與 Git 圖片均不回填、不搬移、不轉檔。未來若需修改 Legacy 圖片，必須另行設計 `Legacy public image → copy/import as cms_draft → edit copied draft version`，不得直接修改 Git asset。
+- 本階段不新增 image-processing Edge Function 或第三方圖片套件，不寫 `cms-public`、publication snapshot、GitHub publication 或公開網站；Stage 6 預覽只依目前已儲存的 draft media reference 顯示 private signed image。
