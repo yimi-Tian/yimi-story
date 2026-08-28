@@ -481,3 +481,16 @@ Stage 6.5 只允許 active admin 編輯自己內容下的新上傳 `cms_draft` �
 - 「恢復原圖」只把草稿引用切回根原圖；無其他引用的編輯版本才可清除。Orphan 判斷會保護仍有編輯版本指向的原圖，Storage／DB／attach 任一步驟失敗均採精確補償，不先破壞既有引用。
 - `github_legacy` 維持唯讀，不顯示圖片編輯或恢復功能，714 筆既有 metadata 與 Git 圖片均不回填、不搬移、不轉檔。未來若需修改 Legacy 圖片，必須另行設計 `Legacy public image → copy/import as cms_draft → edit copied draft version`，不得直接修改 Git asset。
 - 本階段不新增 image-processing Edge Function 或第三方圖片套件，不寫 `cms-public`、publication snapshot、GitHub publication 或公開網站；Stage 6 預覽只依目前已儲存的 draft media reference 顯示 private signed image。
+
+## 後台 V1.0 階段 7A：發布前驗證與準備快照
+
+Stage 7A 將已儲存且狀態為 `validated` 的確切草稿 revision，經第二層發布驗證後凍結成 immutable `publication_snapshots`。這是發布準備，不是公開發布；建立快照不會切換 `content_items.published_snapshot_id`，也不會修改草稿、圖片 metadata、Storage object、GitHub publication 或 GitHub Pages 資料。
+
+- `prepare-publication-snapshot` Edge Function 只接受正式 Admin origin 與 active admin JWT。Function 重新讀取草稿、內容與 media，不信任 browser 傳入的 canonical data、validation、manifest 或 checksum。
+- 最終檢查重新執行 Stage 1 canonical validation，確認草稿 status／validation 對應目前 revision、公開投影不含 `internalNotes`、圖片參照完整且順序固定、`cms_draft` object 存在且 SHA-256 與 metadata 一致。
+- 新上傳圖片在發布準備時必須具備 alt text、人物狀態與 `owned`／`authorized` 權利狀態。既有 `github_legacy` 缺 alt 只保留 grandfathered warning；不回填、不搬移或重寫 714 筆 baseline metadata。
+- snapshot 同時保存原 canonical `snapshot_data`、不含內部備註的 `public_data`、ordered media manifest、最終驗證摘要與 deterministic SHA-256。checksum 覆蓋 schema version、source revision、公開投影與 manifest。
+- 寫入由 service-role-only、`SECURITY DEFINER` RPC 在 transaction 中再次鎖定並核對 revision、draft status、公開投影、manifest 與 checksum。anonymous、non-admin、inactive admin 與 browser active admin 均不可直接建立、更新或刪除 snapshot。
+- 同一 draft revision 與 checksum 重複按下建立會回傳同一筆 snapshot，不產生重複列。草稿之後變更會形成較新的 revision；舊 snapshot 保持不可變且在 UI 中視為較舊準備版本。
+- 後台只顯示 revision、建立時間、狀態與 checksum 摘要，不顯示 raw JSON、UUID、private Storage path、signed URL 或 secret。管理員必須在確認對話框再次確認「此步驟不會立即更新公開網站」。
+- Stage 7A 不寫 `cms-public`、不轉移 private 圖片、不建立 GitHub branch／commit／PR、不切換正式 published pointer。這些工作保留給後續 Stage 7B。
