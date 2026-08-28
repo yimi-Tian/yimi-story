@@ -32,6 +32,6 @@ describe("Stage 5B-2 media validation",()=>{
   });
   test("排序保留asset IDs且邊界安全",()=>{expect(reorderAssetIds(["a","b","c"],1,-1)).toEqual(["b","a","c"]);expect(reorderAssetIds(["a"],0,-1)).toEqual(["a"]);});
   test("同content checksum重複可被阻擋",()=>expect(hasDuplicateChecksum([{checksumSha256:"abc"}],"abc")).toBe(true));
-  test("orphan cleanup只挑未被canonical refs引用的cms_draft",()=>{const assets=[{source:"cms_draft",referenceId:"keep"},{source:"cms_draft",referenceId:"orphan"},{source:"github_legacy",referenceId:"legacy"}];expect(findOrphanDraftMedia(assets,"keep",[])).toEqual([assets[1]]);});
+  test("orphan cleanup只挑未被canonical refs或版本關係保護的cms_draft",()=>{const assets=[{id:"keep",source:"cms_draft",referenceId:"keep",originalMediaId:null},{id:"root",source:"cms_draft",referenceId:"root",originalMediaId:null},{id:"edited",source:"cms_draft",referenceId:"edited",originalMediaId:"root"},{id:"orphan",source:"cms_draft",referenceId:"orphan",originalMediaId:null},{id:"legacy",source:"github_legacy",referenceId:"legacy",originalMediaId:null}];expect(findOrphanDraftMedia(assets,"keep",["edited"])).toEqual([assets[3]]);});
   test("header helpers拒絕未知格式",()=>{expect(detectImageType(new Uint8Array([1,2,3]))).toBeNull();expect(readImageDimensions(new Uint8Array([255,216,255]),"image/jpeg")).toBeNull();});
 });

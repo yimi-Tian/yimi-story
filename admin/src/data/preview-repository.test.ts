@@ -12,7 +12,7 @@ const media = (overrides: Partial<DraftMediaAsset>): DraftMediaAsset => ({
   id: "media", referenceId: "media", contentId: "content", draftId: null, source: "github_legacy", role: "gallery",
   legacyPath: "public/images/test.jpg", bucket: null, objectPath: null, originalFilename: "secret-filename.jpg",
   mimeType: "image/jpeg", byteSize: 1, width: 1, height: 1, checksumSha256: null, altText: "", containsPortrait: "unknown",
-  rightsStatus: "unknown", previewUrl: "https://example.test/image.jpg", ...overrides,
+  rightsStatus: "unknown", originalMediaId:null,transformation:null,previewUrl: "https://example.test/image.jpg", ...overrides,
 });
 
 test("draft wins over published and public model excludes internal notes", () => {

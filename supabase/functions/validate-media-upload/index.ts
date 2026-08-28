@@ -16,12 +16,23 @@ Deno.serve(createValidateMediaUploadHandler(allowedOrigin,{
   },
   async download(path){const {data,error}=await service.storage.from("cms-drafts").download(path);if(error||!data)throw new Error("media_download_failed");return new Uint8Array(await data.arrayBuffer());},
   async create(input,verified,userId){
+    let original:null|Record<string,unknown>=null;
+    if(input.originalMediaId){
+      const {data,error}=await service.from("media_assets")
+        .select("id,content_id,draft_id,source,role,original_media_id,original_filename,alt_text,rights_status,contains_portrait,portrait_consent")
+        .eq("id",input.originalMediaId).eq("content_id",input.contentId).eq("draft_id",input.draftId)
+        .eq("source","cms_draft").eq("created_by",userId).is("deleted_at",null).maybeSingle();
+      if(error||!data||data.original_media_id!==null||data.role!==input.role)throw new Error("media_original_invalid");
+      original=data;
+    }
     const {data,error}=await service.from("media_assets").insert({
       id:input.mediaId,content_id:input.contentId,draft_id:input.draftId,source:"cms_draft",role:input.role,sort_order:0,
-      bucket:"cms-drafts",object_path:input.objectPath,original_filename:String(input.originalFilename||"image").slice(0,255),
+      bucket:"cms-drafts",object_path:input.objectPath,original_filename:String(original?.original_filename??input.originalFilename??"image").slice(0,255),
       mime_type:verified.mimeType,extension:verified.extension,byte_size:verified.byteSize,width:verified.width,height:verified.height,
-      sha256:verified.sha256,alt_text:"",rights_status:"unknown",contains_portrait:null,portrait_consent:"pending",upload_status:"ready",created_by:userId,
-    }).select("id,content_id,draft_id,source,role,bucket,object_path,original_filename,mime_type,byte_size,width,height,sha256,alt_text,contains_portrait,rights_status,created_at,updated_at").single();
+      sha256:verified.sha256,alt_text:String(original?.alt_text??""),rights_status:original?.rights_status??"unknown",
+      contains_portrait:original?.contains_portrait??null,portrait_consent:original?.portrait_consent??"pending",upload_status:"ready",created_by:userId,
+      original_media_id:original?.id??null,transformation:original?input.transformation:null,
+    }).select("id,content_id,draft_id,source,role,bucket,object_path,original_filename,mime_type,byte_size,width,height,sha256,alt_text,contains_portrait,rights_status,original_media_id,transformation,created_at,updated_at").single();
     if(error?.code==="23505")throw new Error("duplicate_media"); if(error||!data)throw new Error("media_record_failed"); return data;
   },
   async remove(path){await service.storage.from("cms-drafts").remove([path]);},

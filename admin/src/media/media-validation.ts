@@ -103,7 +103,8 @@ export function reorderAssetIds(ids: string[], index: number, direction: -1 | 1)
   const next = [...ids]; [next[index], next[target]] = [next[target], next[index]]; return next;
 }
 export const hasDuplicateChecksum = (assets: readonly { checksumSha256: string | null }[], checksum: string) => assets.some((a) => a.checksumSha256 === checksum);
-export function findOrphanDraftMedia<T extends { source: string; referenceId: string }>(assets: readonly T[], coverAssetId: string | null, galleryAssetIds: readonly string[]): T[] {
+export function findOrphanDraftMedia<T extends { id:string;source:string;referenceId:string;originalMediaId?:string|null }>(assets: readonly T[], coverAssetId: string | null, galleryAssetIds: readonly string[]): T[] {
   const referenced=new Set([...(coverAssetId?[coverAssetId]:[]),...galleryAssetIds]);
-  return assets.filter((asset)=>asset.source==="cms_draft"&&!referenced.has(asset.referenceId));
+  const versionRoots=new Set(assets.flatMap((asset)=>asset.source==="cms_draft"&&asset.originalMediaId?[asset.originalMediaId]:[]));
+  return assets.filter((asset)=>asset.source==="cms_draft"&&!referenced.has(asset.referenceId)&&!versionRoots.has(asset.id));
 }

@@ -4,7 +4,9 @@ import { jsonResponse } from "../_shared/http.ts";
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 type Admin = { status: "active" | "inactive" | "not_admin" | "invalid"; userId?: string };
-type Input = { contentId: string; draftId: string; mediaId: string; bucket: string; objectPath: string; role: "cover" | "gallery"; originalFilename: string; declaredMimeType: string };
+type Crop = { x: number; y: number; width: number; height: number; aspectRatio: "original" | "free" | "4:3" | "3:4" | "16:9" | "1:1" };
+type Transformation = { rotation: 0 | 90 | 180 | 270; crop: Crop; normalizedOrientation: true; originalOrientation: number };
+type Input = { contentId: string; draftId: string; mediaId: string; bucket: string; objectPath: string; role: "cover" | "gallery"; originalFilename: string; declaredMimeType: string; originalMediaId?: string; transformation?: Transformation };
 type Verified = { mimeType: string; extension: string; byteSize: number; width: number; height: number; sha256: string };
 type Dependencies = {
   verify(token: string): Promise<Admin>;
@@ -40,6 +42,18 @@ async function checksum(bytes: Uint8Array): Promise<string> {
   const digest=await crypto.subtle.digest("SHA-256",source); return Array.from(new Uint8Array(digest),(b)=>b.toString(16).padStart(2,"0")).join("");
 }
 function validUuid(value: unknown): value is string { return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
+function validTransformation(value: unknown): value is Transformation {
+  if (!value || typeof value !== "object") return false;
+  const item=value as Record<string,unknown>,crop=item.crop as Record<string,unknown>|undefined;
+  const finite=(number:unknown)=>typeof number==="number"&&Number.isFinite(number);
+  return [0,90,180,270].includes(Number(item.rotation))
+    && item.normalizedOrientation===true
+    && Number.isInteger(item.originalOrientation)&&Number(item.originalOrientation)>=1&&Number(item.originalOrientation)<=8
+    && Boolean(crop)&&["original","free","4:3","3:4","16:9","1:1"].includes(String(crop?.aspectRatio))
+    && [crop?.x,crop?.y,crop?.width,crop?.height].every(finite)
+    && Number(crop?.x)>=0&&Number(crop?.y)>=0&&Number(crop?.width)>0&&Number(crop?.height)>0
+    && Number(crop?.x)+Number(crop?.width)<=1.000001&&Number(crop?.y)+Number(crop?.height)<=1.000001;
+}
 
 export function createValidateMediaUploadHandler(allowedOrigin: string, deps: Dependencies) {
   return async (request: Request): Promise<Response> => {
@@ -52,6 +66,8 @@ export function createValidateMediaUploadHandler(allowedOrigin: string, deps: De
     if(admin.status!=="active"||!admin.userId)return jsonResponse({error:"admin_required"},403,headers);
     let input: Input; try{input=await request.json();}catch{return jsonResponse({error:"invalid_request"},400,headers);}
     if(!input||typeof input!=="object"||!validUuid(input.contentId)||!validUuid(input.draftId)||!validUuid(input.mediaId)||input.bucket!=="cms-drafts"||!['cover','gallery'].includes(input.role)||typeof input.objectPath!=="string"||typeof input.originalFilename!=="string"||typeof input.declaredMimeType!=="string")return jsonResponse({error:"invalid_request"},400,headers);
+    const derived=input.originalMediaId!==undefined||input.transformation!==undefined;
+    if(derived&&(!validUuid(input.originalMediaId)||!validTransformation(input.transformation)))return jsonResponse({error:"invalid_transformation"},400,headers);
     const expected=`${admin.userId}/${input.contentId}/${input.mediaId}/${input.mediaId}.`;
     if(!input.objectPath.startsWith(expected)||input.objectPath.includes("..")||input.objectPath.includes("\\"))return jsonResponse({error:"invalid_object_path"},403,headers);
     try {

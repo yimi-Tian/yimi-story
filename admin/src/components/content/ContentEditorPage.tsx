@@ -76,6 +76,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imageEditing, setImageEditing] = useState(false);
   const [failed, setFailed] = useState(false);
   const mediaRef = useRef<DraftMediaEditorHandle>(null);
 
@@ -98,7 +99,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     return () => { active = false; };
   }, [client, isClass, isNew, type, year]);
 
-  useUnsavedChangesWarning(dirty || uploading);
+  useUnsavedChangesWarning(dirty || uploading || imageEditing);
 
   const canonical = useMemo(() => {
     const withId = { ...form, id: isNew ? previewId : form.id } as ContentForm;
@@ -147,6 +148,12 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   }, []);
   const markMediaDirty = useCallback(() => { setDirty(true); setStatus((current) => downgradeValidatedAfterEdit(current)); }, []);
   const markUploading = useCallback((value: boolean) => setUploading(value), []);
+  const markImageEditing = useCallback((value:boolean)=>setImageEditing(value),[]);
+  const imageVersionSaved = useCallback((coverAssetId:string|null,galleryAssetIds:string[],saved:{revision:number;status:"draft";updatedAt:string})=>{
+    setForm((current)=>({...current,coverAssetId,galleryAssetIds}) as ContentForm);
+    setRecord((current)=>current?{...current,data:{...current.data,coverAssetId,galleryAssetIds} as typeof current.data,revision:saved.revision,draftStatus:"draft",updatedAt:saved.updatedAt}:current);
+    setValidation((current)=>({...current,valid:false}));setStatus("draft");
+  },[]);
 
   if (loading) return <LoadingState label="正在建立或讀取草稿" />;
   if (failed && !record && !isNew) return <ErrorState message="無法讀取內容，請確認網路連線與管理員權限。" />;
@@ -156,7 +163,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     <section className="version-panel"><div><span>目前正式版本</span><strong>{record?.publishedAt ? new Date(record.publishedAt).toLocaleString("zh-TW") : "尚未發布"}</strong></div><div><span>草稿版本</span><strong>{record?.revision ? `r${record.revision}` : "建立後為 r1"}</strong><small>{record?.updatedAt ? `最後更新 ${new Date(record.updatedAt).toLocaleString("zh-TW")}` : "尚未儲存"}</small></div><span className={`record-status ${dirty ? "has-draft" : ""}`}>{dirty ? "有未儲存變更" : status === "validated" ? "已檢查" : "草稿"}</span></section>
     <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>錯誤（{validation.errors.length}）</h2>{validation.errors.length ? <ul>{validation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{validation.warnings.length}）</h2>{validation.warnings.length ? <ul>{validation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證提醒。</p>}</section></div>
     <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} /> : <ActivityFields form={form as ActivityForm} set={set} />}
-      {record?.draftId ? <DraftMediaEditor ref={mediaRef} client={client} contentId={record.contentId} draftId={record.draftId} coverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} onReferences={setMediaReferences} onDirty={markMediaDirty} onUploading={markUploading} /> : <section className="form-section media-readonly"><h2>圖片</h2><p className="muted">請先儲存文字草稿，再上傳圖片。</p></section>}
+      {record?.draftId ? <DraftMediaEditor ref={mediaRef} client={client} contentId={record.contentId} draftId={record.draftId} coverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} onReferences={setMediaReferences} onDirty={markMediaDirty} onUploading={markUploading} onEditing={markImageEditing} onVersionSaved={imageVersionSaved} /> : <section className="form-section media-readonly"><h2>圖片</h2><p className="muted">請先儲存文字草稿，再上傳圖片。</p></section>}
     </form>
   </>;
 }
