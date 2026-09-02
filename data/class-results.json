@@ -1801,5 +1801,35 @@
     ],
     "displayOrder": 56,
     "remarks": null
+  },
+  {
+    "id": "CR-115-057",
+    "year": 115,
+    "title": "Stage 7C Publication Draft PR 驗收測試",
+    "className": "Stage 7C 網站發布驗收",
+    "instructor": "邑米測試管理員",
+    "description": "此筆內容僅用於驗證正式資料輸出、GitHub Draft PR 與圖片公開路徑，絕對不會合併至正式網站。",
+    "districts": [
+      "朴子市"
+    ],
+    "venue": "邑米地方知識探索平台",
+    "photoFolder": "CR-115-057",
+    "coverImage": "https://dyjrzrputeomrmqhkwgi.supabase.co/storage/v1/object/public/cms-public/content/71e2d321-e22d-4f4a-9f10-081c3cc957e8/da0fd4c3-39a2-4c27-916b-4c63b6ae6661/649777d9877cbe843d261915bff5646f8d2ea7431cc1664834fbd2a345929ec1.jpg",
+    "coverImageAlt": "Stage 7C 驗收封面",
+    "images": [
+      "https://dyjrzrputeomrmqhkwgi.supabase.co/storage/v1/object/public/cms-public/content/71e2d321-e22d-4f4a-9f10-081c3cc957e8/f3825b6e-ae3c-4f2a-986e-de004783b506/12c24e8f2e10197ece58ee8a34643d202a38745cd967316f283ad5ba5ed20c1f.jpg"
+    ],
+    "imageAlts": [
+      "Stage 7C 驗收相簿"
+    ],
+    "publicationStatus": "approved",
+    "tags": [
+      "發布驗收"
+    ],
+    "sdgs": [
+      "SDG 4"
+    ],
+    "displayOrder": 57,
+    "publicNotes": "Stage 7C temporary fixture"
   }
 ]
