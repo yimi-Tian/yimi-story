@@ -54,3 +54,9 @@ verify_jwt = false
 
 [functions.prepare-publication-media]
 verify_jwt = false
+
+[functions.prepare-github-publication]
+verify_jwt = false
+
+[functions.finalize-github-publication]
+verify_jwt = false

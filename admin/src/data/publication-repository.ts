@@ -25,6 +25,21 @@ export interface PublicationMediaPreparation {
   manifestChecksum: string | null;
   errorCode: string | null;
 }
+export interface GitHubPublication {
+  id: string;
+  snapshotId: string;
+  status: "creating" | "dry_run_ready" | "branch_created" | "open" | "merged" | "deploy_pending" | "deployed" | "finalized" | "failed" | "cancelled";
+  branch: string;
+  baseSha: string;
+  commitSha: string | null;
+  prNumber: number | null;
+  prUrl: string | null;
+  changedFiles: string[];
+  beforeCounts: { classResults: number; activities: number } | null;
+  afterCounts: { classResults: number; activities: number } | null;
+  checkedAt: string | null;
+  errorCode: string | null;
+}
 
 function fail(code: string): never { throw new Error(code); }
 
@@ -111,4 +126,47 @@ export async function requestPublicationMediaPreparation(client: SupabaseClient,
     manifestChecksum: item.manifestChecksum ? String(item.manifestChecksum) : null,
     errorCode: item.errorCode ? String(item.errorCode) : null,
   };
+}
+
+function githubPublication(value: Record<string, unknown>): GitHubPublication {
+  const manifest = value.formal_manifest as Record<string, unknown> | undefined;
+  const shape = value.beforeCounts !== undefined ? value : {
+    id: value.id, snapshotId: value.snapshot_id, status: value.pr_state, branch: value.head_branch,
+    baseSha: value.base_sha, commitSha: value.commit_sha, prNumber: value.pr_number, prUrl: value.pr_url,
+    changedFiles: manifest?.changedFiles, beforeCounts: manifest?.beforeCounts, afterCounts: manifest?.afterCounts,
+    checkedAt: value.checked_at, errorCode: value.error_code,
+  };
+  return {
+    id: String(shape.id), snapshotId: String(shape.snapshotId), status: String(shape.status) as GitHubPublication["status"],
+    branch: String(shape.branch), baseSha: String(shape.baseSha), commitSha: shape.commitSha ? String(shape.commitSha) : null,
+    prNumber: shape.prNumber ? Number(shape.prNumber) : null, prUrl: shape.prUrl ? String(shape.prUrl) : null,
+    changedFiles: Array.isArray(shape.changedFiles) ? shape.changedFiles.map(String) : [],
+    beforeCounts: shape.beforeCounts as GitHubPublication["beforeCounts"] ?? null,
+    afterCounts: shape.afterCounts as GitHubPublication["afterCounts"] ?? null,
+    checkedAt: shape.checkedAt ? String(shape.checkedAt) : null, errorCode: shape.errorCode ? String(shape.errorCode) : null,
+  };
+}
+
+export async function fetchGitHubPublication(client: SupabaseClient, snapshotId: string): Promise<GitHubPublication | null> {
+  const { data, error } = await client.from("github_publications")
+    .select("id,snapshot_id,pr_state,head_branch,base_sha,commit_sha,pr_number,pr_url,formal_manifest,checked_at,error_code")
+    .eq("snapshot_id", snapshotId).maybeSingle();
+  if (error) fail("GITHUB_PUBLICATION_STATUS_FAILED");
+  return data ? githubPublication(data as Record<string, unknown>) : null;
+}
+
+export async function requestGitHubPublication(
+  client: SupabaseClient,
+  snapshotId: string,
+  action: "dry_run" | "create_draft_pr" | "refresh_status" | "cancel",
+): Promise<GitHubPublication> {
+  const { data, error } = await client.functions.invoke("prepare-github-publication", { body: { action, snapshotId } });
+  if (error || !data?.publication) fail(typeof data?.error === "string" ? data.error : "GITHUB_PUBLICATION_FAILED");
+  return githubPublication(data.publication as Record<string, unknown>);
+}
+
+export async function finalizeGitHubPublication(client: SupabaseClient, snapshotId: string): Promise<GitHubPublication> {
+  const { data, error } = await client.functions.invoke("finalize-github-publication", { body: { snapshotId } });
+  if (error || !data?.publication) fail(typeof data?.error === "string" ? data.error : "FINALIZATION_FAILED");
+  return githubPublication(data.publication as Record<string, unknown>);
 }
