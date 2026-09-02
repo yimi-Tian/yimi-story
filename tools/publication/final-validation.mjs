@@ -2,7 +2,7 @@ import { validateActivity } from "../content/validate-activity.mjs";
 import { validateClassResult } from "../content/validate-class-result.mjs";
 import { projectActivityPublicData, projectClassResultPublicData } from "../content/public-projection.mjs";
 
-export const PUBLICATION_SCHEMA_VERSION = "1.0";
+export const PUBLICATION_SCHEMA_VERSION = "1.1";
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -69,6 +69,18 @@ function buildManifestEntry(asset, sortOrder) {
     bucket: asset.bucket ?? null,
     objectPath: asset.objectPath ?? null,
     originalMediaId: asset.originalMediaId ?? null,
+    mimeType: asset.mimeType ?? null,
+    extension: asset.extension ?? null,
+    byteSize: asset.byteSize ?? null,
+    width: asset.width ?? null,
+    height: asset.height ?? null,
+    altText: asset.altText ?? null,
+    caption: asset.caption ?? null,
+    credit: asset.credit ?? null,
+    rightsStatus: asset.rightsStatus ?? null,
+    containsPortrait: asset.containsPortrait ?? null,
+    portraitConsent: asset.portraitConsent ?? null,
+    uploadStatus: asset.uploadStatus ?? null,
   };
 }
 

@@ -53,6 +53,16 @@ test("BrowserRouter 相容 route 可解析 existing class publicId 並顯示編�
 });
 afterEach(() => cleanup());
 
+test("新班級尚無draft與snapshot時 Editor 正常載入", async () => {
+  render(<MemoryRouter initialEntries={["/class-results/new"]}><Routes>
+    <Route path="/class-results/new" element={<ContentEditorBoundary type="class_result"><ContentEditorPage type="class_result" isNew /></ContentEditorBoundary>} />
+  </Routes></MemoryRouter>);
+  expect(await screen.findByRole("heading", { name: "新增班級花絮" })).toBeInTheDocument();
+  expect(screen.getByText(/請先儲存文字草稿/)).toBeInTheDocument();
+  expect(screen.queryByText("後台暫時無法載入")).not.toBeInTheDocument();
+  expect(mocks.fetchPublicationSnapshots).not.toHaveBeenCalled();
+});
+
 test("dirty form refuses to preview an older saved draft", async () => {
   const alert = vi.spyOn(window, "alert").mockImplementation(() => undefined);
   mocks.openContentDraft.mockResolvedValue({

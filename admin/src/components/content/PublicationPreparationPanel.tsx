@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchPublicationSnapshots, requestPublicationPreparation, type PublicationPreparation, type PublicationSnapshotSummary } from "../../data/publication-repository";
+import { PublicationMediaPreparationPanel } from "./PublicationMediaPreparationPanel";
 
 interface Props {
   client: SupabaseClient;
@@ -41,6 +42,7 @@ export function PublicationPreparationPanel({ client, contentId, draftId, revisi
   };
 
   const current = snapshots.find((snapshot) => snapshot.revision === revision);
+  const mediaCandidate = current ?? snapshots[0] ?? null;
   return <section className="form-section publication-panel" aria-labelledby="publication-title">
     <div className="publication-panel__heading"><div><p className="eyebrow">Stage 7A</p><h2 id="publication-title">發布前準備</h2><p className="muted">建立不可變更的準備快照；不會更新公開網站，也不會送出 GitHub 發布。</p></div><span className="record-status">{current ? "發布快照已建立・尚未公開" : "尚未建立發布快照"}</span></div>
     {error && <div className="form-error" role="alert">{error}</div>}
@@ -55,5 +57,6 @@ export function PublicationPreparationPanel({ client, contentId, draftId, revisi
       <button className="button button--accent" type="button" disabled={blocked || draftStatus !== "validated" || !preparation?.valid || Boolean(working) || Boolean(current)} onClick={() => void run("create")}>{working === "create" ? "建立中…" : current ? "已建立目前版本" : "建立發布快照"}</button>
     </div>
     {blocked && <small className="muted">請先完成並儲存目前的文字或圖片變更。</small>}
+    <PublicationMediaPreparationPanel client={client} snapshot={mediaCandidate} currentRevision={revision} />
   </section>;
 }

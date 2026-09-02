@@ -12,7 +12,7 @@ type Preparation = {
   mediaManifest: unknown[];
   publicData: Record<string, unknown>;
 };
-type Snapshot = { created_at: string; source_revision: number; checksum_sha256: string; status: string };
+type Snapshot = { id: string; schema_version: string; created_at: string; source_revision: number; checksum_sha256: string; status: string };
 type Dependencies = {
   verify(token: string): Promise<Admin>;
   prepare(input: Input, userId: string): Promise<Preparation>;
