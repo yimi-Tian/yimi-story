@@ -2,13 +2,13 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { PublicationMediaPreparationPanel } from "./PublicationMediaPreparationPanel";
 
-const mocks=vi.hoisted(()=>({fetch:vi.fn(),request:vi.fn()}));
-vi.mock("../../data/publication-repository",()=>({fetchPublicationMediaPreparation:mocks.fetch,requestPublicationMediaPreparation:mocks.request}));
+const mocks=vi.hoisted(()=>({fetch:vi.fn(),request:vi.fn(),fetchGitHub:vi.fn(),requestGitHub:vi.fn(),finalizeGitHub:vi.fn()}));
+vi.mock("../../data/publication-repository",()=>({fetchPublicationMediaPreparation:mocks.fetch,requestPublicationMediaPreparation:mocks.request,fetchGitHubPublication:mocks.fetchGitHub,requestGitHubPublication:mocks.requestGitHub,finalizeGitHubPublication:mocks.finalizeGitHub}));
 const client={} as never;
 const snapshot={id:"11111111-1111-4111-8111-111111111111",revision:9,schemaVersion:"1.1",checksum:"a".repeat(64),status:"ready",createdAt:"2026-09-02T00:00:00Z"};
 const ready={status:"ready",requiredCount:3,promotedCount:3,legacyCount:0,failedCount:0,manifestChecksum:"b".repeat(64),errorCode:null} as const;
 afterEach(()=>cleanup());
-beforeEach(()=>{mocks.fetch.mockReset();mocks.request.mockReset();mocks.fetch.mockResolvedValue(null);});
+beforeEach(()=>{mocks.fetch.mockReset();mocks.request.mockReset();mocks.fetchGitHub.mockReset();mocks.requestGitHub.mockReset();mocks.finalizeGitHub.mockReset();mocks.fetch.mockResolvedValue(null);mocks.fetchGitHub.mockResolvedValue(null);});
 
 test("沒有snapshot時按鈕停用",()=>{render(<PublicationMediaPreparationPanel client={client} snapshot={null} currentRevision={9}/>);expect(screen.getByRole("button",{name:"準備正式圖片"})).toBeDisabled();expect(screen.getByText(/請先建立發布快照/)).toBeInTheDocument();});
 test("1.1 snapshot但沒有preparation row時顯示尚未準備",async()=>{render(<PublicationMediaPreparationPanel client={client} snapshot={snapshot} currentRevision={9}/>);expect(await screen.findByText("尚未準備")).toBeInTheDocument();expect(screen.getByRole("button",{name:"準備正式圖片"})).toBeEnabled();});

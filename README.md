@@ -494,3 +494,17 @@ Stage 7A 將已儲存且狀態為 `validated` 的確切草稿 revision，經第�
 - 同一 draft revision 與 checksum 重複按下建立會回傳同一筆 snapshot，不產生重複列。草稿之後變更會形成較新的 revision；舊 snapshot 保持不可變且在 UI 中視為較舊準備版本。
 - 後台只顯示 revision、建立時間、狀態與 checksum 摘要，不顯示 raw JSON、UUID、private Storage path、signed URL 或 secret。管理員必須在確認對話框再次確認「此步驟不會立即更新公開網站」。
 - Stage 7A 不寫 `cms-public`、不轉移 private 圖片、不建立 GitHub branch／commit／PR、不切換正式 published pointer。這些工作保留給後續 Stage 7B。
+
+## 後台 V1.0 階段 7C：GitHub Draft PR 與正式資料輸出
+
+Stage 7C 只接受 schema／media manifest `1.1`、Stage 7A 驗證成功且 Stage 7B 正式圖片準備為 `ready` 的 publication snapshot。正式資料由 snapshot 的 `public_data` 與 frozen media manifest 產生，不回讀 current draft media metadata；GitHub `main` 上的 canonical JSON／CSV 是合併前基準。
+
+- GitHub repository 固定為 `yimi-Tian/yimi-story`、base 固定為 `main`。正式檔案白名單只有 `data/class-results.json`、`data/class-results-data.js`、`activities.csv`、`activities-data.js`、`data/platform-home.json`、`data/platform-home-data.js`，不允許圖片、文件或其他路徑。
+- 班級 canonical authority 是 `data/class-results.json`，活動 canonical authority 是 `activities.csv`；兩個 JavaScript fallback 由同次 deterministic export 產生。新增活動時才同步更新首頁活動數量及其 fallback。
+- GitHub App JWT 與 installation token 只在 Edge Function 記憶體中短暫存在。App ID、installation ID、private key、owner 與 repository 都由 Supabase Edge Function secrets 提供，不進 React bundle、資料庫、檔案或 log。
+- 流程先做 dry run 並凍結六檔 SHA-256／byte size、main SHA、snapshot checksum 與 Stage 7B manifest checksum；main 前進或重算結果不同時停止，不會套用過期輸出。
+- 發布 branch 名稱由內容類型、Public ID 與 snapshot checksum 決定。系統只建立 Draft PR，沒有 merge API；管理員必須到 GitHub 人工檢查 Files Changed 並自行合併。
+- PR 合併後，server 重新驗證 PR identity、main 六檔 checksum 與 GitHub Pages 實際 bytes。全部一致後，service-role-only RPC 才以 transaction 和 pointer race guard 更新 `published_snapshot_id`。
+- 取消只適用尚未合併的 publication：精確關閉該 Draft PR 並刪除該 publication branch。已合併後不可由後台取消或刪除 main。
+- `github_publications` 對 browser 只讀；browser 只傳 action 與 snapshot ID，不能指定 repository、branch、formal path、commit SHA、PR 狀態或 published pointer。
+- 正式完成後仍保留 draft、`cms_draft` source 與 `cms_public` 對應資料，供版本追溯；Stage 7C 不會自動清除已發布來源。

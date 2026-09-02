@@ -6,6 +6,7 @@ import {
   type PublicationMediaPreparation,
   type PublicationSnapshotSummary,
 } from "../../data/publication-repository";
+import { GitHubPublicationPanel } from "./GitHubPublicationPanel";
 
 interface Props {
   client: SupabaseClient;
@@ -63,5 +64,6 @@ export function PublicationMediaPreparationPanel({ client, snapshot, currentRevi
     {ready && preparation && <div className="publication-result" aria-live="polite"><strong>正式圖片準備完成</strong><span>需要準備：{preparation.requiredCount}・成功：{preparation.promotedCount}・既有公開圖片：{preparation.legacyCount}</span><span>尚未公開</span><small>下一步將於後續階段建立網站發布內容與 GitHub 發布流程。</small></div>}
     {failed && preparation && <div className="publication-failure" aria-live="polite"><strong>正式圖片準備未完成</strong><span>完成：{preparation.promotedCount}・失敗：{Math.max(preparation.failedCount, 1)}</span><small>可重新嘗試；系統不會覆寫既有正式圖片。</small></div>}
     <button className="button button--accent" type="button" disabled={!snapshot || !compatible || loading || working || ready} onClick={() => void prepare()}>{working ? "準備中…" : failed ? "重新嘗試" : ready ? "正式圖片準備完成" : "準備正式圖片"}</button>
+    <GitHubPublicationPanel client={client} snapshot={snapshot} mediaPreparation={preparation} />
   </section>;
 }
