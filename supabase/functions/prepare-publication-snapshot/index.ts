@@ -32,7 +32,7 @@ Deno.serve(createPreparePublicationSnapshotHandler(allowedOrigin, {
       .select("content_type,published_snapshot_id").eq("id", draft.content_id).single();
     if (itemError || !item) throw new Error("content_not_found");
     const { data: media, error: mediaError } = await service.from("media_assets")
-      .select("id,content_id,draft_id,source,role,sort_order,legacy_path,legacy_asset_key,bucket,object_path,sha256,alt_text,rights_status,contains_portrait,upload_status,original_media_id,deleted_at,created_by")
+      .select("id,content_id,draft_id,source,role,sort_order,legacy_path,legacy_asset_key,bucket,object_path,sha256,mime_type,extension,byte_size,width,height,alt_text,caption,credit,rights_status,contains_portrait,portrait_consent,upload_status,original_media_id,deleted_at,created_by")
       .eq("content_id", draft.content_id).is("deleted_at", null);
     if (mediaError) throw new Error("media_lookup_failed");
     const mapped = (media ?? []).map((asset) => ({
@@ -40,8 +40,11 @@ Deno.serve(createPreparePublicationSnapshotHandler(allowedOrigin, {
       source: asset.source, role: asset.role, sortOrder: asset.sort_order,
       legacyPath: asset.legacy_path, legacyAssetKey: asset.legacy_asset_key,
       bucket: asset.bucket, objectPath: asset.object_path, sha256: asset.sha256,
-      altText: asset.alt_text, rightsStatus: asset.rights_status,
-      containsPortrait: asset.contains_portrait, uploadStatus: asset.upload_status,
+      mimeType: asset.mime_type, extension: asset.extension, byteSize: asset.byte_size,
+      width: asset.width, height: asset.height, altText: asset.alt_text,
+      caption: asset.caption, credit: asset.credit, rightsStatus: asset.rights_status,
+      containsPortrait: asset.contains_portrait, portraitConsent: asset.portrait_consent,
+      uploadStatus: asset.upload_status,
       originalMediaId: asset.original_media_id, deletedAt: asset.deleted_at,
     }));
     return validatePublicationPreparation({
@@ -78,6 +81,8 @@ Deno.serve(createPreparePublicationSnapshotHandler(allowedOrigin, {
     if (error || !data) throw new Error(error?.message ?? "snapshot_create_failed");
     const snapshot = Array.isArray(data) ? data[0] : data;
     return {
+      id: snapshot.id,
+      schema_version: snapshot.schema_version,
       created_at: snapshot.created_at,
       source_revision: snapshot.source_revision,
       checksum_sha256: snapshot.checksum_sha256,

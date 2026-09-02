@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { coreSql, policyBlock } from "./contract-helpers.mjs";
+import { coreSql, policyBlock, read } from "./contract-helpers.mjs";
+
+const publicationMediaSql = read("supabase/migrations/202609020001_publication_media_promotion.sql");
 
 const tables = [
   "admin_users",
@@ -16,6 +18,8 @@ test("所有管理 table 啟用 RLS", () => {
     assert.match(coreSql, new RegExp(`alter table public\\.${table} enable row level security`, "i"));
   }
 });
+
+test("Stage 7B preparation與mapping啟用RLS且browser唯讀",()=>{for(const table of ["publication_media_preparations","publication_media_mappings"]){assert.match(publicationMediaSql,new RegExp(`alter table public\\.${table} enable row level security`,"i"));assert.match(publicationMediaSql,new RegExp(`create policy ${table}_select_active_admin[\\s\\S]*for select to authenticated`,"i"));assert.match(publicationMediaSql,new RegExp(`revoke insert, update, delete on table public\\.${table} from authenticated`,"i"));}});
 
 test("is_active_admin 使用固定 search_path 並避免 recursive RLS", () => {
   assert.match(coreSql, /create function public\.is_active_admin\(\)[\s\S]*security definer[\s\S]*set search_path = pg_catalog, public/i);

@@ -18,6 +18,8 @@ const mediaDraftSql = read("supabase/migrations/202608190003_media_drafts.sql");
 const mediaEditSql = read("supabase/migrations/202608270001_media_edit_versions.sql");
 const mediaReattachSql = read("supabase/migrations/202608280001_attach_existing_draft_media.sql");
 const publicationSnapshotSql = read("supabase/migrations/202608280002_publication_snapshot_workflow.sql");
+const publicationManifestV2Sql = read("supabase/migrations/202609010001_publication_snapshot_media_manifest_v2.sql");
+const publicationMediaSql = read("supabase/migrations/202609020001_publication_media_promotion.sql");
 
 test("migration 採穩定順序且不含 destructive drop", () => {
   assert.deepEqual(migrationFiles, [
@@ -31,9 +33,11 @@ test("migration 採穩定順序且不含 destructive drop", () => {
     "202608270001_media_edit_versions.sql",
     "202608280001_attach_existing_draft_media.sql",
     "202608280002_publication_snapshot_workflow.sql",
+    "202609010001_publication_snapshot_media_manifest_v2.sql",
+    "202609020001_publication_media_promotion.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}\n${mediaEnumSql}\n${mediaDraftSql}\n${mediaEditSql}\n${mediaReattachSql}\n${publicationSnapshotSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql, mediaEnumSql, mediaDraftSql, mediaEditSql, mediaReattachSql, publicationSnapshotSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}\n${mediaEnumSql}\n${mediaDraftSql}\n${mediaEditSql}\n${mediaReattachSql}\n${publicationSnapshotSql}\n${publicationManifestV2Sql}\n${publicationMediaSql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql, mediaEnumSql, mediaDraftSql, mediaEditSql, mediaReattachSql, publicationSnapshotSql, publicationManifestV2Sql, publicationMediaSql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }

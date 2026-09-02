@@ -51,3 +51,6 @@ verify_jwt = false
 
 [functions.prepare-publication-snapshot]
 verify_jwt = false
+
+[functions.prepare-publication-media]
+verify_jwt = false
