@@ -6,6 +6,7 @@ import {
   emptyClassResultForm,
   formFromCanonical,
   normalizeContentForm,
+  presentValidationIssue,
   sdgOptions,
   validateCanonicalContent,
   type ActivityForm,
@@ -25,9 +26,9 @@ import { PublicationPreparationPanel } from "./PublicationPreparationPanel";
 
 const emptyValidation: ValidationResult = { valid: false, errors: [], warnings: [] };
 
-function TextField({ label, value, onChange, type = "text", required = false }: { label: string; value: string; onChange(value: string): void; type?: string; required?: boolean }) {
+function TextField({ label, value, onChange, type = "text", required = false, note, error }: { label: string; value: string; onChange(value: string): void; type?: string; required?: boolean; note?: string; error?: string }) {
   const id = `field-${label.replace(/\s/g, "-")}`;
-  return <label htmlFor={id}>{label}{required && <span className="required-mark">必填</span>}<input id={id} type={type} value={value} required={required} onChange={(event) => onChange(event.target.value)} /></label>;
+  return <label htmlFor={id}>{label}{required && <span className="required-mark">必填</span>}{note && <small>{note}</small>}<input id={id} type={type} value={value} required={required} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined} onChange={(event) => onChange(event.target.value)} />{error && <small id={`${id}-error`} className="field-error" role="alert">{error}</small>}</label>;
 }
 
 function TextAreaField({ label, value, onChange, note }: { label: string; value: string; onChange(value: string): void; note?: string }) {
@@ -54,10 +55,10 @@ function ClassFields({ form, set }: { form: ClassResultForm; set(field: keyof Cl
   </>;
 }
 
-function ActivityFields({ form, set }: { form: ActivityForm; set(field: keyof ActivityForm, value: unknown): void }) {
+function ActivityFields({ form, set, participantError }: { form: ActivityForm; set(field: keyof ActivityForm, value: unknown): void; participantError?: string }) {
   return <>
     <section className="form-section"><h2>基本資料</h2><div className="form-grid"><TextField label="年度" type="number" required value={form.year} onChange={(value) => set("year", value)} /><TextField label="活動名稱" required value={form.name} onChange={(value) => set("name", value)} /><TextField label="開始日期" type="date" value={form.startDate} onChange={(value) => set("startDate", value)} /><TextField label="結束日期" type="date" value={form.endDate} onChange={(value) => set("endDate", value)} /><TextField label="日期顯示" required value={form.dateLabel} onChange={(value) => set("dateLabel", value)} /><MultiChecks legend="地區" options={districtOptions} values={form.districts} onChange={(value) => set("districts", value)} /><TextField label="場地" required value={form.venue} onChange={(value) => set("venue", value)} /></div></section>
-    <section className="form-section"><h2>活動內容</h2><div className="form-grid"><TextField label="計畫名稱" value={form.projectName} onChange={(value) => set("projectName", value)} /><TextField label="活動類型" required value={form.activityType} onChange={(value) => set("activityType", value)} /><TextField label="活動主題" required value={form.topic} onChange={(value) => set("topic", value)} /><TextAreaField label="活動摘要" value={form.summary} onChange={(value) => set("summary", value)} /><MultiChecks legend="SDGs" options={sdgOptions} values={form.sdgs} onChange={(value) => set("sdgs", value)} /><TextField label="參加人數" type="number" value={form.participants} onChange={(value) => set("participants", value)} /><TextField label="合作單位" value={form.partnerOrganizations} onChange={(value) => set("partnerOrganizations", value)} /><TextField label="講師／帶領者" value={form.leader} onChange={(value) => set("leader", value)} /><TagField label="關鍵字" values={form.keywords} onChange={(value) => set("keywords", value)} /><TextField label="影片網址" type="url" value={form.videoUrl} onChange={(value) => set("videoUrl", value)} /><TextField label="相關網址" type="url" value={form.relatedUrl} onChange={(value) => set("relatedUrl", value)} /><label className="check-single"><input type="checkbox" checked={form.featured} onChange={(event) => set("featured", event.target.checked)} />首頁精選</label></div></section>
+    <section className="form-section"><h2>活動內容</h2><div className="form-grid"><TextField label="計畫名稱" value={form.projectName} onChange={(value) => set("projectName", value)} /><TextField label="活動類型" required value={form.activityType} onChange={(value) => set("activityType", value)} /><TextField label="活動主題" required value={form.topic} onChange={(value) => set("topic", value)} /><TextAreaField label="活動摘要" value={form.summary} onChange={(value) => set("summary", value)} /><MultiChecks legend="SDGs" options={sdgOptions} values={form.sdgs} onChange={(value) => set("sdgs", value)} /><TextField label="參與人次" note="請填本活動累計參與人次。" error={participantError} type="number" value={form.participants} onChange={(value) => set("participants", value)} /><TextField label="合作單位" value={form.partnerOrganizations} onChange={(value) => set("partnerOrganizations", value)} /><TextField label="講師／帶領者" value={form.leader} onChange={(value) => set("leader", value)} /><TagField label="關鍵字" values={form.keywords} onChange={(value) => set("keywords", value)} /><TextField label="影片網址" type="url" value={form.videoUrl} onChange={(value) => set("videoUrl", value)} /><TextField label="相關網址" type="url" value={form.relatedUrl} onChange={(value) => set("relatedUrl", value)} /><label className="check-single"><input type="checkbox" checked={form.featured} onChange={(event) => set("featured", event.target.checked)} />首頁精選</label></div></section>
     <section className="form-section"><h2>管理資訊</h2><div className="form-grid"><TextAreaField label="公開備註" note="可能顯示於未來公開內容" value={form.publicNotes} onChange={(value) => set("publicNotes", value)} /><div className="internal-note"><TextAreaField label="內部備註" note="僅後台管理使用，不會發布到公開網站" value={form.internalNotes} onChange={(value) => set("internalNotes", value)} /></div></div></section>
   </>;
 }
@@ -155,6 +156,11 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     setRecord((current)=>current?{...current,data:{...current.data,coverAssetId,galleryAssetIds} as typeof current.data,revision:saved.revision,draftStatus:"draft",updatedAt:saved.updatedAt}:current);
     setValidation((current)=>({...current,valid:false}));setStatus("draft");
   },[]);
+  const presentedValidation = useMemo(() => ({
+    errors: validation.errors.map(presentValidationIssue),
+    warnings: validation.warnings.map(presentValidationIssue),
+  }), [validation]);
+  const participantError = presentedValidation.errors.find((issue) => issue.field === "參與人次")?.message;
 
   if (loading) return <LoadingState label="正在建立或讀取草稿" />;
   if (failed && !record && !isNew) return <ErrorState message="無法讀取內容，請確認網路連線與管理員權限。" />;
@@ -162,9 +168,9 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     <div className="page-heading"><div><p className="eyebrow">{isNew ? "New draft" : "Edit draft"}</p><h1>{isNew ? `新增${isClass ? "班級花絮" : "活動成果"}` : String((form as ClassResultForm).title || (form as ActivityForm).name)}</h1><p className="muted">Public ID：<code>{isNew ? previewId : form.id}</code>{isNew && "（預覽；儲存時由資料庫安全配置）"}</p></div><div className="heading-actions"><button className="button button--ghost" type="button" onClick={() => void cancel()}>取消</button><button className="button button--secondary" type="button" disabled={isNew || saving} onClick={preview}>預覽</button><button className="button button--secondary" type="button" disabled={saving || uploading} onClick={runValidation}>檢查內容</button><button className="button button--accent" type="button" disabled={saving || uploading} onClick={() => void save()}>{uploading ? "圖片上傳中…" : saving ? "儲存中…" : "儲存草稿"}</button></div></div>
     {failed && <div className="form-error" role="alert">儲存失敗，請確認權限或網路連線後再試。</div>}
     <section className="version-panel"><div><span>目前正式版本</span><strong>{record?.publishedAt ? new Date(record.publishedAt).toLocaleString("zh-TW") : "尚未發布"}</strong></div><div><span>草稿版本</span><strong>{record?.revision ? `r${record.revision}` : "建立後為 r1"}</strong><small>{record?.updatedAt ? `最後更新 ${new Date(record.updatedAt).toLocaleString("zh-TW")}` : "尚未儲存"}</small></div><span className={`record-status ${dirty ? "has-draft" : ""}`}>{dirty ? "有未儲存變更" : status === "validated" ? "已檢查" : "草稿"}</span></section>
-    <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>錯誤（{validation.errors.length}）</h2>{validation.errors.length ? <ul>{validation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{validation.warnings.length}）</h2>{validation.warnings.length ? <ul>{validation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證提醒。</p>}</section></div>
+    <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>錯誤（{presentedValidation.errors.length}）</h2>{presentedValidation.errors.length ? <ul>{presentedValidation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{presentedValidation.warnings.length}）</h2>{presentedValidation.warnings.length ? <ul>{presentedValidation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><strong>{issue.field}</strong>：{issue.message}</li>)}</ul> : <p>目前沒有驗證提醒。</p>}</section></div>
     {record?.draftId && record.revision ? <PublicationPreparationPanel client={client} contentId={record.contentId} draftId={record.draftId} revision={record.revision} draftStatus={status} blocked={dirty || saving || uploading || imageEditing} /> : null}
-    <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} /> : <ActivityFields form={form as ActivityForm} set={set} />}
+    <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} /> : <ActivityFields form={form as ActivityForm} set={set} participantError={participantError} />}
       {record?.draftId ? <DraftMediaEditor ref={mediaRef} client={client} contentId={record.contentId} draftId={record.draftId} coverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} onReferences={setMediaReferences} onDirty={markMediaDirty} onUploading={markUploading} onEditing={markImageEditing} onVersionSaved={imageVersionSaved} /> : <section className="form-section media-readonly"><h2>圖片</h2><p className="muted">請先儲存文字草稿，再上傳圖片。</p></section>}
     </form>
   </>;

@@ -3,16 +3,18 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vitest";
 import { ContentEditorBoundary } from "./ContentEditorBoundary";
 import { ContentEditorPage } from "./ContentEditorPage";
+import { ContentListPage } from "./ContentListPage";
 
 const mocks = vi.hoisted(() => ({
   openContentDraft: vi.fn(),
+  fetchContentList: vi.fn(),
   fetchPublicationSnapshots: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../../lib/supabase", () => ({ getSupabaseClient: () => ({}) }));
 vi.mock("../../data/content-repository", async (importOriginal) => {
   const original = await importOriginal<typeof import("../../data/content-repository")>();
-  return { ...original, openContentDraft: mocks.openContentDraft };
+  return { ...original, openContentDraft: mocks.openContentDraft, fetchContentList: mocks.fetchContentList };
 });
 vi.mock("../../data/publication-repository", () => ({
   fetchPublicationSnapshots: mocks.fetchPublicationSnapshots,
@@ -83,4 +85,39 @@ test("dirty form refuses to preview an older saved draft", async () => {
   expect(alert).toHaveBeenCalledWith("目前有尚未儲存的變更，請先儲存草稿後再預覽。");
   expect(screen.queryByText("preview route")).not.toBeInTheDocument();
   alert.mockRestore();
+});
+
+test("活動欄位、驗證摘要與 inline error 統一顯示參與人次", async () => {
+  mocks.openContentDraft.mockResolvedValue({
+    contentId: "activity-content", contentType: "activity", publicId: "115-002",
+    publishedSnapshotId: "activity-snapshot", publishedAt: "2026-09-03T00:00:00Z",
+    draftId: "activity-draft", draftStatus: "draft", revision: 1, updatedAt: "2026-09-03T00:00:00Z", mediaCount: 0,
+    validationResult: { valid: false, errors: [], warnings: [] },
+    data: { id: "115-002", year: 115, name: "測試活動", startDate: null, endDate: null, dateLabel: "8/1",
+      districts: ["東石鄉"], venue: "測試場地", projectName: null, activityType: "工作坊", topic: "地方文化",
+      sdgs: ["SDG 4"], summary: "這是一段足夠長度的活動成果摘要，用來驗證欄位名稱。", participants: 20,
+      partnerOrganizations: null, leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false,
+      publicNotes: null, internalNotes: null, coverAssetId: null, galleryAssetIds: [] },
+  });
+  const rendered = render(<MemoryRouter initialEntries={["/activities/115-002"]}><Routes>
+    <Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} />
+  </Routes></MemoryRouter>);
+  const field = await within(rendered.container).findByLabelText(/參與人次/);
+  expect(screen.getByText("請填本活動累計參與人次。")).toBeInTheDocument();
+  expect(screen.queryByText("參與人數")).not.toBeInTheDocument();
+  expect(screen.queryByText("參加人數")).not.toBeInTheDocument();
+  fireEvent.change(field, { target: { value: "-1" } });
+  fireEvent.click(screen.getByRole("button", { name: "檢查內容" }));
+  expect(field).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getAllByText("參與人次").length).toBeGreaterThanOrEqual(2);
+  expect(screen.getByText("請輸入 0 到 1,000,000 的整數。")).toHaveClass("field-error");
+  expect(screen.getByText((_, element) => element?.tagName === "LI" && element.textContent === "參與人次：請輸入 0 到 1,000,000 的整數。")).toBeInTheDocument();
+  expect(rendered.container.textContent).not.toContain("participants");
+});
+
+test("活動列表 participants 欄位標題顯示參與人次", async () => {
+  mocks.fetchContentList.mockResolvedValue([]);
+  render(<MemoryRouter><ContentListPage type="activity" /></MemoryRouter>);
+  expect(await screen.findByRole("columnheader", { name: "參與人次" })).toBeInTheDocument();
+  expect(screen.queryByRole("columnheader", { name: "人數" })).not.toBeInTheDocument();
 });

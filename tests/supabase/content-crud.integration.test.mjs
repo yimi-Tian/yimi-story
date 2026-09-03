@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { applyBaselinePlan, executeLocalSql, queryLocalJson } from "../../tools/baseline/baseline-db.mjs";
-import { buildBaselinePlan } from "../../tools/baseline/build-baseline.mjs";
+import { buildStage3HistoricalBaselinePlan } from "./stage3-historical-fixture.mjs";
 
 const enabled = process.env.YIMI_RUN_CONTENT_CRUD_INTEGRATION === "1";
 const ACTIVE = "00000000-0000-4000-8000-000000000501";
@@ -20,7 +20,7 @@ ${commit ? "commit" : "rollback"};`).trim().split(/\r?\n/).filter((line) => line
 }
 
 test("Stage 5B-1 local CRUD RPC、revision 與 RLS 實測", { skip: !enabled }, async () => {
-  applyBaselinePlan(await buildBaselinePlan());
+  applyBaselinePlan(await buildStage3HistoricalBaselinePlan());
   executeLocalSql(`
 insert into auth.users (instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { applyBaselinePlan, executeLocalSql, queryLocalJson } from "../../tools/baseline/baseline-db.mjs";
-import { buildBaselinePlan } from "../../tools/baseline/build-baseline.mjs";
+import { buildStage3HistoricalBaselinePlan } from "./stage3-historical-fixture.mjs";
 import { buildFormalPublication, FORMAL_FILE_ALLOWLIST, sha256Hex } from "../../supabase/functions/_shared/formal-publication.ts";
 
 const enabled=process.env.YIMI_RUN_GITHUB_PUBLICATION_INTEGRATION==="1";
@@ -11,7 +11,7 @@ const q=(value)=>`'${String(value).replaceAll("'","''")}'`;
 const asRole=(role,sql,{commit=false}={})=>executeLocalSql(`begin; set local role ${role}; select set_config('request.jwt.claim.role',${q(role)},true); select set_config('request.jwt.claim.sub',${q(ACTOR)},true); ${sql}; ${commit?"commit":"rollback"};`);
 
 test("Stage 7C local draft→snapshot→media ready→Draft PR mock→merge/Pages mock→finalize",{skip:!enabled,timeout:300_000},async()=>{
-  applyBaselinePlan(await buildBaselinePlan());
+  applyBaselinePlan(await buildStage3HistoricalBaselinePlan());
   const baseline=queryLocalJson("select count(*)::integer items,(select count(*) from public.publication_snapshots)::integer snapshots,(select count(*) from public.content_drafts)::integer drafts,(select count(*) from public.media_assets)::integer media,(select count(*) from public.github_publications)::integer publications from public.content_items")[0];
   assert.deepEqual(baseline,{items:119,snapshots:119,drafts:0,media:714,publications:0});
   executeLocalSql(`insert into auth.users(instance_id,id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values('00000000-0000-0000-0000-000000000000','${ACTOR}','authenticated','authenticated','stage7c-local@example.test','',now(),'{}','{}',now(),now()); insert into public.admin_users(user_id,email,is_active) values('${ACTOR}','stage7c-local@example.test',true);`);

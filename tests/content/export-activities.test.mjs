@@ -50,6 +50,8 @@ test("活動 exporter 支援 CSV 逗號、引號、換行與跨年度日期", as
   assert.equal(parsed[0]["活動名稱"], "地方文化，學習活動");
   assert.equal(parsed[0]["活動日期"], "2027/12/31～2028/1/1");
   assert.equal(parsed[0]["活動效益摘要"], record().data.summary);
+  assert.equal(parsed[0]["參與人次"], "20");
+  assert.equal(Object.hasOwn(parsed[0], "參與人數"), false);
   assert.equal(parsed[0]["備註"], "可公開備註");
   assert.equal(output.csvText.includes("不得公開的內部備註"), false);
 });

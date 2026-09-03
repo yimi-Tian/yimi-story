@@ -7,6 +7,51 @@
     month: "long",
     day: "numeric"
   });
+  const publicUx = window.YimiPublicUx;
+  const placeholderImage = "public/images/placeholder.svg";
+
+  function publicHallPresentation(hall) {
+    const href = String(hall?.href || "");
+    if (href.includes("#/overview") || href.endsWith("index.html#/")) {
+      return { ...hall, name: "成果故事", description: "瀏覽邑米推動的活動、計畫、公共參與與地方行動。" };
+    }
+    if (href.includes("#/showcase")) {
+      return { ...hall, name: "學習成果", description: "瀏覽班級學習、走讀、影音、出版與地方素材。" };
+    }
+    if (href.includes("#/explore")) return { ...hall, name: "地方探索" };
+    return hall;
+  }
+
+  function publicCategoryLabel(value) {
+    if (value === "成果展示") return "學習成果";
+    if (value === "成果故事館") return "成果故事";
+    return value;
+  }
+
+  function publicCover(item) {
+    return publicUx.resolvePublicCover({
+      explicitCover: item?.coverImage || item?.image || "",
+      gallery: item?.images || [],
+      placeholder: placeholderImage,
+    });
+  }
+
+  function imageFallbackAttribute(cover) {
+    return cover.fallbacks.length
+      ? ` data-image-fallbacks="${escapeHtml(cover.fallbacks.join("|"))}"`
+      : "";
+  }
+
+  function bindPublicImageFallbacks(container) {
+    container.querySelectorAll("img").forEach((image) => {
+      image.addEventListener("error", () => {
+        const fallbacks = (image.dataset.imageFallbacks || "").split("|").filter(Boolean);
+        image.dataset.imageFallbacks = fallbacks.slice(1).join("|");
+        image.src = fallbacks[0] || placeholderImage;
+        if (!fallbacks[0]) image.alt = "圖片資料整理中";
+      });
+    });
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -78,7 +123,7 @@
 
   function renderHalls(halls) {
     document.querySelector(".hall-section").id = "halls";
-    document.querySelector("#hall-grid").innerHTML = halls.map((hall) => `
+    document.querySelector("#hall-grid").innerHTML = halls.map(publicHallPresentation).map((hall) => `
       <a class="hall-card" href="${escapeHtml(hall.href)}">
         <span class="hall-icon" data-icon-slot aria-hidden="true">
           ${hall.iconSrc
@@ -112,29 +157,23 @@
   function renderFeaturedResults(results) {
     const container = document.querySelector("#featured-results-grid");
     if (!container || !Array.isArray(results)) return;
-    const placeholder = "public/images/placeholder.svg";
-    container.innerHTML = results.map((result) => `
+    container.innerHTML = results.map((result) => {
+      const cover = publicCover(result);
+      return `
       <a class="featured-result-card" href="${escapeHtml(result.link)}">
         <span class="featured-result-image">
-          <img src="${escapeHtml(result.image || placeholder)}" alt="${escapeHtml(result.title)}" loading="lazy">
+          <img src="${escapeHtml(cover.src)}"${imageFallbackAttribute(cover)} alt="${escapeHtml(result.title)}" loading="lazy">
         </span>
         <span class="featured-result-body">
-          <span class="featured-result-category">${escapeHtml(result.category)}</span>
+          <span class="featured-result-category">${escapeHtml(publicCategoryLabel(result.category))}</span>
           <strong>${escapeHtml(result.title)}</strong>
           <span class="featured-result-description">${escapeHtml(result.description)}</span>
           <span class="featured-result-link">查看成果 <span aria-hidden="true">→</span></span>
         </span>
       </a>
-    `).join("");
-
-    container.querySelectorAll("img").forEach((image) => {
-      image.addEventListener("error", () => {
-        if (image.dataset.fallbackApplied === "true") return;
-        image.dataset.fallbackApplied = "true";
-        image.src = placeholder;
-        image.alt = "圖片資料整理中";
-      });
-    });
+    `;
+    }).join("");
+    bindPublicImageFallbacks(container);
   }
 
   function renderPlaces(places) {
@@ -151,21 +190,26 @@
       .sort((a, b) => String(b.date).localeCompare(String(a.date)))
       .slice(0, 5);
 
-    document.querySelector("#latest-grid").innerHTML = sortedItems.map((item, index) => `
+    const container = document.querySelector("#latest-grid");
+    container.innerHTML = sortedItems.map((item, index) => {
+      const cover = publicCover(item);
+      return `
       <article class="latest-card${index === 0 ? " featured" : ""}">
         <a class="latest-image" href="${escapeHtml(item.href)}">
-          <img src="${escapeHtml(item.image)}" alt="" loading="lazy">
+          <img src="${escapeHtml(cover.src)}"${imageFallbackAttribute(cover)} alt="" loading="lazy">
         </a>
         <div class="latest-body">
           <div class="latest-meta">
-            <span>${escapeHtml(item.type)}</span>
+            <span>${escapeHtml(publicCategoryLabel(item.type))}</span>
             <time datetime="${escapeHtml(item.date)}">${escapeHtml(formatDate(item.date))}</time>
           </div>
           <h3><a href="${escapeHtml(item.href)}">${escapeHtml(item.title)}</a></h3>
           <p>${escapeHtml(item.summary)}</p>
         </div>
       </article>
-    `).join("");
+    `;
+    }).join("");
+    bindPublicImageFallbacks(container);
   }
 
   function renderAbout(about) {

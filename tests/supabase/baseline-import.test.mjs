@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -11,12 +11,16 @@ import { buildBaselinePlan, publicationRecordFromBaseline } from "../../tools/ba
 import { canonicalStringify, snapshotChecksum } from "../../tools/baseline/canonical-json.mjs";
 import { exportActivities } from "../../tools/export-activities.mjs";
 import { exportClassResults } from "../../tools/export-class-results.mjs";
+import { createStage3HistoricalSiteRoot } from "./stage3-historical-fixture.mjs";
 
 const root = resolve(import.meta.dirname, "../..");
+let historicalSite;
 let cachedPlan;
-const plan = async () => cachedPlan ||= buildBaselinePlan({ siteRoot: root });
+before(async () => { historicalSite = await createStage3HistoricalSiteRoot(); });
+after(async () => { await historicalSite?.cleanup(); });
+const plan = async () => cachedPlan ||= buildBaselinePlan({ siteRoot: historicalSite.root });
 
-test("baseline plan 精確包含 56、63、119、714，且不建立 drafts 或 GitHub publications", async () => {
+test("Stage 3 歷史 baseline fixture 精確包含 56、63、119、714，且不建立 drafts 或 GitHub publications", async () => {
   const result = await plan();
   assert.deepEqual({
     classes: result.report.classResultCount,
@@ -35,9 +39,9 @@ test("baseline plan 精確包含 56、63、119、714，且不建立 drafts 或 G
   assert.equal(result.report.missingCoverWarningCount, 1);
 });
 
-test("baseline build 與 snapshot checksum 可重現", async () => {
+test("Stage 3 歷史 baseline build 與 snapshot checksum 可重現", async () => {
   const first = await plan();
-  const second = await buildBaselinePlan({ siteRoot: root });
+  const second = await buildBaselinePlan({ siteRoot: historicalSite.root });
   assert.equal(second.report.aggregateChecksumSha256, first.report.aggregateChecksumSha256);
   assert.deepEqual(second.records.map((record) => record.checksumSha256), first.records.map((record) => record.checksumSha256));
   const sample = first.records[0];

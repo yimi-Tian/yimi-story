@@ -4,11 +4,14 @@ import { applyBaselinePlan, executeLocalSql, queryLocalJson } from "../../tools/
 import { buildBaselinePlan, publicationRecordFromBaseline } from "../../tools/baseline/build-baseline.mjs";
 import { exportActivities } from "../../tools/export-activities.mjs";
 import { exportClassResults } from "../../tools/export-class-results.mjs";
+import { createStage3HistoricalSiteRoot } from "./stage3-historical-fixture.mjs";
 
 const enabled = process.env.YIMI_RUN_SUPABASE_INTEGRATION === "1";
 
 test("真正 local Supabase baseline import 為 transactional、idempotent 且拒絕 conflict", { skip: !enabled }, async () => {
-  const plan = await buildBaselinePlan();
+  const historicalSite = await createStage3HistoricalSiteRoot();
+  const plan = await buildBaselinePlan({ siteRoot: historicalSite.root });
+  try {
   const first = applyBaselinePlan(plan);
   assert.equal(first.inserted, 119);
   assert.equal(first.skipped, 0);
@@ -89,4 +92,7 @@ test("真正 local Supabase baseline import 為 transactional、idempotent 且�
   }
   const third = applyBaselinePlan(plan);
   assert.equal(third.skipped, 119);
+  } finally {
+    await historicalSite.cleanup();
+  }
 });

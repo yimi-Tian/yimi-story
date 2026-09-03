@@ -54,7 +54,7 @@ export function validateActivity(data, options = {}) {
 
   if (data.projectName !== null && (typeof data.projectName !== "string" || data.projectName.length > 150)) addIssue(result, "errors", "projectName", "string.length", "projectName 最多 150 字或 null。");
   if (!Array.isArray(data.sdgs) || data.sdgs.length < 1 || data.sdgs.length > 17 || new Set(data.sdgs).size !== data.sdgs.length || data.sdgs.some((sdg) => !/^SDG (?:[1-9]|1[0-7])$/.test(sdg))) addIssue(result, "errors", "sdgs", "sdgs.format", "SDGs 必須是 1–17 的不重複 SDG N 值。");
-  if (data.participants !== null && (!Number.isInteger(data.participants) || data.participants < 0 || data.participants > 1000000)) addIssue(result, "errors", "participants", "participants.range", "participants 必須為 0–1000000 整數或 null。");
+  if (data.participants !== null && (!Number.isInteger(data.participants) || data.participants < 0 || data.participants > 1000000)) addIssue(result, "errors", "participants", "participants.range", "請輸入 0 到 1,000,000 的整數。");
   if (data.partnerOrganizations !== null && (typeof data.partnerOrganizations !== "string" || data.partnerOrganizations.length > 500)) addIssue(result, "errors", "partnerOrganizations", "string.length", "partnerOrganizations 最多 500 字或 null。");
   if (data.leader !== null && (typeof data.leader !== "string" || data.leader.length > 200)) addIssue(result, "errors", "leader", "string.length", "leader 最多 200 字或 null。");
   if (!Array.isArray(data.keywords) || data.keywords.length > 20 || new Set(data.keywords).size !== data.keywords.length || data.keywords.some((keyword) => typeof keyword !== "string" || !keyword || keyword.length > 30)) addIssue(result, "errors", "keywords", "keywords.invalid", "keywords 最多 20 個不重複的 1–30 字項目。");

@@ -4,6 +4,7 @@ import {
   classDataToForm,
   districtOptions,
   normalizeContentForm,
+  presentValidationIssue,
   validateCanonicalContent,
   type ActivityForm,
   type ClassResultForm,
@@ -44,6 +45,13 @@ describe("Stage 1 canonical adapter", () => {
     expect(result.errors).toHaveLength(0);
     expect(result.warnings.some((issue) => issue.code === "legacyImport.dateUnparsed")).toBe(true);
     expect(activityDataToForm(data).districts).toEqual(["臺北市"]);
+    expect(data).toHaveProperty("participants", 20);
+    expect(data).not.toHaveProperty("參與人次");
+  });
+
+  it("participants validation issue 只在顯示層轉為參與人次", () => {
+    expect(presentValidationIssue({ field: "participants", code: "participants.range", message: "participants 必須為整數。" }))
+      .toEqual({ field: "參與人次", code: "participants.range", message: "參與人次 必須為整數。" });
   });
 
   it("legacy district 可保留在表單，正常選項仍以 service area 為主", () => {

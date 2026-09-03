@@ -539,6 +539,12 @@ body {
     max-height: 40px;
   }
 
+  .platform-brand span,
+  .brand-logo span {
+    max-width: 7.5em;
+    line-height: 1.35;
+  }
+
   .platform-header .platform-nav.open {
     grid-template-columns: 1fr;
   }
@@ -698,5 +704,25 @@ body {
 
   .platform-shell-footer-meta {
     grid-column: 1;
+  }
+}
+
+@media (max-width: 440px) {
+  .platform-brand,
+  .brand-logo {
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .platform-brand img,
+  .brand-logo img {
+    width: auto;
+    height: 32px;
+    max-width: 48vw;
+  }
+
+  .platform-brand span,
+  .brand-logo span {
+    display: none;
   }
 }
