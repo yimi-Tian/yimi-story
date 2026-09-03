@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient } from "../../admin/node_modules/@supabase/supabase-js/dist/index.mjs";
 import { applyBaselinePlan } from "../../tools/baseline/baseline-db.mjs";
-import { buildBaselinePlan } from "../../tools/baseline/build-baseline.mjs";
+import { buildStage3HistoricalBaselinePlan } from "./stage3-historical-fixture.mjs";
 
 const enabled=process.env.YIMI_RUN_IMAGE_EDIT_INTEGRATION==="1";
 const client=(url,key)=>createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{headers:{Origin:"http://localhost:5173"}}});
@@ -11,7 +11,7 @@ const png=()=>{const b=new Uint8Array(24);b.set([137,80,78,71,13,10,26,10],0);b.
 
 test("Stage 6.5 local derived attach/restore、revision、RLS與orphan安全",{skip:!enabled,timeout:120_000},async()=>{
   const url=process.env.YIMI_LOCAL_SUPABASE_URL,key=process.env.YIMI_LOCAL_ANON_KEY,serviceKey=process.env.YIMI_LOCAL_SERVICE_ROLE_KEY;assert.ok(url&&key&&serviceKey,"local image edit env required");
-  applyBaselinePlan(await buildBaselinePlan());const service=client(url,serviceKey),suffix=randomUUID().slice(0,8),password=`Safe-${randomUUID()}!`,users=[],objects=[];let contentId=null,draftId=null;
+  applyBaselinePlan(await buildStage3HistoricalBaselinePlan());const service=client(url,serviceKey),suffix=randomUUID().slice(0,8),password=`Safe-${randomUUID()}!`,users=[],objects=[];let contentId=null,draftId=null;
   const identity=async(kind,isAdmin=null)=>{const email=`image-edit-${kind}-${suffix}@example.test`;const{data,error}=await service.auth.admin.createUser({email,password,email_confirm:true});if(error)throw error;users.push(data.user.id);if(isAdmin!==null){const{error:e}=await service.from("admin_users").insert({user_id:data.user.id,email,is_active:isAdmin});if(e)throw e;}const signed=client(url,key);const{error:s}=await signed.auth.signInWithPassword({email,password});if(s)throw s;return{client:signed,id:data.user.id};};
   const active=await identity("active",true),inactive=await identity("inactive",false),nonAdmin=await identity("user");
   const ids={cover:randomUUID(),gallery:randomUUID(),galleryTwo:randomUUID(),coverEdited:randomUUID(),galleryEdited:randomUUID()};

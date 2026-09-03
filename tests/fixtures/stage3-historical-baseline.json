@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "cd8babc7a7e7a49fa4ccaa40d23f852ff6b7dce6",
+  "classResultsBlobSha": "9c5f9495fe097975f3073696cae3667f7e9cf494",
+  "activitiesBlobSha": "1f2194789af2e99398366e99e5ebf440674e2402",
+  "expected": {
+    "classes": 56,
+    "activities": 63,
+    "items": 119,
+    "snapshots": 119,
+    "media": 714,
+    "drafts": 0,
+    "publications": 0
+  }
+}

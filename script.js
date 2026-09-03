@@ -2,12 +2,13 @@ const PLACEHOLDER = "public/images/placeholder.svg";
 const ACTIVITY_CSV = typeof window !== "undefined" ? window.ACTIVITIES_CSV || "" : "";
 const OVERVIEW_YEARS = ["112", "113", "114", "115"];
 const SDG_ICON_BASE = "public/images/sdgs";
+const publicUx = typeof window !== "undefined" ? window.YimiPublicUx : null;
+const PUBLIC_BATCH_SIZE = publicUx?.DEFAULT_BATCH_SIZE || 12;
 const themeData = typeof window !== "undefined" && window.THEMES_DATA
   ? window.THEMES_DATA
   : { themes: [], featured: [] };
 const safeShowcaseData = {
   categories: [
-    { id: "activity-photos", title: "活動照片", description: "瀏覽已整理的活動成果照片。" },
     {
       id: "class-results",
       title: "班級花絮與成果",
@@ -28,6 +29,26 @@ const showcaseData = {
   maxPhotosPerActivity: Number(showcaseSource.maxPhotosPerActivity) > 0 ? Number(showcaseSource.maxPhotosPerActivity) : 3,
   placeholderImage: showcaseSource.placeholderImage || PLACEHOLDER,
 };
+function resolvePublicCover(options) {
+  if (publicUx?.resolvePublicCover) return publicUx.resolvePublicCover(options);
+  const secondary = options?.preferLegacyFallback
+    ? [...(options?.legacyFallbacks || []), ...(options?.gallery || [])]
+    : [...(options?.gallery || []), ...(options?.legacyFallbacks || [])];
+  const candidates = [options?.explicitCover, ...secondary, options?.placeholder || PLACEHOLDER]
+    .filter((value, index, values) => value && values.indexOf(value) === index);
+  return { src: candidates[0] || PLACEHOLDER, fallbacks: candidates.slice(1) };
+}
+function visiblePublicBatch(items, count) {
+  return publicUx?.visibleBatch ? publicUx.visibleBatch(items, count) : items.slice(0, count);
+}
+function nextPublicBatchCount(current, total) {
+  return publicUx?.nextVisibleCount
+    ? publicUx.nextVisibleCount(current, total, PUBLIC_BATCH_SIZE)
+    : Math.min(total, current + PUBLIC_BATCH_SIZE);
+}
+function imageFallbackData(src, fallbacks = []) {
+  return unique(fallbacks).filter((path) => path && path !== src).join("|");
+}
 const classResultsData = typeof window !== "undefined" && Array.isArray(window.CLASS_RESULTS_DATA)
   ? window.CLASS_RESULTS_DATA
   : [];
@@ -61,14 +82,14 @@ const SDG_INFO = {
 
 const siteData = {
   home: {
-    title: "成果故事館",
+    title: "成果故事",
     subtitle: "從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡",
     intro:
-      "邑米社區大學在各鄉鎮推動課程、走讀、展演、工作坊與社區行動，透過成果總覽、主題館、數位走讀互動館、社團紀錄及成果展示，帶您看見學習如何在地方發生、累積並產生改變。",
+      "邑米社區大學在各鄉鎮推動課程、走讀、展演、工作坊與社區行動，透過成果故事、主題館、地方探索、社團紀錄及學習成果，帶您看見學習如何在地方發生、累積並產生改變。",
   },
   entrances: [
     {
-      title: "成果故事館總覽",
+      title: "成果故事",
       href: "#/overview",
       kicker: "112-115",
       description: "以地區與 SDGs 進行分類，逐步彙整 112-115 年活動、成果與照片資料。",
@@ -80,7 +101,7 @@ const siteData = {
       description: "整理赤蘭溪、醫療地景、刺繡文化、海區創生與食農教育等地方知識主題。",
     },
     {
-      title: "地方探索館",
+      title: "地方探索",
       href: "#/explore",
       kicker: "Explore",
       description: "從赤蘭溪 AR 探索出發，逐步擴充嘉義地方文化與環境主題。",
@@ -92,10 +113,10 @@ const siteData = {
       description: "記錄六個學習社團的活動歷程、成員作品、交流展演與地方參與。",
     },
     {
-      title: "活動照片與班級花絮與成果展示",
+      title: "學習成果",
       href: "#/showcase",
       kicker: "Archive",
-      description: "整理活動照片與班級花絮與成果，並預留走讀紀錄、影片紀錄、出版教材與老照片的展示區。",
+      description: "瀏覽班級學習、走讀、影音、出版教材與地方老照片。",
     },
   ],
   digitalTours: [
@@ -242,6 +263,10 @@ function render() {
     window.location.replace("#/clubs");
     return;
   }
+  if (route.page === "showcase" && ["activity-photos", "photos"].includes(route.detail)) {
+    window.location.replace("#/overview");
+    return;
+  }
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
   app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
@@ -275,6 +300,8 @@ function updateNav(page) {
   document.querySelectorAll("[data-nav]").forEach((link) => {
     const nav = link.dataset.nav;
     link.classList.toggle("active", nav === activePage);
+    if (nav === activePage) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
 
   const overviewMenu = document.querySelector('[data-nav="overview"] + .nav-menu');
@@ -364,7 +391,7 @@ function renderHome() {
   app.innerHTML = `
     <section class="hero museum-hero">
       <div class="hero-copy">
-        <div class="hero-kicker">112-115 成果故事館</div>
+        <div class="hero-kicker">112-115 成果故事</div>
         <h1>${siteData.home.title}</h1>
         <p class="hero-subtitle">${siteData.home.subtitle}</p>
         <p class="hero-intro">${siteData.home.intro}</p>
@@ -383,7 +410,7 @@ function renderHome() {
           <span class="section-label">ALL RESULTS</span>
           <h2 id="integrated-overview-title">全部成果</h2>
         </div>
-        <p>直接從成果故事館首頁選擇年度，查看活動統計、服務地區與 SDGs 成果。</p>
+        <p>直接從成果故事首頁選擇年度，查看活動統計、服務地區與 SDGs 成果。</p>
       </div>
       <div class="year-overview-grid" aria-label="112 至 115 年成果">
         ${OVERVIEW_YEARS.map((year) => yearOverviewCard(year, activities)).join("")}
@@ -484,7 +511,10 @@ function renderYearOverview(selectedYear) {
               </div>
             </div>
             <div class="activity-mini-grid" data-year-activity-grid>
-              ${activities.map(activityMiniCard).join("")}
+              ${visiblePublicBatch(activities, PUBLIC_BATCH_SIZE).map(activityMiniCard).join("")}
+            </div>
+            <div class="load-more-row">
+              <button class="button secondary load-more-button" type="button" data-year-load-more>載入更多</button>
             </div>
           </section>
         `
@@ -511,7 +541,7 @@ function renderOverviewDetail(type, id, selectedYear) {
 
   app.innerHTML = `
     <section class="overview-detail-head">
-      <a class="text-link" href="#/overview">返回成果故事館總覽</a>
+      <a class="text-link" href="#/overview">返回成果故事</a>
       <div class="detail-title-line">
         ${isSdg ? `<img class="detail-sdg-icon" src="${sdgIconPath(id)}" alt="${id} icon">` : ""}
         <div>
@@ -526,20 +556,23 @@ function renderOverviewDetail(type, id, selectedYear) {
     </section>
     ${
       activities.length
-        ? `<section class="activity-mini-grid">${activities.map(activityMiniCard).join("")}</section>`
+        ? `<section class="activity-mini-grid" data-simple-activity-grid>${visiblePublicBatch(activities, PUBLIC_BATCH_SIZE).map(activityMiniCard).join("")}</section>
+           <div class="load-more-row"><button class="button secondary load-more-button" type="button" data-simple-activity-load-more>載入更多</button></div>`
         : emptyYearBlock(year)
     }
   `;
+  if (activities.length) bindSimpleActivityBatch(activities);
 }
 
 function renderActivityDetail(activityId) {
   const app = document.querySelector("#app");
   const activity = getActivities().find((item) => item.id === activityId);
   if (!activity) {
-    app.innerHTML = `${pageHeader("找不到活動", "這筆活動資料目前不存在，請回到成果故事館總覽重新選擇。")}`;
+    app.innerHTML = `${pageHeader("找不到活動", "這筆活動資料目前不存在，請回到成果故事重新選擇。")}`;
     return;
   }
   const gallery = unique(activity.photos).filter(Boolean);
+  const coverFallbacks = imageFallbackData(activity.cover, activity.coverFallbacks);
   const sdgSection = activity.sdgs.length
     ? `
     <section class="detail-section">
@@ -563,7 +596,7 @@ function renderActivityDetail(activityId) {
     <section class="detail-section">
       <h2>成果照片牆</h2>
       <div class="detail-gallery">
-        ${gallery.map((src) => `<img src="${src}" alt="${activity.name}成果照片">`).join("")}
+        ${gallery.map((src) => `<img src="${src}" alt="${activity.name}成果照片" loading="lazy">`).join("")}
       </div>
     </section>
   `
@@ -572,7 +605,7 @@ function renderActivityDetail(activityId) {
     <section class="activity-detail-head">
       <div class="detail-back-links">
         <button class="text-link history-back-link" type="button">回到上一頁</button>
-        <a class="text-link" href="#/overview">返回成果故事館總覽</a>
+        <a class="text-link" href="#/overview">返回成果故事</a>
       </div>
       <div>
         <div class="page-kicker">${activity.year} 年活動成果</div>
@@ -581,7 +614,7 @@ function renderActivityDetail(activityId) {
     </section>
     <section class="activity-detail-layout">
       <div class="activity-detail-photo">
-        <img src="${activity.cover}" alt="${activity.name}">
+        <img src="${activity.cover}" data-image-fallbacks="${coverFallbacks}" alt="${activity.name}">
       </div>
       <div class="activity-detail-info">
         ${detailInfo("活動日期", activity.date)}
@@ -1060,7 +1093,7 @@ function formatDigitalWalkPendingItem(item) {
 function digitalWalkTextHeader(title, description) {
   return `
     <section class="digital-walk-text-header">
-      <div class="page-kicker">地方探索館</div>
+      <div class="page-kicker">地方探索</div>
       <h1>${title}</h1>
       <p>${description}</p>
     </section>
@@ -1071,7 +1104,7 @@ function digitalWalkRouteHeader(route) {
   return `
     <section class="page-title platform-hall-banner digital-walk-route-header">
       <div class="platform-hall-copy">
-        <div class="page-kicker">地方探索館</div>
+        <div class="page-kicker">地方探索</div>
         <h1>${route.title}</h1>
         <p>${route.summary}</p>
       </div>
@@ -1283,44 +1316,37 @@ function renderShowcase() {
     renderClassResultDetail(classResultId);
     return;
   }
-  const activities = getActivities();
-  const photoItems = buildShowcasePhotoItems(activities);
   const approvedClassResults = getApprovedClassResults();
   const classResultItems = buildClassResultItems(approvedClassResults);
-  const showcaseItems = [...photoItems, ...classResultItems];
-  const featuredItems = selectShowcaseFeaturedItems(activities);
-  const years = unique(showcaseItems.map((item) => item.year).filter(Boolean)).sort((a, b) => b.localeCompare(a));
-  const districts = unique(showcaseItems.flatMap((item) => item.districts).filter(Boolean)).sort((a, b) => a.localeCompare(b, "zh-Hant"));
-  const activityCount = unique(photoItems.map((item) => item.activityId)).length;
   const requestedCategoryId = route.detail === "student-works" ? "class-results" : route.detail;
   const selectedCategoryId = showcaseData.categories.some((category) => category.id === requestedCategoryId) ? requestedCategoryId : "";
   const isClassResultsPage = selectedCategoryId === "class-results";
+  const selectedCategory = showcaseData.categories.find((category) => category.id === selectedCategoryId);
+  if (selectedCategory && !isBrowsableShowcaseCategory(selectedCategory.id)) {
+    renderLearningCategoryNotice(selectedCategory);
+    return;
+  }
   const classResultDistricts = unique(classResultItems.flatMap((item) => item.districts).filter(Boolean))
     .sort((a, b) => a.localeCompare(b, "zh-Hant"));
-  const initialItems = isClassResultsPage ? classResultItems : showcaseItems;
-  const categoryCounts = {
-    "activity-photos": photoItems.length,
-    "class-results": approvedClassResults.length,
-  };
+  const categoryCounts = { "class-results": approvedClassResults.length };
   app.innerHTML = `
     ${isClassResultsPage
       ? pageHeader("班級花絮與成果", "以課程與班級為單位，持續整理歷年學習花絮、課程實作與共同成果。")
-      : pageHeader("成果展示", "以影像、圖文與創作，保存地方學習的精彩片段。")}
+      : pageHeader("學習成果", "瀏覽班級學習、走讀、影音與出版成果。")}
     ${isClassResultsPage ? "" : `
-    <section class="showcase-intro-card" aria-label="成果展示說明">
+    <section class="showcase-intro-card" aria-label="學習成果說明">
       <div>
-        <span class="section-label">SHOWCASE</span>
-        <h2>集中瀏覽邑米地方學習的視覺成果</h2>
-        <p>成果展示集中整理邑米社區大學歷年累積的活動照片、班級花絮與成果、走讀紀錄、影片紀錄、出版教材與老照片，讓使用者能以視覺方式快速瀏覽學習成果與地方記憶。</p>
+        <span class="section-label">LEARNING RESULTS</span>
+        <h2>瀏覽班級學習、走讀、影音與出版成果</h2>
+        <p>從班級花絮與共同成果出發，逐步整理走讀紀錄、影片、出版教材與地方老照片，讓學習留下的作品與地方素材更容易被找到。</p>
         <div class="showcase-actions">
-          <a class="button" href="#showcase-photo-results">瀏覽成果素材</a>
-          <a class="button secondary" href="#showcase-photo-results">查看照片成果</a>
+          <a class="button" href="#/showcase/class-results">瀏覽學習成果</a>
         </div>
       </div>
       <div class="showcase-quick-stats">
-        <article><strong>${photoItems.length}</strong><span>張照片素材</span></article>
-        <article><strong>${activityCount}</strong><span>件活動來源</span></article>
-        <article><strong>${years.length}</strong><span>個年度</span></article>
+        <article><strong>${approvedClassResults.length}</strong><span>筆班級成果</span></article>
+        <article><strong>${showcaseData.categories.length}</strong><span>類學習成果</span></article>
+        <article><strong>${showcaseData.categories.length - 1}</strong><span>類持續整理</span></article>
       </div>
     </section>
 
@@ -1328,9 +1354,9 @@ function renderShowcase() {
       <div class="section-heading">
         <div>
           <span class="section-label">CATEGORIES</span>
-          <h2 id="showcase-category-title">素材分類</h2>
+          <h2 id="showcase-category-title">學習成果分類</h2>
         </div>
-        <p>活動照片已串接正式成果資料；班級花絮與成果採可控管公開狀態的獨立資料來源。</p>
+        <p>活動照片已整合到成果故事的活動詳細頁；這裡專注呈現學習後留下的成果與地方素材。</p>
       </div>
       <div class="showcase-category-grid">
         ${showcaseData.categories.map((category) => showcaseCategoryCard(category, categoryCounts)).join("")}
@@ -1341,70 +1367,63 @@ function renderShowcase() {
       <div class="section-heading">
         <div>
           <span class="section-label">FEATURED</span>
-          <h2 id="showcase-featured-title">精選成果素材</h2>
+          <h2 id="showcase-featured-title">班級成果精選</h2>
         </div>
-        <p>優先挑選赤蘭溪、木工修繕、地方文化、食農教育與海洋教育等代表性照片。</p>
+        <p>先從近期整理完成的班級成果開始瀏覽。</p>
       </div>
-      <div class="showcase-featured-grid">
-        ${featuredItems.map(showcasePhotoCard).join("") || showcaseEmptyState("目前尚無可顯示的精選照片。")}
+      <div class="showcase-featured-grid is-class-results">
+        ${classResultItems.slice(0, 4).map(showcasePhotoCard).join("") || showcaseEmptyState("目前尚無可顯示的班級成果。")}
       </div>
     </section>
     `}
 
-    <section class="showcase-page-section" id="showcase-photo-results" aria-labelledby="showcase-photo-title">
+    ${isClassResultsPage ? `<section class="showcase-page-section" id="showcase-photo-results" aria-labelledby="showcase-photo-title">
       <div class="section-heading showcase-filter-heading">
         <div>
-          <span class="section-label">${isClassResultsPage ? "CLASS HIGHLIGHTS" : "PHOTO GALLERY"}</span>
-          <h2 id="showcase-photo-title">${isClassResultsPage ? "瀏覽課程紀錄" : "照片成果"}</h2>
+          <span class="section-label">CLASS HIGHLIGHTS</span>
+          <h2 id="showcase-photo-title">瀏覽課程紀錄</h2>
         </div>
-        <p>${isClassResultsPage ? "依地區或關鍵字尋找課程，查看各班歷年累積的學習花絮與共同成果。" : "照片卡片會導回成果故事館正式活動詳細頁。"}</p>
+        <p>依地區或關鍵字尋找課程，查看各班歷年累積的學習花絮與共同成果。</p>
       </div>
-      ${isClassResultsPage ? `
       <div class="showcase-filter-panel is-class-results-filter" aria-label="班級花絮與成果篩選">
         ${showcaseSelect("class-results-district-filter", "地區", [{ value: "", label: "全部地區" }, ...classResultDistricts.map((district) => ({ value: district, label: district }))])}
         ${showcaseSearch("class-results-search", "關鍵字搜尋", "搜尋課程、教師、標籤或地點")}
       </div>
-      ` : `
-      <div class="showcase-filter-panel" aria-label="成果展示篩選">
-        ${showcaseSelect("showcase-type-filter", "素材類型", [{ value: "", label: "全部素材" }, ...showcaseData.categories.map((category) => ({ value: category.id, label: isBrowsableShowcaseCategory(category.id) ? category.title : `${category.title}（整理中）` }))])}
-        ${showcaseSelect("showcase-year-filter", "年度", [{ value: "", label: "全部年度" }, ...years.map((year) => ({ value: year, label: `${year} 年` }))])}
-        ${showcaseSelect("showcase-district-filter", "鄉鎮", [{ value: "", label: "全部鄉鎮" }, ...districts.map((district) => ({ value: district, label: district }))])}
-      </div>
-      `}
       <div class="showcase-result-note" id="showcase-result-note" aria-live="polite"></div>
-      <div class="showcase-photo-grid${isClassResultsPage ? " is-class-results" : ""}" id="showcase-photo-grid">
-        ${initialItems.map(showcasePhotoCard).join("") || showcaseEmptyState(isClassResultsPage ? "目前尚無可顯示的班級花絮與成果。" : "目前沒有可顯示的成果素材。")}
+      <div class="showcase-photo-grid is-class-results" id="showcase-photo-grid">
+        ${visiblePublicBatch(classResultItems, PUBLIC_BATCH_SIZE).map(showcasePhotoCard).join("") || showcaseEmptyState("目前尚無可顯示的班級花絮與成果。")}
       </div>
-    </section>
-
-    ${isClassResultsPage ? "" : `
-    <section class="showcase-page-section showcase-placeholder-section" aria-labelledby="showcase-reserved-title">
-      <div class="section-heading">
-        <div>
-          <span class="section-label">COMING NEXT</span>
-          <h2 id="showcase-reserved-title">走讀紀錄、影片紀錄、出版教材與老照片</h2>
-        </div>
-        <p>這些素材類型已建立入口，等正式資料整理完成後即可逐步補上。</p>
+      <div class="load-more-row">
+        <button class="button secondary load-more-button" type="button" id="class-results-load-more">載入更多</button>
       </div>
-      <div class="showcase-reserved-grid">
-        ${showcaseData.categories.filter((category) => !isBrowsableShowcaseCategory(category.id)).map(showcaseReservedCard).join("")}
-      </div>
-    </section>
-    `}
+    </section>` : ""}
   `;
   if (isClassResultsPage) bindClassResultFilters(classResultItems);
-  else bindShowcaseFilters(showcaseItems, selectedCategoryId);
+}
+
+function renderLearningCategoryNotice(category) {
+  const app = document.querySelector("#app");
+  app.innerHTML = `
+    ${pageHeader(category.title, `${category.title}內容正在整理中。`)}
+    <section class="showcase-page-section">
+      <div class="showcase-empty-state" role="status">
+        <h2>${category.title}內容整理中</h2>
+        <p>${category.description}</p>
+        <a class="button secondary" href="#/showcase">返回學習成果</a>
+      </div>
+    </section>
+  `;
 }
 
 function renderAbout() {
   const app = document.querySelector("#app");
   const towns = ["朴子市", "水上鄉", "新港鄉", "太保市", "中埔鄉", "鹿草鄉", "六腳鄉", "義竹鄉", "東石鄉", "布袋鎮"];
   const halls = [
-    { name: "成果故事館", description: "彙整歷年課程、地方行動與公共參與成果。", href: "#/overview" },
+    { name: "成果故事", description: "彙整歷年課程、地方行動與公共參與成果。", href: "#/overview" },
     { name: "主題館", description: "依地方議題累積深度故事與主題成果。", href: "#/themes" },
-    { name: "地方探索館", description: "透過走讀、任務與數位內容認識地方。", href: "#/explore" },
+    { name: "地方探索", description: "透過走讀、任務與數位內容認識地方。", href: "#/explore" },
     { name: "社團紀錄", description: "記錄社團學習、服務與地方連結。", href: "#/clubs" },
-    { name: "成果展示", description: "保存活動影像、班級花絮與成果及教材。", href: "#/showcase" },
+    { name: "學習成果", description: "保存班級花絮、走讀、影音、出版與地方素材。", href: "#/showcase" },
     { name: "關於邑米", description: "認識學校、平台理念與參與方式。", href: "#/about" },
   ];
   const participation = [
@@ -1512,11 +1531,11 @@ function pageHeader(title, subtitle, options = {}) {
   const routePage = route.page;
   const hallHeaders = {
     home: {
-      label: "成果故事館",
+      label: "成果故事",
       image: "assets/images/platform-home/latest-river.jpg",
     },
     overview: {
-      label: "成果故事館",
+      label: "成果故事",
       image: "assets/images/platform-home/latest-river.jpg",
     },
     themes: {
@@ -1524,15 +1543,15 @@ function pageHeader(title, subtitle, options = {}) {
       image: "assets/images/platform-home/banner-learning.jpg",
     },
     explore: {
-      label: "地方探索館",
+      label: "地方探索",
       image: "assets/images/platform-home/banner-river.jpg",
     },
     digital: {
-      label: "地方探索館",
+      label: "地方探索",
       image: "assets/images/platform-home/banner-river.jpg",
     },
     chilan: {
-      label: "地方探索館",
+      label: "地方探索",
       image: "assets/images/platform-home/banner-river.jpg",
     },
     clubs: {
@@ -1540,7 +1559,7 @@ function pageHeader(title, subtitle, options = {}) {
       image: "public/images/activities/113-002/01.JPG",
     },
     showcase: {
-      label: "成果展示",
+      label: "學習成果",
       image: "public/images/activities/112-006/03.jpg",
     },
     about: {
@@ -1551,7 +1570,7 @@ function pageHeader(title, subtitle, options = {}) {
   const hall = hallHeaders[routePage] || hallHeaders.overview;
   const headerImage = options.image || hall.image;
   const hallIntroductions = {
-    overview: "112–115 年成果故事館，從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡。",
+    overview: "112–115 年成果故事，從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡。",
     themes: "依地方議題整理課程成果、社區故事與長期行動。",
     explore: "走進現場，用故事、任務與數位體驗認識地方。",
     digital: "走進現場，用故事、任務與數位體驗認識地方。",
@@ -1594,6 +1613,7 @@ function homeCarouselSlides(activities) {
     .slice(0, 10)
     .map((activity) => ({
       image: activity.cover,
+      fallbacks: activity.coverFallbacks,
       title: activity.name,
       meta: `${activity.year} 年・${activity.districts.join("、") || activity.topic || "活動成果"}`,
     }));
@@ -1617,7 +1637,7 @@ function heroPhotoCarousel(slides) {
           .map(
             (item, index) => `
               <figure class="hero-carousel-slide ${index === 0 ? "active" : ""}">
-                <img src="${item.image}" alt="${item.title}">
+                <img src="${item.image}" data-image-fallbacks="${imageFallbackData(item.image, item.fallbacks)}" alt="${item.title}"${index === 0 ? "" : ' loading="lazy"'}>
                 <figcaption>
                   <span>${item.meta}</span>
                   <strong>${item.title}</strong>
@@ -2484,32 +2504,37 @@ function getApprovedClassResults() {
     });
 }
 
-function getClassResultImages(result) {
-  const entries = [];
-  if (result.coverImage) {
-    entries.push({
-      src: result.coverImage,
-      alt: result.coverImageAlt || `${result.title || result.className || "班級花絮與成果"}封面照片`,
-    });
-  }
+function getClassResultMedia(result) {
+  const galleryEntries = [];
   (Array.isArray(result.images) ? result.images : []).forEach((image, index) => {
     const src = typeof image === "string" ? image : image?.src;
     if (!src) return;
-    entries.push({
+    galleryEntries.push({
       src,
       alt: (typeof image === "object" ? image?.alt : "")
         || result.imageAlts?.[index]
         || `${result.title || result.className || "班級花絮與成果"}花絮與成果照片 ${index + 1}`,
     });
   });
-  return entries.filter((entry, index) => entries.findIndex((item) => item.src === entry.src) === index);
+  const gallery = galleryEntries.filter((entry, index) => galleryEntries.findIndex((item) => item.src === entry.src) === index);
+  const resolved = resolvePublicCover({
+    explicitCover: result.coverImage || "",
+    gallery: gallery.map((entry) => entry.src),
+    placeholder: showcaseData.placeholderImage || PLACEHOLDER,
+  });
+  const matchedGallery = gallery.find((entry) => entry.src === resolved.src);
+  const cover = {
+    src: resolved.src,
+    alt: result.coverImageAlt || matchedGallery?.alt || `${result.title || result.className || "班級花絮與成果"}封面照片`,
+    fallbacks: resolved.fallbacks,
+  };
+  return { cover, gallery: gallery.filter((entry) => entry.src !== cover.src) };
 }
 
 function buildClassResultItems(results) {
   return results.map((result, index) => {
-    const imageEntries = getClassResultImages(result);
-    const images = imageEntries.map((entry) => entry.src);
-    const image = images[0] || showcaseData.placeholderImage || PLACEHOLDER;
+    const media = getClassResultMedia(result);
+    const image = media.cover.src;
     const searchableValues = [
       result.title,
       result.className,
@@ -2524,9 +2549,9 @@ function buildClassResultItems(results) {
       id: result.id || `class-result-${index + 1}`,
       type: "class-results",
       image,
-      imageAlt: imageEntries[0]?.alt || `${result.title || result.className || "班級花絮與成果"}封面照片`,
+      imageAlt: media.cover.alt,
       lazyImage: true,
-      fallbacks: images.filter((item) => item !== image).concat(showcaseData.placeholderImage || PLACEHOLDER),
+      fallbacks: media.cover.fallbacks,
       activityId: result.relatedActivityId || "",
       activityName: result.title || result.className || "班級花絮與成果",
       className: result.className || "",
@@ -2552,16 +2577,11 @@ function renderClassResultDetail(classResultId) {
   const app = document.querySelector("#app");
   const result = getApprovedClassResults().find((item) => item.id === classResultId);
   if (!result) {
-    app.innerHTML = `${pageHeader("找不到班級花絮與成果", "這筆班級花絮與成果目前不存在或尚未公開，請返回成果展示重新選擇。")}`;
+    app.innerHTML = `${pageHeader("找不到班級花絮與成果", "這筆班級花絮與成果目前不存在或尚未公開，請返回學習成果重新選擇。")}`;
     return;
   }
 
-  const images = getClassResultImages(result);
-  const cover = images[0] || {
-    src: showcaseData.placeholderImage || PLACEHOLDER,
-    alt: `${result.title || result.className || "班級花絮與成果"}封面照片`,
-  };
-  const gallery = images.slice(1);
+  const { cover, gallery } = getClassResultMedia(result);
   const tags = Array.isArray(result.tags) ? result.tags.filter(Boolean) : [];
   const sdgs = Array.isArray(result.sdgs) ? result.sdgs.filter(Boolean) : [];
   const description = result.description || result.summary || "";
@@ -2579,7 +2599,7 @@ function renderClassResultDetail(classResultId) {
     </section>
     <section class="activity-detail-layout class-result-detail-layout">
       <div class="activity-detail-photo">
-        <img src="${cover.src}" alt="${cover.alt}" loading="lazy">
+        <img src="${cover.src}" data-image-fallbacks="${imageFallbackData(cover.src, cover.fallbacks)}" alt="${cover.alt}" loading="lazy">
       </div>
       <div class="activity-detail-info">
         ${detailInfo("課程名稱", result.className)}
@@ -2644,7 +2664,9 @@ function showcaseCategoryCard(category, counts = {}) {
         </div>
         <p>${category.description}</p>
       </div>
-      <a class="showcase-card-link ${isBrowsable ? "" : "is-disabled"}" href="#/showcase/${category.id}" aria-disabled="${isBrowsable ? "false" : "true"}">${category.buttonText || "查看內容"}</a>
+      ${isBrowsable
+        ? `<a class="showcase-card-link" href="#/showcase/${category.id}">${category.buttonText || "查看內容"}</a>`
+        : `<span class="showcase-card-link is-disabled" aria-disabled="true">${category.buttonText || "內容整理中"}</span>`}
     </article>
   `;
 }
@@ -2666,25 +2688,23 @@ function showcasePhotoCard(item) {
     districts,
     item.activityType,
   ].filter(Boolean);
-  const cardTags = item.tags?.length ? item.tags : item.sdgs;
+  const cardTags = item.tags?.length ? item.tags.slice(0, 3) : item.sdgs?.slice(0, 2);
   const fallbacks = unique(item.fallbacks || []).filter((path) => path && path !== item.image).join("|");
   const classDetails = item.type === "class-results"
-    ? [
-        ["課程名稱", item.className],
-        ["授課教師", item.instructor],
-        ["上課地點", item.venue],
-      ].filter(([, value]) => value)
+    ? [item.className, item.instructor, item.venue].filter(Boolean)
     : [];
+  const visibleClassSdgs = item.type === "class-results" ? (item.sdgs || []).slice(0, 2) : [];
+  const hiddenClassSdgs = item.type === "class-results" ? Math.max(0, (item.sdgs || []).length - visibleClassSdgs.length) : 0;
   return `
     <a class="showcase-photo-card" href="${item.href || `#/overview/activity/${encodeURIComponent(item.activityId)}/${item.year || ""}`}" data-showcase-type="${item.type}" data-showcase-year="${item.year || ""}" data-showcase-districts="${(item.districts || []).join("|")}">
       <img src="${item.image}" data-image-fallbacks="${fallbacks}" alt="${item.imageAlt || `${item.activityName}成果照片`}"${item.lazyImage ? ' loading="lazy"' : ""}>
       <div class="showcase-photo-body">
         ${meta.length ? `<div class="showcase-photo-meta">${meta.map((value) => `<span>${value}</span>`).join("")}</div>` : ""}
         <h3>${item.activityName}</h3>
-        ${classDetails.length ? `<dl class="class-result-card-details">${classDetails.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("")}</dl>` : ""}
-        ${item.topic ? `<p>${item.topic}</p>` : ""}
-        ${cardTags?.length ? `<div class="showcase-sdg-tags">${cardTags.slice(0, 4).map((tag) => `<span>${tag}</span>`).join("")}</div>` : ""}
-        ${item.type === "class-results" && item.sdgs?.length ? `<div class="showcase-sdg-tags class-result-card-sdgs">${item.sdgs.map((sdg) => `<span>${sdg}</span>`).join("")}</div>` : ""}
+        ${classDetails.length ? `<p class="class-result-card-details">${classDetails.join("｜")}</p>` : ""}
+        ${item.topic ? `<p class="${item.type === "class-results" ? "class-result-card-summary" : ""}">${item.topic}</p>` : ""}
+        ${cardTags?.length ? `<div class="showcase-sdg-tags class-result-card-tags">${cardTags.map((tag) => `<span>${tag}</span>`).join("")}</div>` : ""}
+        ${visibleClassSdgs.length ? `<div class="showcase-sdg-tags class-result-card-sdgs">${visibleClassSdgs.map((sdg) => `<span>${sdg}</span>`).join("")}${hiddenClassSdgs ? `<span aria-label="另有 ${hiddenClassSdgs} 項 SDGs">+${hiddenClassSdgs}</span>` : ""}</div>` : ""}
         <span class="showcase-view-link">查看成果 →</span>
       </div>
     </a>
@@ -2715,14 +2735,36 @@ function showcaseEmptyState(message) {
   return `<div class="showcase-empty-state">${message}</div>`;
 }
 
+function bindSimpleActivityBatch(activities) {
+  const grid = document.querySelector("[data-simple-activity-grid]");
+  const button = document.querySelector("[data-simple-activity-load-more]");
+  if (!grid || !button) return;
+  let visibleCount = PUBLIC_BATCH_SIZE;
+  const update = () => {
+    const visible = visiblePublicBatch(activities, visibleCount);
+    grid.innerHTML = visible.map(activityMiniCard).join("");
+    button.hidden = visible.length >= activities.length;
+    button.textContent = `載入更多（尚有 ${Math.max(0, activities.length - visible.length)} 筆）`;
+    bindImageFallbacks();
+  };
+  button.addEventListener("click", () => {
+    visibleCount = nextPublicBatchCount(visibleCount, activities.length);
+    update();
+  });
+  update();
+}
+
 function bindClassResultFilters(classResultItems) {
   const districtSelect = document.querySelector("#class-results-district-filter");
   const searchInput = document.querySelector("#class-results-search");
   const grid = document.querySelector("#showcase-photo-grid");
   const note = document.querySelector("#showcase-result-note");
+  const loadMore = document.querySelector("#class-results-load-more");
   if (!districtSelect || !searchInput || !grid) return;
+  let visibleCount = PUBLIC_BATCH_SIZE;
 
-  const update = () => {
+  const update = (resetBatch = true) => {
+    if (resetBatch) visibleCount = PUBLIC_BATCH_SIZE;
     const district = districtSelect.value;
     const keyword = searchInput.value.trim().toLocaleLowerCase("zh-Hant");
     const filtered = classResultItems.filter((item) => {
@@ -2730,15 +2772,29 @@ function bindClassResultFilters(classResultItems) {
       const matchesKeyword = !keyword || item.searchText.includes(keyword);
       return matchesDistrict && matchesKeyword;
     });
+    const visibleItems = visiblePublicBatch(filtered, visibleCount);
     grid.innerHTML = filtered.length
-      ? filtered.map(showcasePhotoCard).join("")
+      ? visibleItems.map(showcasePhotoCard).join("")
       : showcaseEmptyState("目前沒有符合條件的班級花絮與成果。");
-    if (note) note.textContent = `目前顯示 ${filtered.length} 筆班級花絮與成果`;
+    if (note) note.textContent = `共 ${filtered.length} 筆班級花絮與成果，目前顯示 ${visibleItems.length} 筆`;
+    if (loadMore) {
+      loadMore.hidden = visibleItems.length >= filtered.length;
+      loadMore.textContent = `載入更多（尚有 ${Math.max(0, filtered.length - visibleItems.length)} 筆）`;
+    }
     bindImageFallbacks();
   };
 
-  districtSelect.addEventListener("change", update);
-  searchInput.addEventListener("input", update);
+  districtSelect.addEventListener("change", () => update(true));
+  searchInput.addEventListener("input", () => update(true));
+  loadMore?.addEventListener("click", () => {
+    const district = districtSelect.value;
+    const keyword = searchInput.value.trim().toLocaleLowerCase("zh-Hant");
+    const total = classResultItems.filter((item) => (
+      (!district || item.districts.includes(district)) && (!keyword || item.searchText.includes(keyword))
+    )).length;
+    visibleCount = nextPublicBatchCount(visibleCount, total);
+    update(false);
+  });
   update();
 }
 
@@ -2863,10 +2919,12 @@ function initYearOverviewFilters(activities) {
   const sdgLabel = document.querySelector("[data-filter-sdg-label]");
   const toolbar = document.querySelector("#year-filter-toolbar");
   const toolbarToggle = document.querySelector("[data-filter-toggle]");
+  const loadMoreButton = document.querySelector("[data-year-load-more]");
   const currentYear = yearSelect?.value || getRoute().id || "112";
   let selectedDistrict = "";
   let selectedSdg = "";
   let selectedKeyword = "";
+  let visibleCount = PUBLIC_BATCH_SIZE;
 
   if (!grid || !count) return;
 
@@ -2916,7 +2974,8 @@ function initYearOverviewFilters(activities) {
     if (clearButton) clearButton.disabled = filters.length === 0;
   }
 
-  function updateActivities() {
+  function updateActivities(resetBatch = true) {
+    if (resetBatch) visibleCount = PUBLIC_BATCH_SIZE;
     const keyword = selectedKeyword.trim().toLocaleLowerCase("zh-Hant");
     const filtered = activities.filter((activity) => {
       const searchableText = [
@@ -2935,15 +2994,20 @@ function initYearOverviewFilters(activities) {
         (!keyword || searchableText.includes(keyword))
       );
     });
+    const visibleActivities = visiblePublicBatch(filtered, visibleCount);
     count.textContent = String(filtered.length);
     grid.innerHTML = filtered.length
-      ? filtered.map(activityMiniCard).join("")
+      ? visibleActivities.map(activityMiniCard).join("")
       : `
         <div class="filter-empty-state">
           <h3>沒有符合條件的活動</h3>
           <p>請更換地區或 SDGs 條件，再查看其他活動成果。</p>
         </div>
       `;
+    if (loadMoreButton) {
+      loadMoreButton.hidden = visibleActivities.length >= filtered.length;
+      loadMoreButton.textContent = `載入更多（尚有 ${Math.max(0, filtered.length - visibleActivities.length)} 筆）`;
+    }
     renderActiveFilters();
     bindImageFallbacks();
   }
@@ -2983,6 +3047,21 @@ function initYearOverviewFilters(activities) {
   keywordInput?.addEventListener("input", () => {
     selectedKeyword = keywordInput.value.trim();
     updateActivities();
+  });
+
+  loadMoreButton?.addEventListener("click", () => {
+    const keyword = selectedKeyword.trim().toLocaleLowerCase("zh-Hant");
+    const total = activities.filter((activity) => {
+      const searchableText = [
+        activity.name, activity.topic, activity.summary, activity.keywords,
+        activity.place, activity.project, activity.leader, ...(activity.districts || []),
+      ].filter(Boolean).join(" ").toLocaleLowerCase("zh-Hant");
+      return (!selectedDistrict || activity.districts.includes(selectedDistrict))
+        && (!selectedSdg || activity.sdgs.includes(selectedSdg))
+        && (!keyword || searchableText.includes(keyword));
+    }).length;
+    visibleCount = nextPublicBatchCount(visibleCount, total);
+    updateActivities(false);
   });
 
   clearButton?.addEventListener("click", () => {
@@ -3072,23 +3151,30 @@ function yearTab(type, id, year, selectedYear) {
 }
 
 function activityMiniCard(activity) {
-  const sdgTags = activity.sdgs.length
+  const visibleSdgs = activity.sdgs.slice(0, 2);
+  const hiddenSdgCount = Math.max(0, activity.sdgs.length - visibleSdgs.length);
+  const sdgTags = visibleSdgs.length
     ? `
         <div class="activity-sdg-tags">
-          ${activity.sdgs.slice(0, 4).map((sdg) => `<span>${sdg}</span>`).join("")}
+          ${visibleSdgs.map((sdg) => `<span>${sdg}</span>`).join("")}
+          ${hiddenSdgCount ? `<span aria-label="另有 ${hiddenSdgCount} 項 SDGs">+${hiddenSdgCount}</span>` : ""}
         </div>
       `
     : "";
+  const fallbackData = imageFallbackData(activity.cover, activity.coverFallbacks);
   return `
     <a class="activity-mini-card" href="#/overview/activity/${encodeURIComponent(activity.id)}/${activity.year}">
-      <img src="${activity.cover}" alt="${activity.name}">
+      <img src="${activity.cover}" data-image-fallbacks="${fallbackData}" alt="${activity.name}" loading="lazy">
       <div class="mini-card-body">
         <div class="activity-meta-line">
-          <span>${activity.date || activity.year}</span>
+          <span>${activity.year} 年</span>
           <strong>${activity.districts.join("、") || "地區待補"}</strong>
+          ${activity.type ? `<span>${activity.type}</span>` : ""}
         </div>
         <h2>${activity.name}</h2>
+        ${activity.topic || activity.summary ? `<p class="activity-card-summary">${activity.topic || activity.summary}</p>` : ""}
         ${sdgTags}
+        <span class="activity-card-link">查看成果 →</span>
       </div>
     </a>
   `;
@@ -3214,9 +3300,16 @@ function normalizeActivity(record, index) {
   const photos = splitList(pickField(record, ["成果照片路徑", "照片路徑"]))
     .map((src) => normalizeImagePath(src, id))
     .filter(Boolean);
-  const cover =
-    normalizeImagePath(pickField(record, ["封面照片路徑", "封面照片"]), id) ||
-    `public/images/activities/${id}/cover.jpg`;
+  const explicitCover = normalizeImagePath(pickField(record, ["封面照片路徑", "封面照片"]), id);
+  const legacyConventionalCover = `public/images/activities/${id}/cover.jpg`;
+  const resolvedCover = resolvePublicCover({
+    explicitCover,
+    gallery: photos,
+    legacyFallbacks: [legacyConventionalCover],
+    placeholder: PLACEHOLDER,
+    // Legacy records historically render an existing conventional cover.jpg before gallery photos.
+    preferLegacyFallback: !explicitCover,
+  });
 
   return {
     id,
@@ -3242,7 +3335,8 @@ function normalizeActivity(record, index) {
       "coPartners",
     ]) || "",
     leader: pickField(record, ["講師/帶領者", "講師", "帶領者"]) || "",
-    cover,
+    cover: resolvedCover.src,
+    coverFallbacks: resolvedCover.fallbacks,
     photos,
   };
 }

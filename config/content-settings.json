@@ -11,7 +11,9 @@
     "義竹鄉",
     "六腳鄉"
   ],
-  "allowedExternalImageHosts": [],
+  "allowedExternalImageHosts": [
+    "dyjrzrputeomrmqhkwgi.supabase.co"
+  ],
   "maxGalleryImages": 30,
   "maxImageBytes": 10485760,
   "maxImageDimension": 6000

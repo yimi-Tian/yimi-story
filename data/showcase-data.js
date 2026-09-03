@@ -2,15 +2,6 @@
 window.SHOWCASE_DATA = {
   "categories": [
     {
-      "id": "activity-photos",
-      "title": "活動照片",
-      "description": "彙整歷年活動照片，呈現課程、走讀與社區行動成果。",
-      "type": "photo",
-      "icon": "PHOTO",
-      "coverImage": "public/images/activities/112-006/03.jpg",
-      "buttonText": "查看照片成果"
-    },
-    {
       "id": "class-results",
       "title": "班級花絮與成果",
       "description": "呈現各地班級的學習花絮、課程實作與共同成果，記錄邑米社區大學多元而持續的學習風景。",

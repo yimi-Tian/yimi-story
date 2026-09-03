@@ -27,8 +27,8 @@ test("formal publication only emits the six-file allowlist and increments class 
   const result = build();
   assert.deepEqual(Object.keys(result.files).sort(), [...FORMAL_FILE_ALLOWLIST].sort());
   assert.equal(result.changeType, "new");
-  assert.deepEqual(result.beforeCounts, { classResults: 56, activities: 63 });
-  assert.deepEqual(result.afterCounts, { classResults: 57, activities: 63 });
+  assert.deepEqual(result.beforeCounts, { classResults: 56, activities: 64 });
+  assert.deepEqual(result.afterCounts, { classResults: 57, activities: 64 });
   assert.deepEqual(result.changedFiles.sort(), ["data/class-results-data.js", "data/class-results.json"].sort());
 });
 

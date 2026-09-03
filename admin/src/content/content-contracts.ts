@@ -25,6 +25,18 @@ export interface ValidationResult {
   warnings: ValidationIssue[];
 }
 
+const validationFieldLabels: Record<string, string> = {
+  participants: "參與人次",
+};
+
+export function presentValidationIssue(issue: ValidationIssue): ValidationIssue {
+  const field = validationFieldLabels[issue.field] ?? issue.field;
+  const message = issue.field === "participants"
+    ? issue.message.replaceAll("participants", "參與人次").replaceAll("參與人數", "參與人次").replaceAll("參加人數", "參與人次")
+    : issue.message;
+  return { ...issue, field, message };
+}
+
 export interface ClassResultForm {
   id: string;
   year: string;

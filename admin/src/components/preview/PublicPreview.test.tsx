@@ -13,7 +13,7 @@ const model: DraftPreviewModel = {
   data: {
     id: "112-015", year: 112, name: "<script>alert(1)</script>", startDate: null, endDate: null, dateLabel: "112年春季",
     districts: ["水上鄉"], venue: "場地", projectName: null, activityType: "成果", topic: "地方", sdgs: [],
-    summary: "<img src=x onerror=alert(1)>", participants: null, partnerOrganizations: null, leader: null, keywords: [],
+    summary: "<img src=x onerror=alert(1)>", participants: 20, partnerOrganizations: null, leader: null, keywords: [],
     videoUrl: null, relatedUrl: null, featured: false, publicNotes: "公開備註", coverAssetId: null, galleryAssetIds: ["image"],
   },
 };
@@ -29,6 +29,8 @@ test("preview renders editable text safely and keeps admin status outside public
   expect(screen.getByText("<script>alert(1)</script>")).toBeInTheDocument();
   expect(screen.getByText("<img src=x onerror=alert(1)>")).toBeInTheDocument();
   expect(screen.getAllByText("公開備註")).toHaveLength(2);
+  expect(screen.getByText("參與人次")).toBeInTheDocument();
+  expect(screen.getByText("20 人次")).toBeInTheDocument();
   expect(container.querySelector("script")).toBeNull();
   expect(container.querySelector("img[src='x']")).toBeNull();
   expect(container.querySelector(".public-preview")?.textContent).not.toContain("112-015");
