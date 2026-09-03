@@ -71,12 +71,42 @@ window.PLATFORM_HOME_DATA = {
     }
   ],
   "platformStats": [
-    { "label": "活動成果", "value": "63", "unit": "筆", "description": "歷年正式活動成果" },
-    { "label": "照片素材", "value": "120", "unit": "張", "description": "地方學習影像紀錄" },
-    { "label": "地方主題", "value": "5", "unit": "大", "description": "地方議題成果脈絡" },
-    { "label": "探索入口", "value": "4", "unit": "個", "description": "地方知識探索模組" },
-    { "label": "社團行動", "value": "3", "unit": "個", "description": "學員自主行動紀錄" },
-    { "label": "服務鄉鎮", "value": "10", "unit": "個", "description": "邑米社大服務範圍" }
+    {
+      "label": "活動成果",
+      "value": "64",
+      "unit": "筆",
+      "description": "歷年正式活動成果"
+    },
+    {
+      "label": "照片素材",
+      "value": "120",
+      "unit": "張",
+      "description": "地方學習影像紀錄"
+    },
+    {
+      "label": "地方主題",
+      "value": "5",
+      "unit": "大",
+      "description": "地方議題成果脈絡"
+    },
+    {
+      "label": "探索入口",
+      "value": "4",
+      "unit": "個",
+      "description": "地方知識探索模組"
+    },
+    {
+      "label": "社團行動",
+      "value": "3",
+      "unit": "個",
+      "description": "學員自主行動紀錄"
+    },
+    {
+      "label": "服務鄉鎮",
+      "value": "10",
+      "unit": "個",
+      "description": "邑米社大服務範圍"
+    }
   ],
   "featuredResults": [
     {
@@ -86,7 +116,10 @@ window.PLATFORM_HOME_DATA = {
       "description": "以修繕代替汰換，讓木工學習回到社區需要。",
       "image": "public/images/activities/114-022/05.jpg",
       "link": "index.html#/clubs/wood-repair",
-      "relatedActivityIds": ["114-022", "113-002"]
+      "relatedActivityIds": [
+        "114-022",
+        "113-002"
+      ]
     },
     {
       "id": "chilan-river-exploration",
@@ -95,7 +128,12 @@ window.PLATFORM_HOME_DATA = {
       "description": "從流域故事、生態走讀與田野調查，累積赤蘭溪地方知識。",
       "image": "public/images/activities/114-016/03.jpg",
       "link": "index.html#/explore/chilan-river",
-      "relatedActivityIds": ["114-016", "114-017", "114-032", "114-033"]
+      "relatedActivityIds": [
+        "114-016",
+        "114-017",
+        "114-032",
+        "114-033"
+      ]
     },
     {
       "id": "local-culture-walk",
@@ -104,7 +142,12 @@ window.PLATFORM_HOME_DATA = {
       "description": "透過廟宇、老街、聚落與工藝，保存地方生活記憶。",
       "image": "public/images/activities/114-018/01.jpg",
       "link": "index.html#/themes/local-culture",
-      "relatedActivityIds": ["114-018", "114-019", "114-020", "114-015"]
+      "relatedActivityIds": [
+        "114-018",
+        "114-019",
+        "114-020",
+        "114-015"
+      ]
     },
     {
       "id": "marine-education",
@@ -113,7 +156,13 @@ window.PLATFORM_HOME_DATA = {
       "description": "從漁村、釣場與海洋保育，認識嘉義海縣生活。",
       "image": "public/images/activities/113-014/03.jpg",
       "link": "index.html#/themes/marine-education",
-      "relatedActivityIds": ["113-014", "114-026", "114-027", "114-031", "114-032"]
+      "relatedActivityIds": [
+        "113-014",
+        "114-026",
+        "114-027",
+        "114-031",
+        "114-032"
+      ]
     },
     {
       "id": "food-agriculture",
@@ -122,7 +171,11 @@ window.PLATFORM_HOME_DATA = {
       "description": "從在地農產、農村生活與食農體驗，連結土地與生活。",
       "image": "public/images/activities/114-021/03.jpg",
       "link": "index.html#/themes/food-agriculture",
-      "relatedActivityIds": ["114-021", "114-023", "114-008"]
+      "relatedActivityIds": [
+        "114-021",
+        "114-023",
+        "114-008"
+      ]
     },
     {
       "id": "result-showcase",
@@ -131,20 +184,52 @@ window.PLATFORM_HOME_DATA = {
       "description": "以活動照片、班級共同成果與影像素材，保存地方學習的精彩片段。",
       "image": "public/images/activities/112-006/03.jpg",
       "link": "index.html#/showcase",
-      "relatedActivityIds": ["112-006"]
+      "relatedActivityIds": [
+        "112-006"
+      ]
     }
   ],
   "places": [
-    { "name": "朴子市", "href": "index.html#/overview" },
-    { "name": "水上鄉", "href": "index.html#/overview" },
-    { "name": "新港鄉", "href": "index.html#/overview" },
-    { "name": "太保市", "href": "index.html#/overview" },
-    { "name": "中埔鄉", "href": "index.html#/overview" },
-    { "name": "鹿草鄉", "href": "index.html#/overview" },
-    { "name": "六腳鄉", "href": "index.html#/overview" },
-    { "name": "義竹鄉", "href": "index.html#/overview" },
-    { "name": "東石鄉", "href": "index.html#/overview" },
-    { "name": "布袋鎮", "href": "index.html#/overview" }
+    {
+      "name": "朴子市",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "水上鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "新港鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "太保市",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "中埔鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "鹿草鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "六腳鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "義竹鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "東石鄉",
+      "href": "index.html#/overview"
+    },
+    {
+      "name": "布袋鎮",
+      "href": "index.html#/overview"
+    }
   ],
   "latest": [
     {
@@ -194,12 +279,36 @@ window.PLATFORM_HOME_DATA = {
     "imageAlt": "學員在地方課程中共同觀察與記錄"
   },
   "stats": [
-    { "label": "地方探索模組", "value": "1", "unit": "個" },
-    { "label": "服務鄉鎮", "value": "10", "unit": "處" },
-    { "label": "年度成果", "value": "4", "unit": "年" },
-    { "label": "成果資料", "value": "4", "unit": "年" },
-    { "label": "主題館內容", "value": "5", "unit": "類" },
-    { "label": "社團紀錄", "value": "6", "unit": "組" }
+    {
+      "label": "地方探索模組",
+      "value": "1",
+      "unit": "個"
+    },
+    {
+      "label": "服務鄉鎮",
+      "value": "10",
+      "unit": "處"
+    },
+    {
+      "label": "年度成果",
+      "value": "4",
+      "unit": "年"
+    },
+    {
+      "label": "成果資料",
+      "value": "4",
+      "unit": "年"
+    },
+    {
+      "label": "主題館內容",
+      "value": "5",
+      "unit": "類"
+    },
+    {
+      "label": "社團紀錄",
+      "value": "6",
+      "unit": "組"
+    }
   ],
   "news": [
     {
