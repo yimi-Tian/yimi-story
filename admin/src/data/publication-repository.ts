@@ -38,7 +38,42 @@ export interface GitHubPublication {
   beforeCounts: { classResults: number; activities: number } | null;
   afterCounts: { classResults: number; activities: number } | null;
   checkedAt: string | null;
+  finalizedAt?: string | null;
   errorCode: string | null;
+}
+
+export interface PublicationTimeline {
+  publishedSnapshot: PublicationSnapshotSummary | null;
+  entries: { publication: GitHubPublication; snapshot: PublicationSnapshotSummary }[];
+}
+
+// Read by content identity, not draft revision or the recent-ten-snapshots window.
+export async function fetchPublicationTimeline(client: SupabaseClient, contentId: string): Promise<PublicationTimeline> {
+  const pointer = await client.from("content_items").select("published_snapshot_id").eq("id", contentId).single();
+  if (pointer.error) fail("PUBLICATION_HISTORY_FAILED");
+  const publications: GitHubPublication[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const { data, error } = await client.from("github_publications")
+      .select("id,snapshot_id,pr_state,head_branch,base_sha,commit_sha,pr_number,pr_url,formal_manifest,checked_at,finalized_at,error_code")
+      .eq("content_id", contentId).order("created_at", { ascending: false }).order("id", { ascending: false }).range(offset, offset + 99);
+    if (error) fail("PUBLICATION_HISTORY_FAILED");
+    publications.push(...(data ?? []).map((row) => githubPublication(row as Record<string, unknown>)));
+    if (!data || data.length < 100) break;
+  }
+  const ids = [...new Set([pointer.data?.published_snapshot_id, ...publications.map((row) => row.snapshotId)].filter(Boolean))] as string[];
+  const snapshots: PublicationSnapshotSummary[] = [];
+  for (let offset = 0; offset < ids.length; offset += 100) {
+    const { data, error } = await client.from("publication_snapshots")
+      .select("id,source_revision,schema_version,checksum_sha256,status,created_at")
+      .eq("content_id", contentId).in("id", ids.slice(offset, offset + 100));
+    if (error) fail("PUBLICATION_HISTORY_FAILED");
+    snapshots.push(...(data ?? []).map((row) => ({ id: String(row.id), revision: Number(row.source_revision), schemaVersion: String(row.schema_version), checksum: String(row.checksum_sha256), status: String(row.status), createdAt: String(row.created_at) })));
+  }
+  if (ids.some((id) => !snapshots.some((snapshot) => snapshot.id === id))) fail("PUBLICATION_HISTORY_FAILED");
+  return {
+    publishedSnapshot: snapshots.find((snapshot) => snapshot.id === pointer.data?.published_snapshot_id) ?? null,
+    entries: publications.map((publication) => ({ publication, snapshot: snapshots.find((snapshot) => snapshot.id === publication.snapshotId)! })),
+  };
 }
 
 function fail(code: string): never { throw new Error(code); }
@@ -134,7 +169,7 @@ function githubPublication(value: Record<string, unknown>): GitHubPublication {
     id: value.id, snapshotId: value.snapshot_id, status: value.pr_state, branch: value.head_branch,
     baseSha: value.base_sha, commitSha: value.commit_sha, prNumber: value.pr_number, prUrl: value.pr_url,
     changedFiles: manifest?.changedFiles, beforeCounts: manifest?.beforeCounts, afterCounts: manifest?.afterCounts,
-    checkedAt: value.checked_at, errorCode: value.error_code,
+    checkedAt: value.checked_at, finalizedAt: value.finalized_at, errorCode: value.error_code,
   };
   return {
     id: String(shape.id), snapshotId: String(shape.snapshotId), status: String(shape.status) as GitHubPublication["status"],
@@ -144,12 +179,13 @@ function githubPublication(value: Record<string, unknown>): GitHubPublication {
     beforeCounts: shape.beforeCounts as GitHubPublication["beforeCounts"] ?? null,
     afterCounts: shape.afterCounts as GitHubPublication["afterCounts"] ?? null,
     checkedAt: shape.checkedAt ? String(shape.checkedAt) : null, errorCode: shape.errorCode ? String(shape.errorCode) : null,
+    finalizedAt: shape.finalizedAt ? String(shape.finalizedAt) : null,
   };
 }
 
 export async function fetchGitHubPublication(client: SupabaseClient, snapshotId: string): Promise<GitHubPublication | null> {
   const { data, error } = await client.from("github_publications")
-    .select("id,snapshot_id,pr_state,head_branch,base_sha,commit_sha,pr_number,pr_url,formal_manifest,checked_at,error_code")
+    .select("id,snapshot_id,pr_state,head_branch,base_sha,commit_sha,pr_number,pr_url,formal_manifest,checked_at,finalized_at,error_code")
     .eq("snapshot_id", snapshotId).maybeSingle();
   if (error) fail("GITHUB_PUBLICATION_STATUS_FAILED");
   return data ? githubPublication(data as Record<string, unknown>) : null;

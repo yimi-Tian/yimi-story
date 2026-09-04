@@ -10,6 +10,17 @@ function Harness({ dirty }: { dirty: boolean }) {
   return <Link to="/activities">活動成果</Link>;
 }
 
+test("上傳中提供專用離開提示且刷新會被阻擋",()=>{
+  function UploadHarness(){useUnsavedChangesWarning(true,"圖片仍在上傳，確定要離開嗎？");return <Link to="/activities">離開</Link>;}
+  const confirm=vi.spyOn(window,"confirm").mockReturnValue(false);
+  render(<MemoryRouter><UploadHarness/></MemoryRouter>);
+  expect(fireEvent.click(screen.getByRole("link",{name:"離開"}))).toBe(false);
+  expect(confirm).toHaveBeenCalledWith("圖片仍在上傳，確定要離開嗎？");
+  const event=new Event("beforeunload",{cancelable:true});
+  window.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+});
+
 test("dirty 表單會攔截 BrowserRouter 相容的站內連結離開", () => {
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   render(<MemoryRouter><Harness dirty /></MemoryRouter>);

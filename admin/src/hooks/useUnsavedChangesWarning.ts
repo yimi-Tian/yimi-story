@@ -3,7 +3,7 @@ import { useBeforeUnload } from "react-router-dom";
 
 export const unsavedChangesMessage = "尚有未儲存的變更，確定要離開嗎？";
 
-export function useUnsavedChangesWarning(dirty: boolean) {
+export function useUnsavedChangesWarning(dirty: boolean, message = unsavedChangesMessage) {
   useBeforeUnload((event: BeforeUnloadEvent) => {
     if (dirty) event.preventDefault();
   });
@@ -16,12 +16,12 @@ export function useUnsavedChangesWarning(dirty: boolean) {
       if (!target || target.target === "_blank" || target.hasAttribute("download")) return;
       const destination = new URL(target.href, window.location.href);
       if (destination.origin !== window.location.origin || destination.href === window.location.href) return;
-      if (!window.confirm(unsavedChangesMessage)) {
+      if (!window.confirm(message)) {
         event.preventDefault();
         event.stopImmediatePropagation();
       }
     };
     document.addEventListener("click", confirmInternalNavigation, true);
     return () => document.removeEventListener("click", confirmInternalNavigation, true);
-  }, [dirty]);
+  }, [dirty, message]);
 }

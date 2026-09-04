@@ -5,6 +5,7 @@ import {
   districtOptions,
   normalizeContentForm,
   presentValidationIssue,
+  matchesPublishedContent,
   validateCanonicalContent,
   type ActivityForm,
   type ClassResultForm,
@@ -16,6 +17,21 @@ const classForm: ClassResultForm = {
   tags: [" 地方 ", "地方", "成果"], sdgs: ["sdg1", "SDG 1", "2"], displayOrder: "3",
   publicNotes: "公開說明", internalNotes: "CR-115-003 既有內部備註", coverAssetId: "legacy-cover", galleryAssetIds: [],
 };
+
+it("altText驗證在UI統一名稱與訊息但保留field及code",()=>{
+  const source={field:"media.altText",code:"media_alt_required",message:"新上傳圖片必須填寫替代文字。"};
+  const output=presentValidationIssue(source);
+  expect(output).toMatchObject({field:"圖片替代文字（網站不顯示）",message:"請填寫圖片替代文字",canonicalField:"media.altText",code:"media_alt_required",targetId:"media-section"});
+  expect(source.message).toBe("新上傳圖片必須填寫替代文字。");
+  expect(presentValidationIssue({field:"coverAssetId",code:"media.altMissing",message:"請填寫圖片說明文字。"}).message).toBe("請填寫圖片替代文字");
+});
+
+it("網站版本比較忽略物件key順序與內部備註，但保留公開欄位及相簿順序差異",()=>{
+  const data=normalizeContentForm("class_result",classForm);
+  expect(matchesPublishedContent(data,{...data,internalNotes:"只改內部"})).toBe(true);
+  expect(matchesPublishedContent(data,{...data,title:"新的成果"})).toBe(false);
+  expect(matchesPublishedContent({...data,galleryAssetIds:["a","b"]},{...data,galleryAssetIds:["b","a"]})).toBe(false);
+});
 
 const activityForm: ActivityForm = {
   id: "112-015", year: "112", name: "既有活動", startDate: "", endDate: "", dateLabel: "112年5月",
@@ -51,7 +67,13 @@ describe("Stage 1 canonical adapter", () => {
 
   it("participants validation issue 只在顯示層轉為參與人次", () => {
     expect(presentValidationIssue({ field: "participants", code: "participants.range", message: "participants 必須為整數。" }))
-      .toEqual({ field: "參與人次", code: "participants.range", message: "參與人次 必須為整數。" });
+      .toMatchObject({ field: "參與人次", canonicalField: "participants", targetId: "field-participants", code: "participants.range", message: "請輸入整數。" });
+  });
+
+  it("驗證欄位會映射至中文標籤與可聚焦目標", () => {
+    expect(presentValidationIssue({ field: "dateLabel", code: "required", message: "dateLabel 為必填。" })).toMatchObject({ field: "活動日期", targetId: "field-dateLabel" });
+    expect(presentValidationIssue({ field: "coverAssetId", code: "required", message: "coverAssetId 為必填。" })).toMatchObject({ field: "封面圖片", targetId: "media-cover" });
+    expect(presentValidationIssue({ field: "galleryAssetIds.0", code: "required", message: "galleryAssetIds.0 為必填。" })).toMatchObject({ field: "相簿第 1 張", targetId: "media-gallery-1" });
   });
 
   it("legacy district 可保留在表單，正常選項仍以 service area 為主", () => {

@@ -18,6 +18,7 @@ vi.mock("../../data/content-repository", async (importOriginal) => {
 });
 vi.mock("../../data/publication-repository", () => ({
   fetchPublicationSnapshots: mocks.fetchPublicationSnapshots,
+  fetchPublicationTimeline: vi.fn().mockResolvedValue({publishedSnapshot:null,entries:[]}),
   requestPublicationPreparation: vi.fn(),
 }));
 
@@ -80,7 +81,7 @@ test("dirty form refuses to preview an older saved draft", async () => {
     <Route path="/class-results/:publicId" element={<ContentEditorPage type="class_result" />} />
     <Route path="/class-results/:publicId/preview" element={<p>preview route</p>} />
   </Routes></MemoryRouter>);
-  fireEvent.change(await within(rendered.container).findByLabelText(/標題/), { target: { value: "尚未儲存" } });
+  fireEvent.change(await within(rendered.container).findByLabelText(/成果名稱/), { target: { value: "尚未儲存" } });
   fireEvent.click(within(rendered.container).getByRole("button", { name: "預覽" }));
   expect(alert).toHaveBeenCalledWith("目前有尚未儲存的變更，請先儲存草稿後再預覽。");
   expect(screen.queryByText("preview route")).not.toBeInTheDocument();
@@ -92,7 +93,7 @@ test("活動欄位、驗證摘要與 inline error 統一顯示參與人次", asy
     contentId: "activity-content", contentType: "activity", publicId: "115-002",
     publishedSnapshotId: "activity-snapshot", publishedAt: "2026-09-03T00:00:00Z",
     draftId: "activity-draft", draftStatus: "draft", revision: 1, updatedAt: "2026-09-03T00:00:00Z", mediaCount: 0,
-    validationResult: { valid: false, errors: [], warnings: [] },
+    validationResult: { valid: false, errors: [{field:"participants",code:"participants.range",message:"請輸入 0 到 1,000,000 的整數。"}], warnings: [] },
     data: { id: "115-002", year: 115, name: "測試活動", startDate: null, endDate: null, dateLabel: "8/1",
       districts: ["東石鄉"], venue: "測試場地", projectName: null, activityType: "工作坊", topic: "地方文化",
       sdgs: ["SDG 4"], summary: "這是一段足夠長度的活動成果摘要，用來驗證欄位名稱。", participants: 20,
@@ -106,12 +107,14 @@ test("活動欄位、驗證摘要與 inline error 統一顯示參與人次", asy
   expect(screen.getByText("請填本活動累計參與人次。")).toBeInTheDocument();
   expect(screen.queryByText("參與人數")).not.toBeInTheDocument();
   expect(screen.queryByText("參加人數")).not.toBeInTheDocument();
-  fireEvent.change(field, { target: { value: "-1" } });
-  fireEvent.click(screen.getByRole("button", { name: "檢查內容" }));
-  expect(field).toHaveAttribute("aria-invalid", "true");
+  await waitFor(()=>expect(field).toHaveAttribute("aria-invalid", "true"));
   expect(screen.getAllByText("參與人次").length).toBeGreaterThanOrEqual(2);
   expect(screen.getByText("請輸入 0 到 1,000,000 的整數。")).toHaveClass("field-error");
-  expect(screen.getByText((_, element) => element?.tagName === "LI" && element.textContent === "參與人次：請輸入 0 到 1,000,000 的整數。")).toBeInTheDocument();
+  const summaryLink=screen.getByRole("button",{name:"參與人次：請輸入 0 到 1,000,000 的整數。"});
+  expect(summaryLink).toBeInTheDocument();
+  expect(field).toHaveAttribute("aria-describedby","field-participants-error");
+  fireEvent.click(summaryLink);
+  await waitFor(()=>expect(field).toHaveFocus());
   expect(rendered.container.textContent).not.toContain("participants");
 });
 
