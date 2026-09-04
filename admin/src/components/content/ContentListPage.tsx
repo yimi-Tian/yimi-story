@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import type { ContentType } from "../../content/content-contracts";
+import { unpublishedContentState, type ContentType } from "../../content/content-contracts";
 import { getSupabaseClient } from "../../lib/supabase";
 import { ErrorState, LoadingState } from "../States";
 import { contentStatusLabel, filterContentItems, type ContentFilters } from "../../data/content-list";
@@ -49,7 +49,7 @@ export function ContentListPage({ type }: { type: ContentType }) {
       <div className="table-scroll"><table className="content-table"><thead><tr>{isClass ? <><th>ID</th><th>標題／課程</th><th>講師</th><th>地區／場地</th><th>年度</th></> : <><th>ID</th><th>活動名稱／日期</th><th>類型／帶領者</th><th>地區／場地</th><th>參與人次</th></>}<th>狀態</th><th>最後更新</th><th /></tr></thead><tbody>{filtered.map((item) => {
         const data = item.data as unknown as Record<string, unknown>;
         const districts = Array.isArray(data.districts) ? data.districts.join("、") : "";
-        return <tr key={item.contentId}>{isClass ? <><td><code>{item.publicId}</code></td><td><strong>{String(data.title ?? "")}</strong><small>{String(data.className ?? "")}</small></td><td>{String(data.instructor ?? "")}</td><td>{districts}<small>{String(data.venue ?? "")}</small></td><td>{String(data.year ?? "")}</td></> : <><td><code>{item.publicId}</code></td><td><strong>{String(data.name ?? "")}</strong><small>{String(data.dateLabel ?? "")}</small></td><td>{String(data.activityType ?? "")}<small>{String(data.leader ?? "")}</small></td><td>{districts}<small>{String(data.venue ?? "")}</small></td><td>{String(data.participants ?? "—")}</td></>}<td><span className={`record-status ${item.draftId ? "has-draft" : ""}`}>{contentStatusLabel(item)}</span>{item.draftStatus === "validated" && <small>已檢查</small>}</td><td>{new Date(item.updatedAt).toLocaleString("zh-TW")}</td><td><Link className="text-link" to={`${basePath}/${encodeURIComponent(item.publicId)}`}>編輯</Link></td></tr>;
+        return <tr key={item.contentId}>{isClass ? <><td><code>{item.publicId}</code></td><td><strong>{String(data.title ?? "")}</strong><small>{String(data.className ?? "")}</small></td><td>{String(data.instructor ?? "")}</td><td>{districts}<small>{String(data.venue ?? "")}</small></td><td>{String(data.year ?? "")}</td></> : <><td><code>{item.publicId}</code></td><td><strong>{String(data.name ?? "")}</strong><small>{String(data.dateLabel ?? "")}</small></td><td>{String(data.activityType ?? "")}<small>{String(data.leader ?? "")}</small></td><td>{districts}<small>{String(data.venue ?? "")}</small></td><td>{String(data.participants ?? "—")}</td></>}<td><span className={`record-status ${["changed", "unpublished"].includes(unpublishedContentState(item)) ? "has-draft" : ""}`}>{contentStatusLabel(item)}</span>{item.draftStatus === "validated" && <small>已檢查</small>}</td><td>{new Date(item.updatedAt).toLocaleString("zh-TW")}</td><td><Link className="text-link" to={`${basePath}/${encodeURIComponent(item.publicId)}`}>編輯</Link></td></tr>;
       })}</tbody></table></div>
     </>}
   </>;

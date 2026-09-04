@@ -6,7 +6,7 @@ import type { GitHubPublication } from "../../data/publication-repository";
 const mocks=vi.hoisted(()=>({fetch:vi.fn(),timeline:vi.fn(),request:vi.fn(),fetchMedia:vi.fn(),requestMedia:vi.fn(),fetchGitHub:vi.fn(),requestGitHub:vi.fn(),finalizeGitHub:vi.fn()}));
 vi.mock("../../data/publication-repository",()=>({fetchPublicationSnapshots:mocks.fetch,fetchPublicationTimeline:mocks.timeline,requestPublicationPreparation:mocks.request,fetchPublicationMediaPreparation:mocks.fetchMedia,requestPublicationMediaPreparation:mocks.requestMedia,fetchGitHubPublication:mocks.fetchGitHub,requestGitHubPublication:mocks.requestGitHub,finalizeGitHubPublication:mocks.finalizeGitHub}));
 const client={} as never;
-const base={client,contentId:"content-safe",draftId:"draft-safe",revision:4,draftStatus:"validated",blocked:false};
+const base={client,contentId:"content-safe",draftId:"draft-safe",contentState:"changed" as const,revision:4,draftStatus:"validated",blocked:false};
 const preparation={valid:true,errors:[],warnings:[],validation:{revision:4,mediaCount:2,coverReady:true,exporterDeterministic:true},checksum:"a".repeat(64)};
 const snapshot={id:"11111111-1111-4111-8111-111111111111",revision:4,schemaVersion:"1.1",checksum:"a".repeat(64),status:"ready",createdAt:"2026-08-28T00:00:00Z"};
 const media={status:"ready",requiredCount:2,promotedCount:2,legacyCount:0,failedCount:0,manifestChecksum:"b".repeat(64),errorCode:null} as const;

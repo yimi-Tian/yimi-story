@@ -56,6 +56,28 @@ test("BrowserRouter 相容 route 可解析 existing class publicId 並顯示編�
 });
 afterEach(() => cleanup());
 
+test.each([false, true])("existing class r0/r1 Editor and list compare canonical, changed=%s (mock read only)", async (changed) => {
+  const baseline = { id: "CR-115-001", year: 115, title: "既有班級", className: "課程", instructor: "講師", description: "成果",
+    districts: ["水上鄉"], venue: "場地", tags: [], sdgs: [], displayOrder: 1, publicNotes: null, internalNotes: null, coverAssetId: null, galleryAssetIds: [] };
+  const record = { contentId: "mock-content", contentType: "class_result", publicId: baseline.id, publishedSnapshotId: "mock-baseline",
+    publishedAt: "2026-01-01T00:00:00Z", publishedRevision: 0, draftId: "mock-draft", draftStatus: "draft", revision: 1,
+    updatedAt: "2026-09-04T00:00:00Z", mediaCount: 0, validationResult: { valid: true, errors: [], warnings: [] },
+    publishedData: baseline, data: { ...baseline, title: changed ? "修改成果" : baseline.title, internalNotes: "內部筆記", revision: 1 } };
+  const before = JSON.stringify(record);
+  mocks.openContentDraft.mockResolvedValue(record);
+  mocks.fetchContentList.mockResolvedValue([record]);
+  const editor = render(<MemoryRouter initialEntries={["/class-results/CR-115-001"]}><Routes>
+    <Route path="/class-results/:publicId" element={<ContentEditorPage type="class_result" />} />
+  </Routes></MemoryRouter>);
+  expect((await screen.findAllByText(changed ? "已發布・有未發布修改" : "內容已同步")).length).toBeGreaterThan(0);
+  if (!changed) expect(screen.queryByText("有未發布變更")).not.toBeInTheDocument();
+  editor.unmount();
+  render(<MemoryRouter><ContentListPage type="class_result" /></MemoryRouter>);
+  const badge = await screen.findByText(changed ? "已發布・有未發布修改" : "已發布", { selector: "span.record-status" });
+  expect(badge.classList.contains("has-draft")).toBe(changed);
+  expect(JSON.stringify(record)).toBe(before);
+});
+
 test("新班級尚無draft與snapshot時 Editor 正常載入", async () => {
   render(<MemoryRouter initialEntries={["/class-results/new"]}><Routes>
     <Route path="/class-results/new" element={<ContentEditorBoundary type="class_result"><ContentEditorPage type="class_result" isNew /></ContentEditorBoundary>} />
