@@ -25,16 +25,69 @@ export interface ValidationResult {
   warnings: ValidationIssue[];
 }
 
-const validationFieldLabels: Record<string, string> = {
-  participants: "參與人次",
+export const imageAltTextLabel = "圖片替代文字（網站不顯示）";
+export const imageAltTextHelp = "供無障礙閱讀與圖片載入失敗時使用，請簡短描述照片內容。";
+export const imageAltTextRequired = "請填寫圖片替代文字";
+
+export const validationFieldLabels: Record<string, string> = {
+  id: "內容編號", name: "活動名稱", title: "成果名稱", className: "課程名稱",
+  year: "年度", startDate: "開始日期", endDate: "結束日期", dateLabel: "活動日期",
+  districts: "鄉鎮", venue: "活動地點", projectName: "計畫名稱", activityType: "活動類型",
+  topic: "活動主題", sdgs: "SDGs", summary: "活動說明", description: "成果說明",
+  participants: "參與人次", partnerOrganizations: "合作單位", leader: "講師／帶領人",
+  instructor: "講師", keywords: "關鍵字", tags: "標籤", videoUrl: "影片連結",
+  relatedUrl: "延伸連結", featured: "首頁精選", displayOrder: "顯示順序",
+  publicNotes: "公開備註", internalNotes: "內部備註", coverAssetId: "封面圖片",
+  galleryAssetIds: "相簿圖片", media: "圖片", altText: imageAltTextLabel,
 };
 
-export function presentValidationIssue(issue: ValidationIssue): ValidationIssue {
-  const field = validationFieldLabels[issue.field] ?? issue.field;
-  const message = issue.field === "participants"
-    ? issue.message.replaceAll("participants", "參與人次").replaceAll("參與人數", "參與人次").replaceAll("參加人數", "參與人次")
-    : issue.message;
-  return { ...issue, field, message };
+export interface PresentedValidationIssue extends ValidationIssue { canonicalField: string; targetId: string }
+
+export function validationFieldLabel(field: string): string {
+  if (field === "media.altText" || field === "altText") return imageAltTextLabel;
+  const root = field.split(/[.[]/, 1)[0];
+  if (field.startsWith("galleryAssetIds.")) {
+    const index = Number(field.split(".")[1]);
+    return Number.isInteger(index) ? `相簿第 ${index + 1} 張` : "相簿圖片";
+  }
+  return validationFieldLabels[root] ?? "內容資料";
+}
+
+export function validationTargetId(field: string): string {
+  if (field === "coverAssetId") return "media-cover";
+  if (field.startsWith("galleryAssetIds.")) return `media-gallery-${Number(field.split(".")[1]) + 1}`;
+  if (field === "galleryAssetIds" || field === "media" || field === "media.altText" || field === "altText") return "media-section";
+  return `field-${field.split(/[.[]/, 1)[0]}`;
+}
+
+function translateMessage(issue: ValidationIssue): string {
+  if (issue.code === "media.altMissing" || issue.code === "media_alt_required") return imageAltTextRequired;
+  const label = validationFieldLabel(issue.field);
+  let message = issue.message
+    .replaceAll(issue.field, label)
+    .replaceAll("participants", "參與人次")
+    .replaceAll("參與人數", "參與人次")
+    .replaceAll("參加人數", "參與人次");
+  message = message.replaceAll("圖片說明文字", "圖片替代文字").replaceAll("尚未補齊替代文字", "尚未補齊圖片替代文字");
+  message = message
+    .replace(/長度必須為\s*1\s*[-–~～]\s*(\d+)\s*字[。.]?/u, "請填寫 1～$1 個字。")
+    .replace(/必須為\s*0\s*[-–~～到]\s*1,?000,?000\s*的?整數[。.]?/u, "請輸入 0～1,000,000 的整數。")
+    .replace(/必須為整數[。.]?/u, "請輸入整數。");
+  message = message.replace(new RegExp(`^${label}[：:\\s]*`, "u"), "");
+  return message || "請確認此欄位內容。";
+}
+
+export function translateValidationIssue(issue: ValidationIssue): PresentedValidationIssue {
+  return { ...issue, canonicalField: issue.field, field: validationFieldLabel(issue.field), targetId: validationTargetId(issue.field), message: translateMessage(issue) };
+}
+
+export const presentValidationIssue = translateValidationIssue;
+
+// UI comparison only. Internal notes do not represent a public website change.
+export function matchesPublishedContent(draft: CanonicalContent, published: CanonicalContent): boolean {
+  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable)
+    : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).filter(([key]) => key !== "internalNotes").sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stable(item)])) : value;
+  return JSON.stringify(stable(draft)) === JSON.stringify(stable(published));
 }
 
 export interface ClassResultForm {

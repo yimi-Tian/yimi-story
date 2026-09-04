@@ -8,6 +8,8 @@ export interface ContentListItem {
   publicId: string;
   publishedSnapshotId: string | null;
   publishedAt: string | null;
+  publishedData?: CanonicalContent | null;
+  publishedRevision?: number | null;
   draftId: string | null;
   draftStatus: DraftStatus | null;
   revision: number | null;
@@ -37,6 +39,8 @@ function toListItem(row: RawObject): ContentListItem {
     publicId: String(row.public_id),
     publishedSnapshotId: row.published_snapshot_id ? String(row.published_snapshot_id) : null,
     publishedAt: published?.created_at ? String(published.created_at) : null,
+    publishedData: published?.snapshot_data as CanonicalContent | undefined ?? null,
+    publishedRevision: typeof published?.source_revision === "number" ? published.source_revision : null,
     draftId: draft?.id ? String(draft.id) : null,
     draftStatus: draft?.status ? draft.status as DraftStatus : null,
     revision: typeof draft?.revision === "number" ? draft.revision : null,
@@ -53,7 +57,7 @@ const CONTENT_SELECT = `
   published_snapshot_id,
   updated_at,
   drafts:content_drafts(id, revision, status, data, validation_result, updated_at),
-  published:publication_snapshots!content_items_published_snapshot_id_fkey(id, snapshot_data, created_at),
+  published:publication_snapshots!content_items_published_snapshot_id_fkey(id, snapshot_data, source_revision, created_at),
   media:media_assets(id)
 `;
 
