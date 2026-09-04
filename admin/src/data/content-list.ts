@@ -1,19 +1,21 @@
 import type { ContentListItem } from "./content-repository";
+import { unpublishedContentState } from "../content/content-contracts";
 
 export type ContentStatusFilter = "all" | "published" | "draft" | "unpublished" | "published_with_draft";
 
 export function contentStatusLabel(item: ContentListItem): string {
-  if (item.publishedSnapshotId && item.draftId) return "已發布・有未發布修改";
+  if (unpublishedContentState(item) === "changed") return "已發布・有未發布修改";
+  if (unpublishedContentState(item) === "unknown") return "已發布・內容比對暫不可用";
   if (item.publishedSnapshotId) return "已發布";
   return "未發布草稿";
 }
 
 function statusMatches(item: ContentListItem, status: ContentStatusFilter): boolean {
   if (status === "all") return true;
-  if (status === "published") return Boolean(item.publishedSnapshotId && !item.draftId);
+  if (status === "published") return unpublishedContentState(item) === "synced";
   if (status === "draft") return Boolean(item.draftId);
   if (status === "unpublished") return Boolean(!item.publishedSnapshotId && item.draftId);
-  return Boolean(item.publishedSnapshotId && item.draftId);
+  return unpublishedContentState(item) === "changed";
 }
 
 export interface ContentFilters {

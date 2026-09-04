@@ -8,9 +8,10 @@ export const publicationLabels: Record<GitHubPublication["status"], string> = {
   deployed: "網站已更新，等待完成確認", finalized: "發布完成", failed: "發布未完成", cancelled: "本次發布已取消",
 };
 
-export function resolvePublicationUiState({ timeline, currentSnapshot, revision, mediaPreparation }: {
+export function resolvePublicationUiState({ timeline, currentSnapshot, revision, mediaPreparation, contentState }: {
   timeline: PublicationTimeline; currentSnapshot: PublicationSnapshotSummary | null; revision: number;
   mediaPreparation: PublicationMediaPreparation | null;
+  contentState?: "unpublished" | "synced" | "changed" | "unknown";
 }) {
   const active = timeline.entries.find(({ publication }) => activeStatuses.has(publication.status)) ?? null;
   const current = timeline.entries.find(({ snapshot }) => snapshot.id === currentSnapshot?.id) ?? null;
@@ -21,8 +22,8 @@ export function resolvePublicationUiState({ timeline, currentSnapshot, revision,
   const status = relevant?.publication.status ?? null;
   const ready = mediaPreparation?.status === "ready";
   const otherActive = Boolean(active && active.snapshot.id !== currentSnapshot?.id);
-  const showUnpublishedChanges = Boolean(timeline.publishedSnapshot && revision > timeline.publishedSnapshot.revision);
-  const primaryLabel = status ? publicationLabels[status] : ready ? "可送出發布" : showUnpublishedChanges ? "有未發布變更" : "準備中";
+  const showUnpublishedChanges = Boolean(timeline.publishedSnapshot && contentState === "changed");
+  const primaryLabel = status ? publicationLabels[status] : ready ? "可送出發布" : showUnpublishedChanges ? "有未發布變更" : contentState === "synced" ? "內容已同步" : "準備中";
   const secondaryMessage = status === "failed" ? "請先取消未完成的發布作業，再修改並儲存草稿以準備新版本。"
     : status === "cancelled" ? "草稿內容已保留；修改並儲存草稿後，可準備新版本。"
     : status === "finalized" ? "此版本已完成正式發布。"

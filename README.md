@@ -495,6 +495,15 @@ Stage 7A 將已儲存且狀態為 `validated` 的確切草稿 revision，經第�
 - 後台只顯示 revision、建立時間、狀態與 checksum 摘要，不顯示 raw JSON、UUID、private Storage path、signed URL 或 secret。管理員必須在確認對話框再次確認「此步驟不會立即更新公開網站」。
 - Stage 7A 不寫 `cms-public`、不轉移 private 圖片、不建立 GitHub branch／commit／PR、不切換正式 published pointer。這些工作保留給後續 Stage 7B。
 
+## Stage 7D-B.1：同步內容與 Production semantic commit gate
+
+- Dashboard、內容列表與 Editor 以 draft／published snapshot 的公開 canonical 欄位比較判斷未發布修改，不以 draft 存在、revision 或 timestamps 判斷。`internalNotes` 與非 canonical 技術 metadata 不影響公開內容同步狀態；圖片引用與相簿順序仍納入比較。讀不到 published canonical 時不得假定已同步。
+- `get_or_create_content_draft` lifecycle 保持不變。開啟既有內容產生的相同內容草稿可保留；draft row count 只記錄，不再要求固定為 3，也不得為符合總數而刪除草稿。
+- 本次驗收紀錄為 4 drafts（CR-115-001 r1、CR-115-056 r1、115-001 r1、115-002 r14），公開 canonical diff 均為 0，視為內容已同步，不因筆數阻擋 commit。這是觀測紀錄，不是新的固定筆數斷言。
+- Commit gate 必須唯讀核對 canonical diff、draft-only media／Storage、snapshot、preparation、mapping、publication 與 published pointer；新增、未確認的變更或進行中發布需停止調查。不得僅因 canonical diff 為 0 就略過圖片與發布依賴檢查。
+- 已確認保留的 115-002 finalized publication、snapshot、preparation、mapping、cms_draft 原始／衍生圖片及 Storage 是正式 retention 歷史，不以其非零數量判失敗。與已驗收基準逐筆／雜湊核對，額外或異動依賴才需調查；Legacy digest、正式六檔與其他 Production 基準仍需保持不變。
+- 此 semantic gate 是維護發布檢查規則，不改 DB、migration、RLS、Stage 7A／7B／7C 發布驗證或 finalization contract；不授權清理或寫入 Production。
+
 ## 後台 V1.0 階段 7C：GitHub Draft PR 與正式資料輸出
 
 Stage 7C 只接受 schema／media manifest `1.1`、Stage 7A 驗證成功且 Stage 7B 正式圖片準備為 `ready` 的 publication snapshot。正式資料由 snapshot 的 `public_data` 與 frozen media manifest 產生，不回讀 current draft media metadata；GitHub `main` 上的 canonical JSON／CSV 是合併前基準。

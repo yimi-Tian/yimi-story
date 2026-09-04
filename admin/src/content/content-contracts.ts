@@ -83,11 +83,26 @@ export function translateValidationIssue(issue: ValidationIssue): PresentedValid
 
 export const presentValidationIssue = translateValidationIssue;
 
-// UI comparison only. Internal notes do not represent a public website change.
+// UI-only public canonical allowlist. Never compare row/revision/time metadata.
+// This does not change normalization, snapshot validation or publication contracts.
+const publicCanonicalKeys = [
+  "id", "year", "title", "className", "instructor", "description", "districts", "venue", "tags", "sdgs", "displayOrder",
+  "name", "startDate", "endDate", "dateLabel", "projectName", "activityType", "topic", "summary", "participants",
+  "partnerOrganizations", "leader", "keywords", "videoUrl", "relatedUrl", "featured", "publicNotes", "coverAssetId", "galleryAssetIds",
+] as const;
 export function matchesPublishedContent(draft: CanonicalContent, published: CanonicalContent): boolean {
-  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable)
-    : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).filter(([key]) => key !== "internalNotes").sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, stable(item)])) : value;
-  return JSON.stringify(stable(draft)) === JSON.stringify(stable(published));
+  const pick = (data: CanonicalContent) => publicCanonicalKeys.map((key) => (data as unknown as Record<string, unknown>)[key]);
+  return JSON.stringify(pick(draft)) === JSON.stringify(pick(published));
+}
+
+export function unpublishedContentState(item: {
+  publishedSnapshotId: string | null; draftId: string | null;
+  data: CanonicalContent; publishedData?: CanonicalContent | null;
+}): "unpublished" | "synced" | "changed" | "unknown" {
+  if (!item.publishedSnapshotId) return "unpublished";
+  if (!item.draftId) return "synced";
+  if (!item.publishedData) return "unknown";
+  return matchesPublishedContent(item.data, item.publishedData) ? "synced" : "changed";
 }
 
 export interface ClassResultForm {

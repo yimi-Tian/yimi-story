@@ -9,7 +9,7 @@ import { presentValidationIssue } from "../../content/content-contracts";
 import { GitHubPublicationPanel } from "./GitHubPublicationPanel";
 import { publicationLabels, resolvePublicationUiState } from "../../content/publication-ui-state";
 
-interface Props {client:SupabaseClient;contentId:string;draftId:string;revision:number;draftStatus:string;blocked:boolean}
+interface Props {client:SupabaseClient;contentId:string;draftId:string;revision:number;draftStatus:string;blocked:boolean;contentState?:"unpublished"|"synced"|"changed"|"unknown"}
 type Working="check"|"prepare"|null;
 
 const messageFor=(error:unknown)=>{
@@ -23,7 +23,7 @@ const messageFor=(error:unknown)=>{
 };
 const stepState=(done:boolean,current:boolean,error=false)=>error?"需修正":done?"已完成":current?"進行中":"未完成";
 
-export function PublicationPreparationPanel({client,contentId,draftId,revision,draftStatus,blocked}:Props){
+export function PublicationPreparationPanel({client,contentId,draftId,revision,draftStatus,blocked,contentState}:Props){
   const[preparation,setPreparation]=useState<PublicationPreparation|null>(null);const[snapshots,setSnapshots]=useState<PublicationSnapshotSummary[]>([]);
   const[media,setMedia]=useState<PublicationMediaPreparation|null>(null);
   const[timeline,setTimeline]=useState<PublicationTimeline>({publishedSnapshot:null,entries:[]});
@@ -38,7 +38,7 @@ export function PublicationPreparationPanel({client,contentId,draftId,revision,d
       if(active){setSnapshots(candidate&&!rows.some((row)=>row.id===candidate.id)?[candidate,...rows]:rows);setTimeline(history);setMedia(value);setLoadedKey(readKey);}
     }).catch(()=>{if(active)setError("無法讀取發布進度，請重新整理後再操作。");}).finally(()=>{if(active)setLoading(false);});
     return()=>{active=false;};},[client,contentId,revision,readKey]);
-  const ui=resolvePublicationUiState({timeline,currentSnapshot:current,revision,mediaPreparation:media});
+  const ui=resolvePublicationUiState({timeline,currentSnapshot:current,revision,mediaPreparation:media,contentState});
   const unavailable=loading||loadedKey!==readKey;
   const publicationTarget=ui.active?.snapshot??current??ui.relevant?.snapshot??null;
   const targetPublication=timeline.entries.find(({snapshot})=>snapshot.id===publicationTarget?.id)?.publication??null;
