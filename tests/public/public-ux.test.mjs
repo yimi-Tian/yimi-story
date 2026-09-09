@@ -8,7 +8,9 @@ const require = createRequire(import.meta.url);
 const { DEFAULT_BATCH_SIZE, nextVisibleCount, resolvePublicCover, visibleBatch } = require("../../js/public-ux.js");
 const root = new URL("../../", import.meta.url);
 const source = await readFile(new URL("script.js", root), "utf8");
+const platformSource = await readFile(new URL("js/platform-home.js", root), "utf8");
 const styles = await readFile(new URL("styles.css", root), "utf8");
+const platformStyles = await readFile(new URL("css/platform-home.css", root), "utf8");
 const index = await readFile(new URL("index.html", root), "utf8");
 const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
@@ -74,6 +76,42 @@ test("導覽顯示新資訊架構、移除活動照片入口並保留舊 route r
   assert.doesNotMatch(index, /查看照片成果/);
   assert.equal(showcase.categories.some((item) => item.id === "activity-photos"), false);
   assert.match(source, /\["activity-photos", "photos"\]\.includes\(route\.detail\)[\s\S]*location\.replace\("#\/overview"\)/);
+});
+
+test("地方探索公開選單只顯示可使用的赤蘭溪 AR 走讀", () => {
+  assert.match(index, /data-nav="themes">主題館[\s\S]*?#\/themes\/food-agriculture[\s\S]*?#\/themes\/marine-education[\s\S]*?#\/themes\/local-culture[\s\S]*?#\/themes\/environmental-education/);
+  assert.match(index, /data-nav="explore">地方探索[\s\S]*?<div class="nav-menu">\s*<a href="#\/digital\/game">赤蘭溪 AR走讀<\/a>\s*<\/div>/);
+  assert.doesNotMatch(index, /赤蘭溪探索模組|朴子醫療文化探索|海線生活探索|食農地方探索/);
+  assert.doesNotMatch(index, /<div class="nav-menu">[\s\S]*?#\/digital\/(?:chilan-walk|puzi-medical)[\s\S]*?<\/div>/);
+  assert.match(source, /slug: "chilan-walk"/);
+  assert.match(source, /slug: "puzi-medical"/);
+  assert.match(source, /detail === "game"[\s\S]*renderChilanGame/);
+});
+
+test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {
+  assert.match(platform, /<script src="activities-data\.js"><\/script>[\s\S]*?<script src="data\/platform-home-data\.js"><\/script>/);
+  assert.match(platformSource, /activity\["是否公開"\] === "是"/);
+  assert.match(platformSource, /const districts = new Set/);
+  assert.match(platformSource, /<div class="place-item"/);
+  assert.doesNotMatch(platformSource, /<a href="\$\{escapeHtml\(place\.href\)\}"/);
+  assert.match(platformStyles, /\.place-count\s*\{[\s\S]*margin-left:\s*auto/);
+
+  const districtCounts = new Map();
+  activities.filter((activity) => activity["是否公開"] === "是").forEach((activity) => {
+    const districts = new Set(activity["鄉鎮市區"].split(/[、,，/／;；\s]+/).filter(Boolean));
+    districts.forEach((district) => districtCounts.set(district, (districtCounts.get(district) || 0) + 1));
+  });
+  assert.deepEqual(
+    ["朴子市", "水上鄉", "新港鄉", "太保市", "中埔鄉", "鹿草鄉", "六腳鄉", "義竹鄉", "東石鄉", "布袋鎮"]
+      .map((district) => districtCounts.get(district) || 0),
+    [19, 8, 5, 0, 10, 2, 6, 9, 6, 2],
+  );
+});
+
+test("首頁移除 ABOUT YIMI 區塊與專用渲染呼叫", () => {
+  assert.doesNotMatch(platform, /platform-about|ABOUT YIMI|about-image|about-text|認識平台成果/);
+  assert.doesNotMatch(platformSource, /function renderAbout|renderAbout\(/);
+  assert.match(platformSource, /href === "#platform-about"[\s\S]*href: "index\.html#\/about"/);
 });
 
 test("班級卡摘要使用 CSS 兩行 clamp、SDG 精簡、CTA 靠底", () => {

@@ -2,6 +2,7 @@
   "use strict";
 
   const DATA_URL = "data/platform-home.json";
+  const ACTIVITY_CSV = window.ACTIVITIES_CSV || "";
   const dateFormatter = new Intl.DateTimeFormat("zh-TW", {
     year: "numeric",
     month: "long",
@@ -19,6 +20,7 @@
       return { ...hall, name: "學習成果", description: "瀏覽班級學習、走讀、影音、出版與地方素材。" };
     }
     if (href.includes("#/explore")) return { ...hall, name: "地方探索" };
+    if (href === "#platform-about") return { ...hall, href: "index.html#/about" };
     return hall;
   }
 
@@ -176,12 +178,71 @@
     bindPublicImageFallbacks(container);
   }
 
-  function renderPlaces(places) {
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+
+    for (let index = 0; index < text.length; index += 1) {
+      const character = text[index];
+      const next = text[index + 1];
+      if (character === '"' && inQuotes && next === '"') {
+        cell += '"';
+        index += 1;
+      } else if (character === '"') {
+        inQuotes = !inQuotes;
+      } else if (character === "," && !inQuotes) {
+        row.push(cell);
+        cell = "";
+      } else if ((character === "\n" || character === "\r") && !inQuotes) {
+        if (character === "\r" && next === "\n") index += 1;
+        row.push(cell);
+        if (row.some((value) => value.trim() !== "")) rows.push(row);
+        row = [];
+        cell = "";
+      } else {
+        cell += character;
+      }
+    }
+
+    row.push(cell);
+    if (row.some((value) => value.trim() !== "")) rows.push(row);
+    if (rows.length < 2) return [];
+
+    const headers = rows[0].map((header) => header.trim().replace(/^\uFEFF/, ""));
+    return rows.slice(1).map((values) => Object.fromEntries(
+      headers.map((header, index) => [header, (values[index] || "").trim()])
+    ));
+  }
+
+  function publishedDistrictCounts(csvText) {
+    const counts = new Map();
+    parseCsv(csvText)
+      .filter((activity) => (
+        activity["是否公開"] === "是"
+        && activity["活動ID"]
+        && activity["活動名稱"]
+      ))
+      .forEach((activity) => {
+        const districts = new Set(
+          String(activity["鄉鎮市區"] || "")
+            .split(/[、,，/／;；\s]+/)
+            .map((district) => district.trim())
+            .filter(Boolean)
+        );
+        districts.forEach((district) => counts.set(district, (counts.get(district) || 0) + 1));
+      });
+    return counts;
+  }
+
+  function renderPlaces(places, districtCounts) {
     document.querySelector("#place-grid").innerHTML = places.map((place, index) => `
-      <a href="${escapeHtml(place.href)}" style="--place-order:${index}">
-        <span aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
-        ${escapeHtml(place.name)}
-      </a>
+      <div class="place-item" style="--place-order:${index}">
+        <span class="place-order" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+        <strong>${escapeHtml(place.name)}</strong>
+        <span class="place-count">${districtCounts.get(place.name) || 0} 件</span>
+      </div>
     `).join("");
   }
 
@@ -210,13 +271,6 @@
     `;
     }).join("");
     bindPublicImageFallbacks(container);
-  }
-
-  function renderAbout(about) {
-    const image = document.querySelector("#about-image");
-    image.src = about.image;
-    image.alt = about.imageAlt;
-    document.querySelector("#about-text").textContent = about.text;
   }
 
   function renderStats(stats) {
@@ -284,9 +338,8 @@
       renderHalls(data.halls);
       renderPlatformStats(data.platformStats || data.stats);
       renderFeaturedResults(data.featuredResults || []);
-      renderPlaces(data.places);
+      renderPlaces(data.places, publishedDistrictCounts(ACTIVITY_CSV));
       renderLatest(data.latest);
-      renderAbout(data.about);
       renderNews(data.news);
       document.querySelector("#last-updated").textContent = `最後更新：${formatDate(data.meta.lastUpdated)}`;
     } catch (error) {
