@@ -25,6 +25,14 @@ const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
 const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
 const activities = parseCsv(await readFile(new URL("activities.csv", root), "utf8"));
+const collectionPreviewSource = source.slice(
+  source.indexOf("function renderDigitalWalkCollectionPreview"),
+  source.indexOf("function renderDigitalWalkDraftList"),
+);
+const chilanKnowledgeSource = source.slice(
+  source.indexOf("function getChilanKnowledgeTopics"),
+  source.indexOf("function renderDigitalWalkCollectionPreview"),
+);
 
 test("共用封面 resolver 依 explicit、gallery、legacy、placeholder 決定順序", () => {
   const explicit = resolvePublicCover({ explicitCover: "cover.jpg", gallery: ["01.jpg"], legacyFallbacks: ["legacy.jpg"], placeholder: "empty.svg" });
@@ -156,6 +164,62 @@ test("赤蘭溪 canonical route 維持 placeholder 且未加入公開 dropdown",
   assert.match(source, /slug: "chilan-walk"/);
   assert.match(source, /數位走讀內容待補/);
   assert.doesNotMatch(index, /href="#\/digital\/chilan-walk"/);
+});
+
+test("draft collection preview 使用現有三段 router 且只接受 draft collection", () => {
+  assert.match(source, /detail === "draft-collection"[\s\S]*renderDigitalWalkCollectionPreview\(stopId\)/);
+  assert.match(source, /route\.detail === "draft-collection"[\s\S]*getDigitalWalkCollection\(route\.id, "draft"\)/);
+  assert.match(source, /href="#\/digital\/draft-collection\/\$\{encodeURIComponent\(chilanCollection\.slug\)\}"/);
+  assert.match(collectionPreviewSource, /getDigitalWalkCollection\(collectionSlug, "draft"\)/);
+  assert.doesNotMatch(index, /#\/digital\/draft-collection/);
+});
+
+test("collection preview 依 routeIds 動態輸出 WT、YG 與實際站數", () => {
+  const collection = getDigitalWalkCollection(digitalWalks, "chilan-walk", "draft");
+  const routes = getDigitalWalksForCollection(digitalWalks, collection.id, "draft");
+  assert.deepEqual(routes.map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
+  assert.deepEqual(routes.map((route) => Number(route.stopCount)), [5, 7]);
+  assert.ok(routes.every((route) => route.publicationStatus === "draft" && route.publiclyListed === false));
+  assert.match(collectionPreviewSource, /getDigitalWalksForCollection\(collection\.id, "draft"\)/);
+  assert.match(collectionPreviewSource, /routes\.map\(digitalWalkCollectionRouteCard\)/);
+  assert.match(collectionPreviewSource, /route\.stopCount/);
+  assert.match(collectionPreviewSource, /encodeURIComponent\(route\.id\)/);
+  assert.doesNotMatch(collectionPreviewSource, /DW-WT-001|DW-YG-001|灣潭聚落線上數位走讀|鹽館聚落線上數位走讀/);
+});
+
+test("collection preview 移除 ABOUT 段落並依路線、背景、AR 排序", () => {
+  assert.doesNotMatch(collectionPreviewSource, /ABOUT THE COLLECTION|digital-walk-collection-position|digital-walk-position-title/);
+  const routesIndex = collectionPreviewSource.indexOf("digital-walk-collection-routes");
+  const knowledgeIndex = collectionPreviewSource.indexOf("digital-walk-knowledge-section");
+  const arIndex = collectionPreviewSource.indexOf("digital-walk-collection-ar");
+  assert.ok(routesIndex > 0);
+  assert.ok(knowledgeIndex > routesIndex);
+  assert.ok(arIndex > knowledgeIndex);
+});
+
+test("collection preview 唯讀使用 RL 公開摘要且排除內部整理欄位", () => {
+  assert.match(chilanKnowledgeSource, /window\.LOCAL_EXPLORATION_DATA/);
+  assert.match(chilanKnowledgeSource, /chilanModule\?\.guidePoints/);
+  assert.match(chilanKnowledgeSource, /title: point\.title/);
+  assert.match(chilanKnowledgeSource, /description: point\.description/);
+  assert.doesNotMatch(`${chilanKnowledgeSource}${collectionPreviewSource}`, /pendingItems|photoDirections|guidePointStatus|資料整理中|建置中/);
+});
+
+test("collection Hero 不使用圖片，AR CTA 導向既有公開入口", () => {
+  const heroSource = collectionPreviewSource.slice(
+    collectionPreviewSource.indexOf("digital-walk-collection-hero"),
+    collectionPreviewSource.indexOf("digitalWalkDraftNotice"),
+  );
+  assert.match(heroSource, /\$\{collection\.title\}/);
+  assert.match(heroSource, /\$\{collection\.summary\}/);
+  assert.doesNotMatch(heroSource, /<img|112-009|coverImage|unsorted|YG-01\/cover\.jpg|WT-03\/01\.JPG/);
+  assert.match(collectionPreviewSource, /href="#\/digital\/game"/);
+});
+
+test("collection preview 延續兩欄桌機與 719px 以下單欄觸控樣式", () => {
+  assert.match(styles, /@media \(min-width: 720px\)[\s\S]*?\.digital-walk-collection-route-grid\s*\{[\s\S]*?repeat\(2/);
+  assert.match(styles, /@media \(max-width: 719px\)[\s\S]*?\.digital-walk-collection-route-card \.button[\s\S]*?min-height: 46px/);
+  assert.match(styles, /\.digital-walk-knowledge-grid[\s\S]*?display: grid/);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {

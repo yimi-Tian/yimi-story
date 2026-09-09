@@ -471,6 +471,227 @@ button {
   font-weight: 900;
 }
 
+.digital-walk-collection-back {
+  margin-top: 1rem;
+}
+
+.digital-walk-collection-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 1rem 0;
+  padding: clamp(2rem, 6vw, 4.5rem);
+  border-radius: 10px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.16) 0 8%, transparent 8.5%),
+    radial-gradient(circle at 78% 74%, rgba(236, 151, 58, 0.2) 0 13%, transparent 13.5%),
+    linear-gradient(135deg, var(--stream-dark), #1682b1 62%, #69b5c7);
+}
+
+.digital-walk-collection-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -5%;
+  bottom: -4.5rem;
+  width: 52%;
+  height: 8rem;
+  border: 2px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.digital-walk-collection-hero-copy {
+  display: grid;
+  max-width: 760px;
+  gap: 0.8rem;
+}
+
+.digital-walk-collection-hero .section-label {
+  width: fit-content;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.digital-walk-collection-hero h1,
+.digital-walk-collection-hero p {
+  margin: 0;
+}
+
+.digital-walk-collection-hero h1 {
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  font-size: clamp(2.4rem, 6vw, 4.25rem);
+  line-height: 1.18;
+}
+
+.digital-walk-collection-hero p {
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.digital-walk-collection-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.digital-walk-collection-metrics span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  background: rgba(2, 51, 79, 0.22);
+}
+
+.digital-walk-collection-metrics strong {
+  font-size: 1.35rem;
+}
+
+.digital-walk-collection-preview-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 960px;
+  margin: 0 auto 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(11, 111, 164, 0.18);
+  border-radius: 8px;
+  background: rgba(230, 244, 248, 0.58);
+}
+
+.digital-walk-collection-preview-link > div {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.digital-walk-knowledge-section,
+.digital-walk-collection-routes {
+  margin-top: 2.4rem;
+}
+
+.digital-walk-knowledge-grid,
+.digital-walk-collection-route-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.digital-walk-knowledge-card {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(11, 111, 164, 0.16);
+  border-radius: 8px;
+  background: rgba(247, 251, 252, 0.86);
+}
+
+.digital-walk-knowledge-card > span {
+  color: var(--clay);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.digital-walk-knowledge-card h3,
+.digital-walk-knowledge-card p {
+  margin: 0;
+}
+
+.digital-walk-knowledge-card h3 {
+  margin-top: 0.4rem;
+  color: var(--stream-dark);
+  font-size: 1.15rem;
+}
+
+.digital-walk-knowledge-card p {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.digital-walk-collection-route-card {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--cream-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(72, 51, 30, 0.08);
+}
+
+.digital-walk-collection-route-card > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--sand);
+}
+
+.digital-walk-collection-route-card h3,
+.digital-walk-collection-route-card p {
+  margin: 0;
+}
+
+.digital-walk-collection-route-card h3 {
+  color: var(--stream-dark);
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.digital-walk-collection-route-card p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.digital-walk-collection-route-district {
+  margin-top: 0.3rem !important;
+  color: var(--stream-dark) !important;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.digital-walk-collection-route-card .button {
+  align-self: start;
+  margin-top: auto;
+}
+
+.digital-walk-collection-ar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  padding: clamp(1.35rem, 4vw, 2.2rem);
+  border: 1px solid rgba(236, 151, 58, 0.38);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff8ed, #fff 72%);
+}
+
+.digital-walk-collection-ar h2,
+.digital-walk-collection-ar p {
+  margin: 0;
+}
+
+.digital-walk-collection-ar h2 {
+  margin-top: 0.4rem;
+  color: var(--stream-dark);
+  font-family: "Noto Serif TC", "PMingLiU", serif;
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+}
+
+.digital-walk-collection-ar p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
 .digital-walk-draft-grid,
 .digital-walk-stop-grid {
   display: grid;
@@ -1095,6 +1316,14 @@ button {
 }
 
 @media (min-width: 720px) {
+  .digital-walk-knowledge-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .digital-walk-collection-route-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .digital-walk-stop-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1163,6 +1392,51 @@ button {
   .digital-walk-draft-notice {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .digital-walk-collection-back {
+    margin-top: 0.75rem;
+  }
+
+  .digital-walk-collection-hero {
+    margin-top: 0.75rem;
+    padding: 1.7rem 1.15rem;
+  }
+
+  .digital-walk-collection-hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .digital-walk-collection-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .digital-walk-collection-metrics span {
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .digital-walk-collection-preview-link,
+  .digital-walk-collection-preview-link > div,
+  .digital-walk-collection-ar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .digital-walk-collection-preview-link .button,
+  .digital-walk-collection-route-card .button,
+  .digital-walk-collection-ar .button {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .digital-walk-knowledge-section,
+  .digital-walk-collection-routes {
+    margin-top: 1.6rem;
   }
 
   .digital-walk-text-header {
