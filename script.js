@@ -54,7 +54,7 @@ const classResultsData = typeof window !== "undefined" && Array.isArray(window.C
   : [];
 const digitalWalksData = typeof window !== "undefined" && Array.isArray(window.DIGITAL_WALKS_DATA?.routes)
   ? window.DIGITAL_WALKS_DATA
-  : { routes: [] };
+  : { collections: [], routes: [] };
 const clubData = typeof window !== "undefined" && Array.isArray(window.CLUBS_DATA?.clubs)
   ? window.CLUBS_DATA
   : { clubs: [] };
@@ -783,11 +783,63 @@ function renderDigitalTours(detail, stopId = "") {
   `;
 }
 
+function getPublicDigitalWalks() {
+  if (typeof publicUx?.getPublicDigitalWalks === "function") {
+    return publicUx.getPublicDigitalWalks(digitalWalksData);
+  }
+  return digitalWalksData.routes.filter((route) => (
+    route?.publicationStatus === "approved"
+    && route.publiclyListed === true
+  ));
+}
+
 function getDraftDigitalWalks() {
+  if (typeof publicUx?.getDraftDigitalWalks === "function") {
+    return publicUx.getDraftDigitalWalks(digitalWalksData);
+  }
   return digitalWalksData.routes.filter((route) => (
     route?.publicationStatus === "draft"
     && route.publiclyListed === false
   ));
+}
+
+function getDigitalWalkCollection(identifier, visibility = "all") {
+  if (typeof publicUx?.getDigitalWalkCollection === "function") {
+    return publicUx.getDigitalWalkCollection(digitalWalksData, identifier, visibility);
+  }
+  const collections = Array.isArray(digitalWalksData.collections) ? digitalWalksData.collections : [];
+  return collections.find((collection) => {
+    const matchesIdentifier = collection?.id === identifier || collection?.slug === identifier;
+    const matchesVisibility = visibility === "public"
+      ? collection?.publicationStatus === "approved" && collection.publiclyListed === true
+      : visibility === "draft"
+        ? collection?.publicationStatus === "draft" && collection.publiclyListed === false
+        : true;
+    return matchesIdentifier && matchesVisibility;
+  }) || null;
+}
+
+function getDigitalWalksForCollection(identifier, visibility = "all") {
+  if (typeof publicUx?.getDigitalWalksForCollection === "function") {
+    return publicUx.getDigitalWalksForCollection(digitalWalksData, identifier, visibility);
+  }
+  const collection = getDigitalWalkCollection(identifier, visibility);
+  if (!collection || !Array.isArray(collection.routeIds)) return [];
+  const routesById = new Map(
+    digitalWalksData.routes
+      .filter((route) => {
+        if (route?.collectionId !== collection.id) return false;
+        if (visibility === "public") {
+          return route.publicationStatus === "approved" && route.publiclyListed === true;
+        }
+        if (visibility === "draft") {
+          return route.publicationStatus === "draft" && route.publiclyListed === false;
+        }
+        return true;
+      })
+      .map((route) => [route.id, route])
+  );
+  return collection.routeIds.map((routeId) => routesById.get(routeId)).filter(Boolean);
 }
 
 function renderDigitalWalkDraftList() {

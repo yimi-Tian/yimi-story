@@ -5,7 +5,16 @@ import test from "node:test";
 import { parseCsv } from "../../tools/content/csv.mjs";
 
 const require = createRequire(import.meta.url);
-const { DEFAULT_BATCH_SIZE, nextVisibleCount, resolvePublicCover, visibleBatch } = require("../../js/public-ux.js");
+const {
+  DEFAULT_BATCH_SIZE,
+  nextVisibleCount,
+  resolvePublicCover,
+  visibleBatch,
+  getPublicDigitalWalks,
+  getDraftDigitalWalks,
+  getDigitalWalkCollection,
+  getDigitalWalksForCollection,
+} = require("../../js/public-ux.js");
 const root = new URL("../../", import.meta.url);
 const source = await readFile(new URL("script.js", root), "utf8");
 const platformSource = await readFile(new URL("js/platform-home.js", root), "utf8");
@@ -14,6 +23,7 @@ const platformStyles = await readFile(new URL("css/platform-home.css", root), "u
 const index = await readFile(new URL("index.html", root), "utf8");
 const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
+const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
 const activities = parseCsv(await readFile(new URL("activities.csv", root), "utf8"));
 
 test("共用封面 resolver 依 explicit、gallery、legacy、placeholder 決定順序", () => {
@@ -86,6 +96,66 @@ test("地方探索公開選單只顯示可使用的赤蘭溪 AR 走讀", () => {
   assert.match(source, /slug: "chilan-walk"/);
   assert.match(source, /slug: "puzi-medical"/);
   assert.match(source, /detail === "game"[\s\S]*renderChilanGame/);
+});
+
+test("赤蘭溪 collection 以固定 slug 與有序 routeIds 建立 canonical 關係", () => {
+  const collection = getDigitalWalkCollection(digitalWalks, "chilan-walk");
+  assert.ok(collection);
+  assert.equal(collection.id, "DWC-CHILAN-001");
+  assert.equal(collection.title, "赤蘭溪數位走讀");
+  assert.deepEqual(collection.routeIds, ["DW-WT-001", "DW-YG-001"]);
+  assert.equal(collection.publicationStatus, "draft");
+  assert.equal(collection.publiclyListed, false);
+  assert.equal(getDigitalWalkCollection(digitalWalks, "chilan-walk", "public"), null);
+  assert.equal(getDigitalWalkCollection(digitalWalks, "chilan-walk", "draft")?.id, collection.id);
+});
+
+test("兩條赤蘭溪路線以 collectionId 關聯，不依標題或地區文字推測", () => {
+  const routes = getDigitalWalksForCollection(digitalWalks, "chilan-walk");
+  assert.deepEqual(routes.map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
+  assert.ok(routes.every((route) => route.collectionId === "DWC-CHILAN-001"));
+
+  const renamed = structuredClone(digitalWalks);
+  renamed.routes.forEach((route) => {
+    route.title = `改名-${route.id}`;
+    route.district = "測試地區";
+  });
+  assert.deepEqual(
+    getDigitalWalksForCollection(renamed, "DWC-CHILAN-001").map((route) => route.id),
+    ["DW-WT-001", "DW-YG-001"],
+  );
+});
+
+test("public 與 draft selectors 嚴格採用狀態及列表旗標的雙條件", () => {
+  assert.deepEqual(getPublicDigitalWalks(digitalWalks), []);
+  assert.deepEqual(
+    new Set(getDraftDigitalWalks(digitalWalks).map((route) => route.id)),
+    new Set(["DW-WT-001", "DW-YG-001"]),
+  );
+
+  const fixture = {
+    routes: [
+      { id: "approved-listed", publicationStatus: "approved", publiclyListed: true },
+      { id: "approved-hidden", publicationStatus: "approved", publiclyListed: false },
+      { id: "draft-hidden", publicationStatus: "draft", publiclyListed: false },
+      { id: "draft-listed", publicationStatus: "draft", publiclyListed: true },
+    ],
+  };
+  assert.deepEqual(getPublicDigitalWalks(fixture).map((route) => route.id), ["approved-listed"]);
+  assert.deepEqual(getDraftDigitalWalks(fixture).map((route) => route.id), ["draft-hidden"]);
+});
+
+test("draft preview renderer 仍由 draft selector 提供既有路線", () => {
+  assert.match(source, /getDraftDigitalWalks\(\)\.find\(\(route\) => route\.id === detail\)/);
+  assert.match(source, /href="#\/digital\/\$\{encodeURIComponent\(route\.id\)\}"/);
+  assert.match(source, /href="#\/digital\/\$\{encodeURIComponent\(route\.id\)\}\/\$\{encodeURIComponent\(stop\.id\)\}"/);
+  assert.match(source, /線上數位走讀草稿預覽/);
+});
+
+test("赤蘭溪 canonical route 維持 placeholder 且未加入公開 dropdown", () => {
+  assert.match(source, /slug: "chilan-walk"/);
+  assert.match(source, /數位走讀內容待補/);
+  assert.doesNotMatch(index, /href="#\/digital\/chilan-walk"/);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {

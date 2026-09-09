@@ -1,8 +1,23 @@
 // Generated from data/digital-walks.json by tools/sync-static-data.mjs. Do not edit by hand.
 window.DIGITAL_WALKS_DATA = {
+  "collections": [
+    {
+      "id": "DWC-CHILAN-001",
+      "slug": "chilan-walk",
+      "title": "赤蘭溪數位走讀",
+      "summary": "沿著赤蘭溪流域，從灣潭與鹽館兩條聚落路線，認識水環境、信仰、產業與地方生活記憶。",
+      "routeIds": [
+        "DW-WT-001",
+        "DW-YG-001"
+      ],
+      "publicationStatus": "draft",
+      "publiclyListed": false
+    }
+  ],
   "routes": [
     {
       "id": "DW-YG-001",
+      "collectionId": "DWC-CHILAN-001",
       "title": "鹽館聚落線上數位走讀",
       "district": "中埔鄉鹽館地區",
       "theme": "聚落信仰、傳統建築、菸業記憶與水環境",
@@ -456,6 +471,7 @@ window.DIGITAL_WALKS_DATA = {
     },
     {
       "id": "DW-WT-001",
+      "collectionId": "DWC-CHILAN-001",
       "title": "灣潭聚落線上數位走讀",
       "district": "中埔鄉灣潭地區",
       "theme": "聚落信仰、傳統建築、溪流水環境與菸業記憶",

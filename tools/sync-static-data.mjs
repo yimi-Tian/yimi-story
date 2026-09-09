@@ -116,14 +116,54 @@ async function validateClassResults(data) {
 }
 
 async function validateDigitalWalks(data) {
+  const collections = Array.isArray(data?.collections) ? data.collections : [];
   const routes = Array.isArray(data?.routes) ? data.routes : [];
   const routeIds = new Set();
+  const collectionIds = new Set();
+  const collectionSlugs = new Set();
+  const collectionsById = new Map();
   const stopIds = new Set();
 
+  for (const route of routes) assertUnique(routeIds, route.id, "路線 ID");
+
+  for (const collection of collections) {
+    assertUnique(collectionIds, collection.id, "走讀 collection ID");
+    assertUnique(collectionSlugs, collection.slug, "走讀 collection slug");
+    collectionsById.set(collection.id, collection);
+    if (!collection.title || !collection.summary) {
+      throw new Error(`走讀 collection ${collection.id} 必須包含 title 與 summary。`);
+    }
+    if (!["draft", "approved"].includes(collection.publicationStatus) || typeof collection.publiclyListed !== "boolean") {
+      throw new Error(`走讀 collection ${collection.id} 的公開狀態不完整。`);
+    }
+    if (collection.publicationStatus === "draft" && collection.publiclyListed !== false) {
+      throw new Error(`草稿 collection ${collection.id} 不得進入公開列表，publiclyListed 必須為 false。`);
+    }
+    if (!Array.isArray(collection.routeIds) || collection.routeIds.length === 0) {
+      throw new Error(`走讀 collection ${collection.id} 必須關聯至少一條路線。`);
+    }
+    const collectionRouteIds = new Set();
+    for (const routeId of collection.routeIds) {
+      assertUnique(collectionRouteIds, routeId, `${collection.id} 關聯路線 ID`);
+      if (!routeIds.has(routeId)) {
+        throw new Error(`走讀 collection ${collection.id} 關聯不存在的路線 ${routeId}。`);
+      }
+    }
+  }
+
   for (const route of routes) {
-    assertUnique(routeIds, route.id, "路線 ID");
+    if (!["draft", "approved"].includes(route.publicationStatus) || typeof route.publiclyListed !== "boolean") {
+      throw new Error(`路線 ${route.id} 的公開狀態不完整。`);
+    }
     if (route.publicationStatus === "draft" && route.publiclyListed !== false) {
       throw new Error(`草稿路線 ${route.id} 不得進入公開列表，publiclyListed 必須為 false。`);
+    }
+    const collection = collectionsById.get(route.collectionId);
+    if (!collection) {
+      throw new Error(`路線 ${route.id} 必須以 collectionId 關聯既有走讀 collection。`);
+    }
+    if (!collection.routeIds.includes(route.id)) {
+      throw new Error(`路線 ${route.id} 與 collection ${collection.id} 的雙向關聯不一致。`);
     }
 
     const stops = Array.isArray(route.stops) ? route.stops : [];
