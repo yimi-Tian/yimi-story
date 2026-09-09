@@ -579,7 +579,7 @@ a {
   gap: 13px;
 }
 
-.place-grid a {
+.place-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -589,30 +589,23 @@ a {
   border-left: 4px solid var(--river);
   box-shadow: 0 4px 12px rgba(23, 79, 83, 0.08);
   font-weight: 800;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.place-grid a:nth-child(3n) {
-  transform: none;
+.place-item strong {
+  min-width: 0;
+  white-space: nowrap;
 }
 
-.place-grid a:hover,
-.place-grid a:focus-visible {
-  color: var(--white);
-  background: var(--river);
-  border-left-color: var(--river-dark);
-  box-shadow: 0 9px 20px rgba(23, 79, 83, 0.18);
-  transform: translateY(-3px);
-}
-
-.place-grid a span {
+.place-order {
   color: var(--clay);
   font-size: 12px;
 }
 
-.place-grid a:hover span,
-.place-grid a:focus-visible span {
-  color: #f4d8a0;
+.place-count {
+  margin-left: auto;
+  color: var(--river-dark);
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .place-hint {
@@ -1083,14 +1076,15 @@ a {
     gap: 10px;
   }
 
-  .place-grid a {
+  .place-item {
     min-width: 0;
+    gap: 7px;
     padding: 9px 10px;
     font-size: 15px;
   }
 
-  .place-grid a:nth-child(3n) {
-    transform: none;
+  .place-count {
+    font-size: 13px;
   }
 
   .split-heading {
