@@ -14,6 +14,7 @@ const {
   getDraftDigitalWalks,
   getDigitalWalkCollection,
   getDigitalWalksForCollection,
+  selectPublicDigitalWalkStop,
 } = require("../../js/public-ux.js");
 const root = new URL("../../", import.meta.url);
 const source = await readFile(new URL("script.js", root), "utf8");
@@ -33,6 +34,25 @@ const chilanKnowledgeSource = source.slice(
   source.indexOf("function getChilanKnowledgeTopics"),
   source.indexOf("function renderDigitalWalkCollectionPreview"),
 );
+const publicStopRendererSource = source.slice(
+  source.indexOf("function renderDigitalWalkPublicStopDetail"),
+  source.indexOf("function renderDigitalWalkStopDetail"),
+);
+const draftStopRendererSource = source.slice(
+  source.indexOf("function renderDigitalWalkStopDetail"),
+  source.indexOf("function getDigitalWalkDisplayGallery"),
+);
+const draftDataNotesSource = source.slice(
+  source.indexOf("function digitalWalkDataNotesSection"),
+  source.indexOf("function formatDigitalWalkPendingItem"),
+);
+const digitalWalkStops = digitalWalks.routes.flatMap((route) => route.stops || []);
+const digitalWalkStop = (id) => digitalWalkStops.find((stop) => stop.id === id);
+const selectApprovedStopFixture = (stop) => {
+  const fixture = structuredClone(stop);
+  fixture.publicationStatus = "approved";
+  return selectPublicDigitalWalkStop(fixture);
+};
 
 test("共用封面 resolver 依 explicit、gallery、legacy、placeholder 決定順序", () => {
   const explicit = resolvePublicCover({ explicitCover: "cover.jpg", gallery: ["01.jpg"], legacyFallbacks: ["legacy.jpg"], placeholder: "empty.svg" });
@@ -220,6 +240,95 @@ test("collection preview 延續兩欄桌機與 719px 以下單欄觸控樣式", 
   assert.match(styles, /@media \(min-width: 720px\)[\s\S]*?\.digital-walk-collection-route-grid\s*\{[\s\S]*?repeat\(2/);
   assert.match(styles, /@media \(max-width: 719px\)[\s\S]*?\.digital-walk-collection-route-card \.button[\s\S]*?min-height: 46px/);
   assert.match(styles, /\.digital-walk-knowledge-grid[\s\S]*?display: grid/);
+});
+
+test("draft renderer 保留 pendingItems、權利註記與草稿提示", () => {
+  assert.match(draftStopRendererSource, /digitalWalkDraftNotice\(\)/);
+  assert.match(draftStopRendererSource, /digitalWalkDataNotesSection\(stop\)/);
+  assert.match(draftDataNotesSource, /stop\.pendingItems/);
+  assert.match(draftDataNotesSource, /stop\.rights/);
+  assert.match(draftDataNotesSource, /資料補充中/);
+});
+
+test("public selector 與 renderer 不輸出 pending、rights 或內部待辦字樣", () => {
+  assert.ok(digitalWalkStops.every((stop) => selectPublicDigitalWalkStop(stop) === null));
+  const selectedStops = digitalWalkStops.map(selectApprovedStopFixture);
+  assert.equal(selectedStops.length, 12);
+  for (const stop of selectedStops) {
+    assert.ok(stop);
+    assert.equal(Object.hasOwn(stop, "pendingItems"), false);
+    assert.equal(Object.hasOwn(stop, "rights"), false);
+    assert.doesNotMatch(JSON.stringify(stop), /待確認|待補|待整理|待查|編輯提示/);
+  }
+  assert.doesNotMatch(publicStopRendererSource, /pendingItems|\.rights|digitalWalkDraftNotice|資料補充中|公開授權說明/);
+  assert.doesNotMatch(publicStopRendererSource, /待確認|待補|待整理|待查/);
+  assert.doesNotMatch(
+    JSON.stringify(selectApprovedStopFixture(digitalWalkStop("YG-02"))),
+    /目前照片未完整呈現/,
+  );
+});
+
+test("YG-01 public mode 採無圖片版型且拒絕禁止公開街景圖", () => {
+  const selected = selectApprovedStopFixture(digitalWalkStop("YG-01"));
+  assert.equal(selected.coverImage, "");
+  assert.deepEqual(selected.images, []);
+  assert.match(publicStopRendererSource, /digital-walk-stop-layout\$\{stop\.coverImage \? "" : " is-no-image"\}/);
+  assert.match(styles, /\.digital-walk-stop-layout\.is-no-image\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
+
+  const forbiddenFixture = structuredClone(digitalWalkStop("YG-01"));
+  forbiddenFixture.publicationStatus = "approved";
+  forbiddenFixture.rights.status = "已確認";
+  forbiddenFixture.coverImage = "public/images/digital/digital-walks/DW-YG-001/YG-01/cover.jpg";
+  assert.equal(selectPublicDigitalWalkStop(forbiddenFixture).coverImage, "");
+});
+
+test("WT-03 不使用疑似錯站圖片，無圖仍保留完整文字站點", () => {
+  const raw = digitalWalkStop("WT-03");
+  const selected = selectApprovedStopFixture(raw);
+  assert.deepEqual(raw.images, []);
+  assert.equal(selected.coverImage, "");
+  assert.deepEqual(selected.images, []);
+  assert.ok(selected.name && selected.locationDescription && selected.storyPoints.length);
+
+  const forbiddenFixture = structuredClone(raw);
+  forbiddenFixture.publicationStatus = "approved";
+  forbiddenFixture.rights.status = "已確認";
+  forbiddenFixture.images = ["public/images/digital/digital-walks/DW-WT-001/WT-03/01.JPG"];
+  assert.deepEqual(selectPublicDigitalWalkStop(forbiddenFixture).images, []);
+});
+
+test("public mode 保留安全與私人土地提醒，且先提醒再提供導航", () => {
+  const selected = selectApprovedStopFixture(digitalWalkStop("YG-07"));
+  assert.ok(selected.safetyNotes.length);
+  assert.deepEqual(selected.privateLand, {
+    status: "是",
+    note: "戶外為公共空間，無法進入內部拍攝。",
+  });
+  assert.match(selected.googleMapsUrl, /^https:\/\/maps\.app\.goo\.gl\//);
+  const safetyIndex = source.indexOf("<h3>安全提醒</h3>", source.indexOf("function digitalWalkReminderSection"));
+  const privateLandIndex = source.indexOf("<h3>私人土地或進入提醒</h3>", safetyIndex);
+  const mapIndex = source.indexOf("<h3>位置導航</h3>", privateLandIndex);
+  assert.ok(safetyIndex < privateLandIndex && privateLandIndex < mapIndex);
+});
+
+test("public sources 僅保留可對外來源，rights 只控制媒體而不直接顯示", () => {
+  const wt04 = selectApprovedStopFixture(digitalWalkStop("WT-04"));
+  const yg03 = selectApprovedStopFixture(digitalWalkStop("YG-03"));
+  assert.equal(wt04.sources.length, 4);
+  assert.deepEqual(yg03.sources, ["現場匾額、楹聯與建築文字"]);
+  assert.equal(Object.hasOwn(wt04, "rights"), false);
+  assert.match(publicStopRendererSource, /digitalWalkPublicSourcesSection\(stop\.sources\)/);
+});
+
+test("Stage 3 只預備 approved + listed 路線的 public renderer", () => {
+  assert.match(source, /getPublicDigitalWalks\(\)\.find\(\(route\) => route\.id === detail\)/);
+  assert.ok(digitalWalks.routes.every((route) => (
+    route.publicationStatus === "draft" && route.publiclyListed === false
+  )));
+  assert.deepEqual(getPublicDigitalWalks(digitalWalks), []);
+  assert.match(source, /slug: "chilan-walk"/);
+  assert.match(source, /數位走讀內容待補/);
+  assert.doesNotMatch(index, /href="#\/digital\/chilan-walk"/);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {

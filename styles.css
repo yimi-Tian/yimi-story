@@ -916,6 +916,18 @@ button {
   flex: 1;
 }
 
+.digital-walk-stop-card.is-no-image .digital-walk-stop-card-body {
+  padding-top: 1.25rem;
+}
+
+.digital-walk-stop-layout.is-no-image {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.digital-walk-stop-layout.is-no-image .activity-detail-info {
+  max-width: none;
+}
+
 .digital-walk-stop-order,
 .digital-walk-stop-time,
 .digital-walk-local-name {
