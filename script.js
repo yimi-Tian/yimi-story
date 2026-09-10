@@ -102,9 +102,9 @@ const siteData = {
     },
     {
       title: "地方探索",
-      href: "#/explore",
+      href: "#/digital/chilan-walk",
       kicker: "Explore",
-      description: "從赤蘭溪 AR 探索出發，逐步擴充嘉義地方文化與環境主題。",
+      description: "透過赤蘭溪數位走讀與 AR 走讀，認識流域聚落、地方故事與生活記憶。",
     },
     {
       title: "社團紀錄",
@@ -254,6 +254,10 @@ function getRoute() {
 
 function render() {
   const route = getRoute();
+  if (route.page === "explore" && !route.detail) {
+    window.location.replace("#/digital/chilan-walk");
+    return;
+  }
   const isLegacyWoodRepairTheme =
     (route.page === "themes" || route.page === "theme") && route.detail === "wood-repair";
   if (isLegacyWoodRepairTheme) {
@@ -2010,7 +2014,7 @@ function renderAbout() {
   const halls = [
     { name: "成果故事", description: "彙整歷年課程、地方行動與公共參與成果。", href: "#/overview" },
     { name: "主題館", description: "依地方議題累積深度故事與主題成果。", href: "#/themes" },
-    { name: "地方探索", description: "透過走讀、任務與數位內容認識地方。", href: "#/explore" },
+    { name: "地方探索", description: "透過走讀、任務與數位內容認識地方。", href: "#/digital/chilan-walk" },
     { name: "社團紀錄", description: "記錄社團學習、服務與地方連結。", href: "#/clubs" },
     { name: "學習成果", description: "保存班級花絮、走讀、影音、出版與地方素材。", href: "#/showcase" },
     { name: "關於邑米", description: "認識學校、平台理念與參與方式。", href: "#/about" },

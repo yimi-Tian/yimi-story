@@ -19,12 +19,16 @@ const {
 const root = new URL("../../", import.meta.url);
 const source = await readFile(new URL("script.js", root), "utf8");
 const platformSource = await readFile(new URL("js/platform-home.js", root), "utf8");
+const explorationSource = await readFile(new URL("local-exploration.js", root), "utf8");
+const explorationDataSource = await readFile(new URL("local-exploration-data.js", root), "utf8");
 const styles = await readFile(new URL("styles.css", root), "utf8");
 const platformStyles = await readFile(new URL("css/platform-home.css", root), "utf8");
 const index = await readFile(new URL("index.html", root), "utf8");
 const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
 const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
+const explorationModules = JSON.parse(await readFile(new URL("data/exploration-modules.json", root), "utf8"));
+const platformHome = JSON.parse(await readFile(new URL("data/platform-home.json", root), "utf8"));
 const activities = parseCsv(await readFile(new URL("activities.csv", root), "utf8"));
 const collectionPreviewSource = source.slice(
   source.indexOf("function renderDigitalWalkCollectionPreview"),
@@ -68,6 +72,54 @@ const selectApprovedStopFixture = (stop) => {
 const selectReleaseCandidateStop = (stop) => selectPublicDigitalWalkStop({
   ...structuredClone(stop),
   publicationStatus: "approved",
+});
+
+test("舊地方探索館導向正式赤蘭溪數位走讀且公開導覽不再連館頁", () => {
+  assert.match(source, /route\.page === "explore" && !route\.detail[\s\S]*window\.location\.replace\("#\/digital\/chilan-walk"\)/);
+  assert.match(index, /class="nav-trigger" href="#\/digital\/chilan-walk" data-nav="explore">地方探索<\/a>/);
+  assert.match(platform, /href="index\.html#\/digital\/chilan-walk">地方探索<\/a>/);
+  assert.doesNotMatch(index, /class="nav-trigger" href="#\/explore"/);
+  assert.doesNotMatch(platform, /href="index\.html#\/explore">地方探索<\/a>/);
+});
+
+test("赤蘭溪舊詳細頁改為地方知識並保留三個背景主題", () => {
+  const chilan = explorationModules.modules.find((module) => module.id === "chilan-river");
+  assert.equal(chilan.title, "赤蘭溪地方知識");
+  assert.deepEqual(chilan.guidePoints.map((point) => point.code), ["RL001", "RL002", "RL003"]);
+  assert.match(explorationDataSource, /title: "赤蘭溪地方知識"/);
+  assert.match(explorationSource, /前往赤蘭溪數位走讀/);
+  assert.match(explorationSource, /前往赤蘭溪 AR走讀/);
+  assert.match(explorationSource, /並非 GPS 導航|地方知識主題示意圖/);
+
+  const detailRenderer = explorationSource.slice(
+    explorationSource.indexOf("function renderModuleDetail"),
+    explorationSource.indexOf("function renderPreviewPanel"),
+  );
+  assert.doesNotMatch(detailRenderer, /statusPill\(module\.status\)|module\.arStatus|renderFlowSection|renderArPanel|renderPreviewPanel/);
+  assert.doesNotMatch(explorationSource.slice(
+    explorationSource.indexOf("function renderGuidePoints"),
+    explorationSource.indexOf("function renderKnowledgeCtas"),
+  ), /point\.photoDirections|guidePointStatus/);
+});
+
+test("舊規劃模組沒有公開入口且直接舊網址安全導回新版入口", () => {
+  const renderSource = explorationSource.slice(explorationSource.indexOf("function render(detail)"));
+  assert.match(renderSource, /module\.id === "chilan-river"[\s\S]*window\.location\.replace\("#\/digital\/chilan-walk"\)/);
+  assert.doesNotMatch(JSON.stringify(platformHome), /explore\/(?:puzi-medical-culture|coastal-life|food-agriculture-place)/);
+  assert.ok(explorationModules.modules.some((module) => module.id === "puzi-medical-culture"));
+  assert.ok(explorationModules.modules.some((module) => module.id === "coastal-life"));
+  assert.ok(explorationModules.modules.some((module) => module.id === "food-agriculture-place"));
+});
+
+test("平台首頁改接正式地方探索入口、真正 AR 與赤蘭溪背景知識", () => {
+  const explorationHall = platformHome.halls.find((hall) => hall.name === "地方探索");
+  const chilanKnowledge = platformHome.featuredResults.find((item) => item.id === "chilan-river-exploration");
+  const arItem = platformHome.latest.find((item) => item.title === "赤蘭溪 AR 探索");
+  assert.equal(explorationHall.href, "index.html#/digital/chilan-walk");
+  assert.equal(chilanKnowledge.link, "index.html#/explore/chilan-river");
+  assert.equal(chilanKnowledge.title, "赤蘭溪地方知識");
+  assert.equal(arItem.href, "index.html#/digital/game");
+  assert.ok(!platformHome.latest.some((item) => item.title === "朴子醫療文化"));
 });
 
 test("共用封面 resolver 依 explicit、gallery、legacy、placeholder 決定順序", () => {

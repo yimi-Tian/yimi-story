@@ -204,18 +204,16 @@
     const detail = module.detailContent || {};
     app.innerHTML = `
       <div class="theme-detail-back exploration-detail-back">
-        <a class="theme-back-link" href="#/explore">← 返回地方探索館</a>
+        <a class="theme-back-link" href="#/digital/chilan-walk">← 返回赤蘭溪數位走讀</a>
       </div>
       <section class="platform-hall-banner exploration-detail-banner">
         <div class="platform-hall-copy">
-          <span class="section-label">LOCAL MODULE</span>
+          <span class="section-label">CHILAN RIVER KNOWLEDGE</span>
           <h1>${module.title}</h1>
           ${hasValue(detail.slogan) ? `<p class="exploration-hero-slogan">${detail.slogan}</p>` : ""}
           ${hasValue(detail.intro) ? `<p>${detail.intro}</p>` : ""}
           <div class="exploration-meta-row">
-            ${statusPill(module.status)}
             ${activities.length ? `<span>${activities.length} 項相關成果</span>` : ""}
-            ${hasValue(module.arStatus) ? `<span>${module.arStatus}</span>` : ""}
           </div>
           ${pillList(module.tags)}
         </div>
@@ -224,21 +222,9 @@
         </div>
       </section>
 
-      <section class="exploration-section exploration-intro-grid" aria-labelledby="exploration-intro-title">
-        ${hasValue(detail.future) ? `
-          <article class="exploration-panel">
-            <span class="section-label">MODULE INTRO</span>
-            <h2 id="exploration-intro-title">模組介紹</h2>
-            <p>${detail.future}</p>
-          </article>
-        ` : ""}
-        ${renderPreviewPanel(detail.preview)}
-      </section>
-
       ${renderExplorationMap(module)}
-      ${renderFlowSection()}
       ${renderGuidePoints(module.guidePoints)}
-      ${renderArPanel(module)}
+      ${renderKnowledgeCtas()}
       ${renderRelatedActivities(activities)}
       ${renderRelatedThemes(module)}
     `;
@@ -267,13 +253,12 @@
       <section class="exploration-section exploration-map-section" aria-labelledby="exploration-map-title">
         <div class="theme-section-heading exploration-map-heading">
           <div>
-            ${hasValue(info.subtitle) ? `<span class="section-label">${info.subtitle}</span>` : ""}
-            <h2 id="exploration-map-title">${hasValue(info.title) ? info.title : "探索地圖"}</h2>
+            <span class="section-label">KNOWLEDGE THEMES</span>
+            <h2 id="exploration-map-title">${hasValue(info.title) ? info.title : "赤蘭溪主題示意"}</h2>
           </div>
-          ${hasValue(info.status) ? `<span class="exploration-map-status">${info.status}</span>` : ""}
         </div>
         ${hasValue(info.description) ? `<p class="exploration-map-description">${info.description}</p>` : ""}
-        <div class="exploration-map-canvas" role="list" aria-label="赤蘭溪探索節點示意圖">
+        <div class="exploration-map-canvas" role="list" aria-label="赤蘭溪地方知識主題示意圖">
           <div class="exploration-river-line" aria-hidden="true"></div>
           ${nodes.map((node, index) => `
             <button
@@ -306,10 +291,10 @@
       <section class="exploration-section" aria-labelledby="guide-points-title">
         <div class="theme-section-heading">
           <div>
-            <span class="section-label">GUIDE POINTS</span>
-            <h2 id="guide-points-title">導覽點預留區</h2>
+            <span class="section-label">LOCAL KNOWLEDGE</span>
+            <h2 id="guide-points-title">認識赤蘭溪</h2>
           </div>
-          <p>先整理地方故事與探索任務，導覽位置、影像與現地互動仍持續建置中。</p>
+          <p>從流域背景、聚落記憶與生態觀察，延伸閱讀赤蘭溪的地方故事。</p>
         </div>
         <div class="guide-point-grid">
           ${items.map((point) => {
@@ -322,7 +307,6 @@
                     <h3>${point.title}</h3>
                     ${hasValue(point.description) ? `<p>${point.description}</p>` : ""}
                   </div>
-                  ${guidePointStatus(point.status)}
                 </div>
                 <details class="guide-point-details">
                   <summary>查看內容 <span aria-hidden="true">＋</span></summary>
@@ -337,12 +321,6 @@
                       <section class="guide-point-content-block">
                         <h4>探索任務</h4>
                         <p>${point.task}</p>
-                      </section>
-                    ` : ""}
-                    ${hasValue(point.photoDirections) ? `
-                      <section class="guide-point-content-block">
-                        <h4>可放照片方向</h4>
-                        <p>${point.photoDirections}</p>
                       </section>
                     ` : ""}
                     ${list(point.sdgs).length ? `
@@ -367,6 +345,20 @@
               </article>
             `;
           }).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderKnowledgeCtas() {
+    return `
+      <section class="exploration-section exploration-panel" aria-labelledby="exploration-next-title">
+        <span class="section-label">EXPLORE CHILAN RIVER</span>
+        <h2 id="exploration-next-title">繼續探索赤蘭溪</h2>
+        <p>透過線上數位走讀認識灣潭聚落，也可以前往 AR 走讀展開實地探索。</p>
+        <div class="theme-banner-actions">
+          <a class="button" href="#/digital/chilan-walk">前往赤蘭溪數位走讀</a>
+          <a class="button secondary" href="#/digital/game">前往赤蘭溪 AR走讀</a>
         </div>
       </section>
     `;
@@ -523,11 +515,14 @@
       list(item.aliases).includes(detail)
     );
     if (!module) {
-      renderIndex();
+      window.location.replace("#/digital/chilan-walk");
       return;
     }
-    if (module.id === "chilan-river") renderModuleDetail(module);
-    else renderPlanned(module);
+    if (module.id === "chilan-river") {
+      renderModuleDetail(module);
+      return;
+    }
+    window.location.replace("#/digital/chilan-walk");
   }
 
   window.LocalExploration = { render };
