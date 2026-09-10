@@ -10,8 +10,8 @@ window.DIGITAL_WALKS_DATA = {
         "DW-WT-001",
         "DW-YG-001"
       ],
-      "publicationStatus": "draft",
-      "publiclyListed": false
+      "publicationStatus": "approved",
+      "publiclyListed": true
     }
   ],
   "routes": [
@@ -492,8 +492,8 @@ window.DIGITAL_WALKS_DATA = {
       "summary": "灣潭聚落線上數位走讀以地方信仰、百年老樹、溪流水環境與煙樓產業記憶為主軸，依序認識泗洲佛祖寺、仙姑娘廟、百年芒果樹、灣潭溪及灣潭煙樓。透過現場照片與地方故事，呈現聚落信仰、居民生活、自然環境及產業發展留下的文化痕跡。",
       "coverImage": "public/images/digital/digital-walks/DW-WT-001/cover.JPG",
       "routeMapImage": null,
-      "publicationStatus": "draft",
-      "publiclyListed": false,
+      "publicationStatus": "approved",
+      "publiclyListed": true,
       "stops": [
         {
           "routeId": "DW-WT-001",
@@ -551,7 +551,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "確認主祀神祇正式名稱、建寺年代、修建沿革、配祀神明、主要祭典，以及九玄七祖祠的設置背景與地方故事。"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-WT-001",
@@ -608,7 +608,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "確認仙姑娘的身分、建廟年代、廟宇沿革、主要祭祀日期、地方傳說及目前管理者。"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-WT-001",
@@ -656,14 +656,14 @@ window.DIGITAL_WALKS_DATA = {
             "note": "位於走讀路線可見範圍。"
           },
           "safetyNotes": [
-            "請勿攀爬、拉扯枝條、採摘果實或破壞樹皮。道路旁停留時應注意來車與落枝風險。"
+            "建議由公共道路沿線觀看，不需進入私人土地。道路旁停留時請注意來車與落枝；請勿攀爬、拉扯枝條、採摘果實或破壞樹皮。"
           ],
           "observationPrompt": "抬頭觀察芒果樹的樹冠，再看看樹幹的粗細與分枝方式。這棵樹可能陪伴灣潭居民多久了？它周圍的道路、農田或住家又發生過哪些變化？",
           "photoStatus": "主圖可用；目前無補充照片，後續可視需要補拍老樹全景、樹幹及周邊環境。",
           "pendingItems": [
             "確認地方慣用名稱、實際樹種、推估樹齡依據、土地權屬、居民記憶、是否曾受風災或病蟲害影響，以及是否具有聚會、乘涼或辨路功能。"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-WT-001",
@@ -726,7 +726,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "確認各張溪流照片的實際拍攝位置、瀾沙壩正式名稱、灣潭仔圳的現地範圍、水工設施用途、季節水量、可安全停留點及雨季替代動線。"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-WT-001",
@@ -790,7 +790,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "確認建造年代、原所有人、菸草種植與烘製年代、設備用途、停止使用時間、農村再生整修過程、藝術作品來源、現況管理者。"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         }
       ]
     }

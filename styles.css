@@ -583,6 +583,11 @@ button {
   gap: 1rem;
 }
 
+.digital-walk-collection-route-grid.is-single-route {
+  max-width: 780px;
+  margin-inline: auto;
+}
+
 .digital-walk-knowledge-card {
   min-width: 0;
   padding: 0.9rem 1rem;
@@ -1334,6 +1339,10 @@ button {
 
   .digital-walk-collection-route-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .digital-walk-collection-route-grid.is-single-route {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .digital-walk-stop-grid {
