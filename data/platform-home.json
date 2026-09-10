@@ -44,9 +44,9 @@
     {
       "icon": "探",
       "iconSrc": "",
-      "name": "地方探索館",
-      "description": "透過探索地圖與數位體驗走進地方。",
-      "href": "index.html#/explore"
+      "name": "地方探索",
+      "description": "透過數位走讀與 AR 走讀認識赤蘭溪地方故事。",
+      "href": "index.html#/digital/chilan-walk"
     },
     {
       "icon": "社",
@@ -123,9 +123,9 @@
     },
     {
       "id": "chilan-river-exploration",
-      "category": "赤蘭溪探索",
-      "title": "赤蘭溪地方知識探索",
-      "description": "從流域故事、生態走讀與田野調查，累積赤蘭溪地方知識。",
+      "category": "背景知識",
+      "title": "赤蘭溪地方知識",
+      "description": "從流域故事、生態觀察與田野調查，延伸閱讀赤蘭溪地方記憶。",
       "image": "public/images/activities/114-016/03.jpg",
       "link": "index.html#/explore/chilan-river",
       "relatedActivityIds": [
@@ -238,7 +238,7 @@
       "summary": "沿著流域故事，認識聚落生活與地方記憶。",
       "date": "2026-06-28",
       "image": "assets/images/platform-home/latest-river.jpg",
-      "href": "index.html#/explore/chilan-river"
+      "href": "index.html#/digital/game"
     },
     {
       "type": "活動成果",
@@ -255,14 +255,6 @@
       "date": "2026-06-08",
       "image": "assets/images/platform-home/latest-work.jpg",
       "href": "index.html#/showcase"
-    },
-    {
-      "type": "主題故事",
-      "title": "朴子醫療文化",
-      "summary": "從街區地景讀出地方醫療發展的生活故事。",
-      "date": "2026-05-26",
-      "image": "assets/images/platform-home/banner-community.jpg",
-      "href": "index.html#/explore/puzi-medical-culture"
     },
     {
       "type": "社團紀錄",

@@ -16,12 +16,12 @@ window.LOCAL_EXPLORATION_DATA = {
     {
       id: "chilan-river",
       aliases: ["chilan-ar"],
-      title: "赤蘭溪探索模組",
-      subtitle: "從流域故事、生態走讀到數位互動，認識赤蘭溪地方知識。",
+      title: "赤蘭溪地方知識",
+      subtitle: "從流域背景、地方記憶與學習延伸，認識赤蘭溪。",
       description:
-        "赤蘭溪探索模組以赤蘭溪流域為核心，整合田野調查、耆老訪談、生態走讀、老照片、速寫紀錄與數位探索內容，作為地方探索館第一個示範模組。",
+        "整理赤蘭溪流域的田野調查、地方故事、生態觀察與學習成果，作為數位走讀之外的背景知識與延伸閱讀。",
       status: "建置中",
-      tags: ["赤蘭溪", "流域知識", "生態走讀", "地方故事", "AR 預留"],
+      tags: ["赤蘭溪", "流域知識", "生態觀察", "地方故事", "學習延伸"],
       coverImage: "assets/images/platform-home/latest-river.jpg",
       relatedThemeIds: ["environmental-education", "local-culture", "marine-education"],
       relatedThemes: ["環境教育", "地方文化", "海洋教育"],
@@ -30,9 +30,9 @@ window.LOCAL_EXPLORATION_DATA = {
       featured: true,
       arStatus: "AR 功能建置中",
       detailContent: {
-        slogan: "沿著流域走進地方記憶",
+        slogan: "從流域背景走進地方記憶",
         intro:
-          "赤蘭溪探索模組以赤蘭溪流域為核心，透過田野調查、耆老訪談、生態走讀、老照片蒐集、速寫紀錄與數位互動，整理赤蘭溪沿岸的聚落記憶、產業變遷、流域生態與地方生活故事。",
+          "本頁整理赤蘭溪流域的田野調查、地方故事、生態觀察與學習成果，呈現河流與聚落生活的關係，並提供數位走讀之外的背景知識與延伸閱讀。",
         future:
           "本模組為地方探索館第一個示範模組，未來將逐步建置探索地圖、導覽點、故事任務、記憶蒐集與 AR 擴增實境體驗，讓使用者能以自主探索方式認識赤蘭溪地方知識。",
         preview: [
@@ -44,11 +44,11 @@ window.LOCAL_EXPLORATION_DATA = {
           "AR 擴增實境體驗將於赤蘭溪探索模組後續階段逐步建置，未來可結合角色導覽、故事任務與現地探索，讓使用者在地方場域中看見流域故事與地方記憶。",
       },
       mapInfo: {
-        title: "赤蘭溪探索地圖",
+        title: "赤蘭溪地方知識主題示意",
         subtitle: "CHILAN RIVER EXPLORATION MAP",
-        description: "以赤蘭溪流域為線索，將源頭故事、聚落取水記憶與生態觀察整理為三個探索節點。正式地圖與 GPS 導覽功能將於後續階段逐步建置。",
+        description: "以赤蘭溪流域為線索，將源頭故事、聚落取水記憶與生態觀察整理為三個背景知識主題。",
         status: "地圖資料整理中",
-        note: "本區為赤蘭溪探索模組示意地圖，正式點位、GPS 導覽與現地路線將於資料確認後逐步建置。",
+        note: "本區呈現三個地方知識主題的概念關係，並非 GPS 導航或灣潭五站路線圖。",
       },
       mapNodes: [
         {
