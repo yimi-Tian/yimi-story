@@ -54,7 +54,7 @@ const classResultsData = typeof window !== "undefined" && Array.isArray(window.C
   : [];
 const digitalWalksData = typeof window !== "undefined" && Array.isArray(window.DIGITAL_WALKS_DATA?.routes)
   ? window.DIGITAL_WALKS_DATA
-  : { routes: [] };
+  : { collections: [], routes: [] };
 const clubData = typeof window !== "undefined" && Array.isArray(window.CLUBS_DATA?.clubs)
   ? window.CLUBS_DATA
   : { clubs: [] };
@@ -247,6 +247,7 @@ function getRoute() {
     page: parts[0] || "home",
     detail: parts[1] || "",
     id: decodeURIComponent(parts[2] || ""),
+    subId: decodeURIComponent(parts[3] || ""),
     year: parts[3] || "112",
   };
 }
@@ -270,16 +271,26 @@ function render() {
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
   app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
+  const isDraftCollectionPreview = route.page === "digital"
+    && route.detail === "draft-collection"
+    && Boolean(getDigitalWalkCollection(route.id));
+  const isReleaseCandidatePreview = route.page === "digital"
+    && route.detail === "release-candidate";
   app.classList.toggle(
     "digital-walk-draft-page",
-    route.page === "digital" && (route.detail === "draft" || getDraftDigitalWalks().some((item) => item.id === route.detail)),
+    route.page === "digital" && (
+      route.detail === "draft"
+      || isDraftCollectionPreview
+      || isReleaseCandidatePreview
+      || getDraftDigitalWalks().some((item) => item.id === route.detail)
+    ),
   );
   stopHomeCarousel();
   updateNav(route.page);
   if (route.page === "overview") renderOverview();
   else if (route.page === "themes") renderThemes(route.detail);
   else if (route.page === "explore" && window.LocalExploration) window.LocalExploration.render(route.detail);
-  else if (route.page === "digital" || route.page === "chilan") renderDigitalTours(route.detail, route.id);
+  else if (route.page === "digital" || route.page === "chilan") renderDigitalTours(route.detail, route.id, route.subId);
   else if (route.page === "clubs") renderClubs(route.detail);
   else if (route.page === "showcase") renderShowcase();
   else if (route.page === "about") renderAbout();
@@ -736,10 +747,24 @@ function renderThemes(detail) {
   });
 }
 
-function renderDigitalTours(detail, stopId = "") {
+function renderDigitalTours(detail, stopId = "", childId = "") {
   const app = document.querySelector("#app");
+  if (detail === "release-candidate") {
+    renderDigitalWalkReleaseCandidate(stopId, childId);
+    return;
+  }
+  if (detail === "draft-collection") {
+    renderDigitalWalkCollectionPreview(stopId);
+    return;
+  }
   if (detail === "draft") {
     renderDigitalWalkDraftList();
+    return;
+  }
+
+  const publicCollection = getDigitalWalkCollection(detail, "public");
+  if (publicCollection) {
+    renderDigitalWalkPublicCollection(publicCollection);
     return;
   }
 
@@ -747,6 +772,13 @@ function renderDigitalTours(detail, stopId = "") {
   if (draftRoute) {
     if (stopId) renderDigitalWalkStopDetail(draftRoute, stopId);
     else renderDigitalWalkRouteDetail(draftRoute);
+    return;
+  }
+
+  const publicRoute = getPublicDigitalWalks().find((route) => route.id === detail);
+  if (publicRoute) {
+    if (stopId) renderDigitalWalkPublicStopDetail(publicRoute, stopId);
+    else renderDigitalWalkPublicRouteDetail(publicRoute);
     return;
   }
 
@@ -783,18 +815,415 @@ function renderDigitalTours(detail, stopId = "") {
   `;
 }
 
+function getPublicDigitalWalks() {
+  if (typeof publicUx?.getPublicDigitalWalks === "function") {
+    return publicUx.getPublicDigitalWalks(digitalWalksData);
+  }
+  return digitalWalksData.routes.filter((route) => (
+    route?.publicationStatus === "approved"
+    && route.publiclyListed === true
+  ));
+}
+
 function getDraftDigitalWalks() {
+  if (typeof publicUx?.getDraftDigitalWalks === "function") {
+    return publicUx.getDraftDigitalWalks(digitalWalksData);
+  }
   return digitalWalksData.routes.filter((route) => (
     route?.publicationStatus === "draft"
     && route.publiclyListed === false
   ));
 }
 
+function getDigitalWalkCollection(identifier, visibility = "all") {
+  if (typeof publicUx?.getDigitalWalkCollection === "function") {
+    return publicUx.getDigitalWalkCollection(digitalWalksData, identifier, visibility);
+  }
+  const collections = Array.isArray(digitalWalksData.collections) ? digitalWalksData.collections : [];
+  return collections.find((collection) => {
+    const matchesIdentifier = collection?.id === identifier || collection?.slug === identifier;
+    const matchesVisibility = visibility === "public"
+      ? collection?.publicationStatus === "approved" && collection.publiclyListed === true
+      : visibility === "draft"
+        ? collection?.publicationStatus === "draft" && collection.publiclyListed === false
+        : true;
+    return matchesIdentifier && matchesVisibility;
+  }) || null;
+}
+
+function getDigitalWalksForCollection(identifier, visibility = "all") {
+  if (typeof publicUx?.getDigitalWalksForCollection === "function") {
+    return publicUx.getDigitalWalksForCollection(digitalWalksData, identifier, visibility);
+  }
+  const collection = getDigitalWalkCollection(identifier, visibility);
+  if (!collection || !Array.isArray(collection.routeIds)) return [];
+  const routesById = new Map(
+    digitalWalksData.routes
+      .filter((route) => {
+        if (route?.collectionId !== collection.id) return false;
+        if (visibility === "public") {
+          return route.publicationStatus === "approved" && route.publiclyListed === true;
+        }
+        if (visibility === "draft") {
+          return route.publicationStatus === "draft" && route.publiclyListed === false;
+        }
+        return true;
+      })
+      .map((route) => [route.id, route])
+  );
+  return collection.routeIds.map((routeId) => routesById.get(routeId)).filter(Boolean);
+}
+
+function getChilanKnowledgeTopics() {
+  const modules = Array.isArray(window.LOCAL_EXPLORATION_DATA?.modules)
+    ? window.LOCAL_EXPLORATION_DATA.modules
+    : [];
+  const chilanModule = modules.find((module) => module?.id === "chilan-river");
+  const allowedCodes = new Set(["RL001", "RL002", "RL003"]);
+  return (Array.isArray(chilanModule?.guidePoints) ? chilanModule.guidePoints : [])
+    .filter((point) => allowedCodes.has(point?.code) && point.title && point.description)
+    .map((point) => ({
+      code: point.code,
+      title: point.title,
+      description: point.description,
+    }));
+}
+
+function renderDigitalWalkCollectionPreview(collectionSlug) {
+  const app = document.querySelector("#app");
+  const collection = getDigitalWalkCollection(collectionSlug);
+  if (!collection) {
+    app.innerHTML = `
+      ${digitalWalkTextHeader("找不到數位走讀總入口", "這個草稿 collection 不存在或不符合內部預覽規則。")}
+      <div class="digital-walk-return-row">
+        <a class="button secondary" href="#/digital/draft">返回草稿預覽</a>
+      </div>
+    `;
+    return;
+  }
+
+  const routes = getDigitalWalksForCollection(collection.id);
+  const topics = getChilanKnowledgeTopics();
+  const totalStops = routes.reduce((sum, route) => sum + (Number(route.stopCount) || 0), 0);
+
+  app.innerHTML = `
+    <div class="theme-detail-back digital-walk-collection-back">
+      <a class="theme-back-link" href="#/digital/draft">← 返回數位走讀草稿預覽</a>
+    </div>
+
+    <section class="digital-walk-collection-hero" aria-labelledby="digital-walk-collection-title">
+      <div class="digital-walk-collection-hero-copy">
+        <span class="digital-walk-draft-badge">Collection 草稿預覽</span>
+        <span class="section-label">CHILAN RIVER DIGITAL WALK</span>
+        <h1 id="digital-walk-collection-title">${collection.title}</h1>
+        <p>${collection.summary}</p>
+        <div class="digital-walk-collection-metrics" aria-label="數位走讀摘要">
+          <span><strong>${routes.length}</strong> 條聚落路線</span>
+          <span><strong>${totalStops}</strong> 個探索站點</span>
+        </div>
+      </div>
+    </section>
+
+    ${digitalWalkDraftNotice()}
+
+    <section class="digital-walk-collection-routes" aria-labelledby="digital-walk-collection-routes-title">
+      <div class="theme-section-heading">
+        <div>
+          <span class="section-label">CHOOSE A ROUTE</span>
+          <h2 id="digital-walk-collection-routes-title">選擇探索路線</h2>
+        </div>
+        <p>依建議順序閱讀站點，從聚落地景進入地方故事。</p>
+      </div>
+      <div class="digital-walk-collection-route-grid">
+        ${routes.map(digitalWalkCollectionRouteCard).join("")}
+      </div>
+    </section>
+
+    ${topics.length ? `
+      <section class="digital-walk-knowledge-section" aria-labelledby="digital-walk-knowledge-title">
+        <div class="theme-section-heading">
+          <div>
+            <span class="section-label">KNOW THE RIVER</span>
+            <h2 id="digital-walk-knowledge-title">認識赤蘭溪</h2>
+          </div>
+          <p>從流域、聚落生活與生態觀察，建立進入兩條走讀路線前的地方脈絡。</p>
+        </div>
+        <div class="digital-walk-knowledge-grid">
+          ${topics.map((topic, index) => `
+            <article class="digital-walk-knowledge-card">
+              <span>${String(index + 1).padStart(2, "0")}</span>
+              <h3>${topic.title}</h3>
+              <p>${topic.description}</p>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-collection-ar-title">
+      <div>
+        <span class="section-label">AR EXPERIENCE</span>
+        <h2 id="digital-walk-collection-ar-title">想走進現場？</h2>
+        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+      </div>
+      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+    </section>
+  `;
+}
+
+function digitalWalkCollectionRouteCard(route) {
+  const stopCount = Number(route.stopCount) || (Array.isArray(route.stops) ? route.stops.length : 0);
+  const transportModes = Array.isArray(route.transportModes) ? route.transportModes.filter(Boolean) : [];
+  return `
+    <article class="digital-walk-collection-route-card">
+      ${route.coverImage ? `<img src="${route.coverImage}" alt="${route.title}路線封面" loading="lazy">` : ""}
+      <div class="digital-walk-draft-card-body">
+        <span class="digital-walk-draft-badge">草稿路線預覽</span>
+        <div>
+          <h3>${route.title}</h3>
+          ${route.district ? `<p class="digital-walk-collection-route-district">${route.district}</p>` : ""}
+        </div>
+        ${route.summary ? `<p>${route.summary}</p>` : ""}
+        <dl class="digital-walk-meta-list">
+          <div><dt>探索站點</dt><dd>${stopCount} 站</dd></div>
+          ${Number(route.estimatedMinutes) ? `<div><dt>建議時間</dt><dd>約 ${Number(route.estimatedMinutes)} 分鐘</dd></div>` : ""}
+          ${transportModes.length ? `<div><dt>探索方式</dt><dd>${transportModes.join("、")}</dd></div>` : ""}
+        </dl>
+        <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}">進入草稿路線預覽</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderDigitalWalkPublicCollection(collection) {
+  const app = document.querySelector("#app");
+  const routes = getDigitalWalksForCollection(collection.id, "public");
+  const topics = getChilanKnowledgeTopics();
+  const totalStops = routes.reduce(
+    (sum, route) => sum + getPublicDigitalWalkStops(route).length,
+    0,
+  );
+  const publicSummary = routes.length === 1 && routes[0].summary
+    ? routes[0].summary
+    : collection.summary;
+
+  app.innerHTML = `
+    <section class="digital-walk-collection-hero" aria-labelledby="digital-walk-public-collection-title">
+      <div class="digital-walk-collection-hero-copy">
+        <span class="section-label">CHILAN RIVER DIGITAL WALK</span>
+        <h1 id="digital-walk-public-collection-title">${collection.title}</h1>
+        <p>${publicSummary}</p>
+        <div class="digital-walk-collection-metrics" aria-label="數位走讀摘要">
+          <span><strong>${routes.length}</strong> 條聚落路線</span>
+          <span><strong>${totalStops}</strong> 個探索站點</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="digital-walk-collection-routes" aria-labelledby="digital-walk-public-collection-routes-title">
+      <div class="theme-section-heading">
+        <div>
+          <span class="section-label">CHOOSE A ROUTE</span>
+          <h2 id="digital-walk-public-collection-routes-title">選擇探索路線</h2>
+        </div>
+        <p>依建議順序閱讀站點，從聚落地景進入地方故事。</p>
+      </div>
+      <div class="digital-walk-collection-route-grid${routes.length === 1 ? " is-single-route" : ""}">
+        ${routes.map(digitalWalkPublicCollectionRouteCard).join("")}
+      </div>
+    </section>
+
+    ${topics.length ? `
+      <section class="digital-walk-knowledge-section" aria-labelledby="digital-walk-public-knowledge-title">
+        <div class="theme-section-heading">
+          <div>
+            <span class="section-label">KNOW THE RIVER</span>
+            <h2 id="digital-walk-public-knowledge-title">認識赤蘭溪</h2>
+          </div>
+          <p>從流域、聚落生活與生態觀察，建立進入走讀路線前的地方脈絡。</p>
+        </div>
+        <div class="digital-walk-knowledge-grid">
+          ${topics.map((topic, index) => `
+            <article class="digital-walk-knowledge-card">
+              <span>${String(index + 1).padStart(2, "0")}</span>
+              <h3>${topic.title}</h3>
+              <p>${topic.description}</p>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-public-ar-title">
+      <div>
+        <span class="section-label">AR EXPERIENCE</span>
+        <h2 id="digital-walk-public-ar-title">想走進現場？</h2>
+        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+      </div>
+      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+    </section>
+  `;
+}
+
+function digitalWalkPublicCollectionRouteCard(route) {
+  const stopCount = getPublicDigitalWalkStops(route).length;
+  return `
+    <article class="digital-walk-collection-route-card">
+      ${route.coverImage ? `<img src="${route.coverImage}" alt="${route.title}路線封面" loading="lazy">` : ""}
+      <div class="digital-walk-draft-card-body">
+        <div>
+          <h3>${route.title}</h3>
+          ${route.district ? `<p class="digital-walk-collection-route-district">${route.district}</p>` : ""}
+        </div>
+        ${route.summary ? `<p>${route.summary}</p>` : ""}
+        <dl class="digital-walk-meta-list">
+          <div><dt>探索站點</dt><dd>${stopCount} 站</dd></div>
+          ${Number(route.estimatedMinutes) ? `<div><dt>建議時間</dt><dd>約 ${Number(route.estimatedMinutes)} 分鐘</dd></div>` : ""}
+        </dl>
+        <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}">進入數位走讀</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderDigitalWalkReleaseCandidate(identifier, stopId = "") {
+  const collection = getDigitalWalkCollection("chilan-walk");
+  const route = collection
+    ? getDigitalWalksForCollection(collection.id).find((item) => item.id === "DW-WT-001")
+    : null;
+
+  if (identifier === collection?.slug) {
+    renderDigitalWalkReleaseCandidateCollection(collection, route);
+    return;
+  }
+  if (identifier === route?.id) {
+    const options = {
+      allowDraftPreview: true,
+      routeHrefBase: "#/digital/release-candidate",
+      returnHref: `#/digital/release-candidate/${encodeURIComponent(collection.slug)}`,
+      showReleaseCandidateNotice: true,
+    };
+    if (stopId) renderDigitalWalkPublicStopDetail(route, stopId, options);
+    else renderDigitalWalkPublicRouteDetail(route, options);
+    return;
+  }
+
+  const app = document.querySelector("#app");
+  app.innerHTML = `
+    ${digitalWalkTextHeader("找不到發布候選預覽", "這個發布候選入口不存在，請返回赤蘭溪候選總覽。")}
+    <div class="digital-walk-return-row">
+      <a class="button secondary" href="#/digital/release-candidate/chilan-walk">返回發布候選總覽</a>
+    </div>
+  `;
+}
+
+function renderDigitalWalkReleaseCandidateCollection(collection, route) {
+  const app = document.querySelector("#app");
+  const topics = getChilanKnowledgeTopics();
+  const stops = route ? getPublicDigitalWalkStops(route, { allowDraftPreview: true }) : [];
+  const routes = route ? [route] : [];
+  const releaseCandidateSummary = route?.summary || collection.summary;
+  app.innerHTML = `
+    <div class="theme-detail-back digital-walk-collection-back">
+      <a class="theme-back-link" href="#/digital/draft">← 返回數位走讀草稿預覽</a>
+    </div>
+
+    <section class="digital-walk-collection-hero" aria-labelledby="digital-walk-rc-title">
+      <div class="digital-walk-collection-hero-copy">
+        <span class="digital-walk-draft-badge">發布候選預覽</span>
+        <span class="section-label">CHILAN RIVER DIGITAL WALK</span>
+        <h1 id="digital-walk-rc-title">${collection.title}</h1>
+        <p>${releaseCandidateSummary}</p>
+        <div class="digital-walk-collection-metrics" aria-label="發布候選摘要">
+          <span><strong>${routes.length}</strong> 條聚落路線</span>
+          <span><strong>${stops.length}</strong> 個探索站點</span>
+        </div>
+      </div>
+    </section>
+
+    ${digitalWalkReleaseCandidateNotice()}
+
+    <section class="digital-walk-collection-routes" aria-labelledby="digital-walk-rc-routes-title">
+      <div class="theme-section-heading">
+        <div>
+          <span class="section-label">CHOOSE A ROUTE</span>
+          <h2 id="digital-walk-rc-routes-title">選擇探索路線</h2>
+        </div>
+        <p>依建議順序閱讀站點，從聚落地景進入地方故事。</p>
+      </div>
+      <div class="digital-walk-collection-route-grid is-single-route">
+        ${routes.map((item) => digitalWalkReleaseCandidateRouteCard(item, stops.length)).join("")}
+      </div>
+    </section>
+
+    ${topics.length ? `
+      <section class="digital-walk-knowledge-section" aria-labelledby="digital-walk-rc-knowledge-title">
+        <div class="theme-section-heading">
+          <div>
+            <span class="section-label">KNOW THE RIVER</span>
+            <h2 id="digital-walk-rc-knowledge-title">認識赤蘭溪</h2>
+          </div>
+          <p>從流域、聚落生活與生態觀察，建立進入走讀路線前的地方脈絡。</p>
+        </div>
+        <div class="digital-walk-knowledge-grid">
+          ${topics.map((topic, index) => `
+            <article class="digital-walk-knowledge-card">
+              <span>${String(index + 1).padStart(2, "0")}</span>
+              <h3>${topic.title}</h3>
+              <p>${topic.description}</p>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-rc-ar-title">
+      <div>
+        <span class="section-label">AR EXPERIENCE</span>
+        <h2 id="digital-walk-rc-ar-title">想走進現場？</h2>
+        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+      </div>
+      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+    </section>
+  `;
+}
+
+function digitalWalkReleaseCandidateRouteCard(route, stopCount) {
+  return `
+    <article class="digital-walk-collection-route-card">
+      ${route.coverImage ? `<img src="${route.coverImage}" alt="${route.title}路線封面" loading="lazy">` : ""}
+      <div class="digital-walk-draft-card-body">
+        <span class="digital-walk-draft-badge">發布候選路線</span>
+        <div>
+          <h3>${route.title}</h3>
+          ${route.district ? `<p class="digital-walk-collection-route-district">${route.district}</p>` : ""}
+        </div>
+        ${route.summary ? `<p>${route.summary}</p>` : ""}
+        <dl class="digital-walk-meta-list">
+          <div><dt>探索站點</dt><dd>${stopCount} 站</dd></div>
+          ${Number(route.estimatedMinutes) ? `<div><dt>建議時間</dt><dd>約 ${Number(route.estimatedMinutes)} 分鐘</dd></div>` : ""}
+        </dl>
+        <a class="button secondary" href="#/digital/release-candidate/${encodeURIComponent(route.id)}">進入發布候選路線</a>
+      </div>
+    </article>
+  `;
+}
+
 function renderDigitalWalkDraftList() {
   const app = document.querySelector("#app");
   const routes = getDraftDigitalWalks();
+  const chilanCollection = getDigitalWalkCollection("chilan-walk");
   app.innerHTML = `
     ${digitalWalkTextHeader("線上數位走讀草稿預覽", "此頁僅供內部檢查，草稿內容尚未公開。")}
+    ${chilanCollection ? `
+      <aside class="digital-walk-collection-preview-link">
+        <div>
+          <span class="digital-walk-draft-badge">Collection 草稿</span>
+          <strong>${chilanCollection.title}</strong>
+        </div>
+        <a class="button secondary" href="#/digital/draft-collection/${encodeURIComponent(chilanCollection.slug)}">查看總入口預覽</a>
+      </aside>
+    ` : ""}
     <section class="digital-walk-draft-grid" aria-label="草稿路線列表">
       ${routes.map((route) => `
         <article class="digital-walk-draft-card">
@@ -893,6 +1322,157 @@ function digitalWalkStopCard(route, stop) {
         <a class="button secondary" href="#/digital/${encodeURIComponent(route.id)}/${encodeURIComponent(stop.id)}">查看站點</a>
       </div>
     </article>
+  `;
+}
+
+function selectPublicDigitalWalkStop(stop) {
+  if (typeof publicUx?.selectPublicDigitalWalkStop !== "function") return null;
+  return publicUx.selectPublicDigitalWalkStop(stop);
+}
+
+function getPublicDigitalWalkStops(route, options = {}) {
+  return (Array.isArray(route?.stops) ? route.stops : [])
+    .map((stop) => selectPublicDigitalWalkStop(
+      options.allowDraftPreview ? { ...stop, publicationStatus: "approved" } : stop,
+    ))
+    .filter((stop) => stop?.id && stop.name)
+    .sort((a, b) => Number(a.order) - Number(b.order));
+}
+
+function renderDigitalWalkPublicRouteDetail(route, options = {}) {
+  const app = document.querySelector("#app");
+  const stops = getPublicDigitalWalkStops(route, options);
+  const centerSingleLastStop = route.id === "DW-YG-001" && stops.length === 7;
+  const routeHrefBase = options.routeHrefBase || "#/digital";
+  app.innerHTML = `
+    ${options.returnHref ? `
+      <div class="theme-detail-back digital-walk-collection-back">
+        <a class="theme-back-link" href="${options.returnHref}">← 返回發布候選總覽</a>
+      </div>
+    ` : ""}
+    ${digitalWalkRouteHeader(route)}
+    ${options.showReleaseCandidateNotice ? digitalWalkReleaseCandidateNotice() : ""}
+    <section class="digital-walk-route-summary">
+      <div class="digital-walk-route-summary-heading">
+        <span class="digital-walk-route-feature-label">路線特色</span>
+        <h2>${route.theme}</h2>
+      </div>
+      <dl class="digital-walk-meta-list is-route-meta">
+        <div><dt>地區</dt><dd>${route.district}</dd></div>
+        <div><dt>站點</dt><dd>共 ${stops.length} 站</dd></div>
+        <div><dt>建議時間</dt><dd>約 ${route.estimatedMinutes} 分鐘</dd></div>
+        <div><dt>交通方式</dt><dd>${(route.transportModes || []).join("、")}</dd></div>
+        <div><dt>適合對象</dt><dd>${(route.audiences || []).join("、")}</dd></div>
+      </dl>
+    </section>
+    ${digitalWalkRouteMap(route)}
+    <section class="digital-walk-stops-section" aria-labelledby="digital-walk-public-stops-title">
+      <div class="section-heading">
+        <div><h2 id="digital-walk-public-stops-title">路線站點</h2></div>
+        <p>共 ${stops.length} 站，依建議順序瀏覽。</p>
+      </div>
+      <div class="digital-walk-stop-grid${centerSingleLastStop ? " has-centered-single-last" : ""}">
+        ${stops.map((stop) => digitalWalkPublicStopCard(route, stop, routeHrefBase)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function digitalWalkPublicStopCard(route, stop, routeHrefBase = "#/digital") {
+  return `
+    <article class="digital-walk-stop-card${stop.coverImage ? "" : " is-no-image"}">
+      ${stop.coverImage ? `<img src="${stop.coverImage}" alt="${stop.name}站點主圖" loading="lazy">` : ""}
+      <div class="digital-walk-stop-card-body">
+        <span class="digital-walk-stop-order">第 ${stop.order} 站</span>
+        <h3>${stop.name}</h3>
+        ${stop.localName ? `<p class="digital-walk-local-name">地方慣用名稱：${stop.localName}</p>` : ""}
+        ${stop.locationDescription ? `<p>${stop.locationDescription}</p>` : ""}
+        ${stop.recommendedMinutes ? `<span class="digital-walk-stop-time">建議停留約 ${stop.recommendedMinutes} 分鐘</span>` : ""}
+        <a class="button secondary" href="${routeHrefBase}/${encodeURIComponent(route.id)}/${encodeURIComponent(stop.id)}">查看站點</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderDigitalWalkPublicStopDetail(route, stopId, options = {}) {
+  const app = document.querySelector("#app");
+  const stops = getPublicDigitalWalkStops(route, options);
+  const routeHrefBase = options.routeHrefBase || "#/digital";
+  const routeHref = `${routeHrefBase}/${encodeURIComponent(route.id)}`;
+  const stopIndex = stops.findIndex((stop) => stop.id === stopId);
+  const stop = stops[stopIndex];
+  if (!stop) {
+    app.innerHTML = `
+      ${pageHeader("找不到數位走讀站點", "這個站點不存在，請返回路線總覽重新選擇。")}
+      <a class="button secondary" href="${routeHref}">返回路線總覽</a>
+    `;
+    return;
+  }
+
+  const previousStop = stops[stopIndex - 1];
+  const nextStop = stops[stopIndex + 1];
+  app.innerHTML = `
+    <section class="activity-detail-head digital-walk-detail-head">
+      <div class="detail-back-links">
+        <button class="text-link history-back-link" type="button">回到上一頁</button>
+        <a class="text-link" href="${routeHref}">返回路線總覽</a>
+      </div>
+      <div>
+        <div class="page-kicker">第 ${stop.order} 站／共 ${stops.length} 站</div>
+        <h1>${stop.name}</h1>
+        ${stop.localName ? `<p>地方慣用名稱：${stop.localName}</p>` : ""}
+      </div>
+    </section>
+    ${options.showReleaseCandidateNotice ? digitalWalkReleaseCandidateNotice() : ""}
+    <section class="activity-detail-layout digital-walk-stop-layout${stop.coverImage ? "" : " is-no-image"}">
+      ${stop.coverImage ? `
+        <div class="activity-detail-photo digital-walk-stop-main">
+          <img src="${stop.coverImage}" alt="${stop.name}站點主圖" loading="lazy">
+        </div>
+      ` : ""}
+      <div class="activity-detail-info">
+        ${detailInfo("位置描述", stop.locationDescription)}
+        ${stop.recommendedMinutes ? detailInfo("建議停留時間", `約 ${stop.recommendedMinutes} 分鐘`) : ""}
+        ${detailInfo("現場辨識物", stop.landmarks)}
+      </div>
+    </section>
+    ${stop.images.length ? `
+      <section class="detail-section">
+        <h2>補充照片</h2>
+        <div class="detail-gallery digital-walk-detail-gallery${stop.images.length === 2 ? " is-two-items" : ""}">
+          ${stop.images.map((src, index) => `
+            <figure class="digital-walk-gallery-item${isDigitalWalkTextImage(src) ? " is-text-content" : ""}">
+              <img src="${src}" alt="${stop.name}補充照片 ${index + 1}" loading="lazy">
+            </figure>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${digitalWalkDetailSection("故事重點", stop.storyPoints, "list")}
+    ${digitalWalkDetailSection("完整介紹", stop.description, "prose")}
+    ${digitalWalkDetailSection("觀察提示", stop.observationPrompt, "prose")}
+    ${digitalWalkReminderSection(stop)}
+    ${digitalWalkPublicSourcesSection(stop.sources)}
+    <nav class="digital-walk-stop-nav" aria-label="站點導覽">
+      ${previousStop ? `<a class="button secondary" href="${routeHref}/${encodeURIComponent(previousStop.id)}">← 上一站：${previousStop.name}</a>` : "<span></span>"}
+      ${nextStop ? `<a class="button secondary" href="${routeHref}/${encodeURIComponent(nextStop.id)}">下一站：${nextStop.name} →</a>` : "<span></span>"}
+    </nav>
+  `;
+
+  app.querySelector(".history-back-link")?.addEventListener("click", () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.hash = routeHref;
+  });
+}
+
+function digitalWalkPublicSourcesSection(sources) {
+  const displayedSources = Array.isArray(sources) ? sources.filter(Boolean) : [];
+  if (!displayedSources.length) return "";
+  return `
+    <section class="detail-section digital-walk-grouped-section" aria-labelledby="digital-walk-public-sources-title">
+      <h2 id="digital-walk-public-sources-title">資料來源</h2>
+      <ul>${displayedSources.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </section>
   `;
 }
 
@@ -1129,6 +1709,15 @@ function digitalWalkDraftNotice() {
     <aside class="digital-walk-draft-notice" aria-label="草稿狀態">
       <span class="digital-walk-draft-badge">草稿／未公開</span>
       <p>本頁僅供內容與版面檢查，尚未列入平台公開入口。</p>
+    </aside>
+  `;
+}
+
+function digitalWalkReleaseCandidateNotice() {
+  return `
+    <aside class="digital-walk-draft-notice is-release-candidate" aria-label="發布候選狀態">
+      <span class="digital-walk-draft-badge">發布候選預覽</span>
+      <p>本頁以公開安全規則呈現，尚未列入網站公開入口。</p>
     </aside>
   `;
 }
