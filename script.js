@@ -1092,19 +1092,23 @@ function digitalWalkPublicCollectionRouteCard(route) {
 
 function renderDigitalWalkReleaseCandidate(identifier, stopId = "") {
   const collection = getDigitalWalkCollection("chilan-walk");
-  const route = collection
-    ? getDigitalWalksForCollection(collection.id).find((item) => item.id === "DW-WT-001")
-    : null;
+  const collectionRoutes = collection ? getDigitalWalksForCollection(collection.id) : [];
+  const wantanRoute = collectionRoutes.find((item) => item.id === "DW-WT-001");
 
   if (identifier === collection?.slug) {
-    renderDigitalWalkReleaseCandidateCollection(collection, route);
+    renderDigitalWalkReleaseCandidateCollection(collection, wantanRoute);
     return;
   }
+  const route = collectionRoutes.find((item) => item.id === identifier);
   if (identifier === route?.id) {
+    const isYanguanPreview = route.id === "DW-YG-001";
     const options = {
       allowDraftPreview: true,
       routeHrefBase: "#/digital/release-candidate",
-      returnHref: `#/digital/release-candidate/${encodeURIComponent(collection.slug)}`,
+      returnHref: isYanguanPreview
+        ? "#/digital/draft"
+        : `#/digital/release-candidate/${encodeURIComponent(collection.slug)}`,
+      returnLabel: isYanguanPreview ? "返回數位走讀草稿預覽" : "返回發布候選總覽",
       showReleaseCandidateNotice: true,
     };
     if (stopId) renderDigitalWalkPublicStopDetail(route, stopId, options);
@@ -1294,10 +1298,10 @@ function digitalWalkRouteMap(route) {
   if (!route.routeMapImage) return "";
 
   const alt = route.id === "DW-YG-001"
-    ? "鹽館聚落數位走讀路線圖，以五個走讀區段整合七個站點，呈現站點順序與相對位置"
+    ? "鹽館聚落數位走讀路線圖，共七個探索站點，依同址或鄰近關係整合為五個區段"
     : `${route.title}路線圖`;
   const caption = route.id === "DW-YG-001"
-    ? "本圖為鹽館聚落數位走讀示意圖，主要呈現站點順序與相對位置，實際動線請依現場道路及導航資訊為準。"
+    ? "本路線共 7 個探索站點，依同址或鄰近關係整合為 5 個區段。本圖呈現走讀順序與站點分組，為非比例、非導航示意圖；實際位置與動線請以各站導航及現場狀況為準。"
     : "本圖為數位走讀示意圖，實際動線請依現場道路及導航資訊為準。";
 
   return `
@@ -1351,7 +1355,7 @@ function renderDigitalWalkPublicRouteDetail(route, options = {}) {
   app.innerHTML = `
     ${options.returnHref ? `
       <div class="theme-detail-back digital-walk-collection-back">
-        <a class="theme-back-link" href="${options.returnHref}">← 返回發布候選總覽</a>
+        <a class="theme-back-link" href="${options.returnHref}">← ${options.returnLabel || "返回發布候選總覽"}</a>
       </div>
     ` : ""}
     ${digitalWalkRouteHeader(route)}

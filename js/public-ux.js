@@ -10,6 +10,7 @@
   const FORBIDDEN_PUBLIC_STOP_IMAGES = [
     /\/unsorted\//i,
     /\/DW-YG-001\/YG-01\/cover\.jpg$/i,
+    /\/DW-YG-001\/YG-07\/02\.jpg$/i,
     /\/DW-WT-001\/WT-03\/01\.JPG$/i,
   ];
 
@@ -60,7 +61,19 @@
   }
 
   function getPublicDigitalWalks(data) {
-    return selectByDigitalWalkVisibility(data?.routes, "public");
+    const publicRoutes = selectByDigitalWalkVisibility(data?.routes, "public");
+    const routesById = new Map(publicRoutes.map((route) => [route.id, route]));
+    const orderedRoutes = [];
+    const includedRouteIds = new Set();
+    for (const collection of selectByDigitalWalkVisibility(data?.collections, "public")) {
+      for (const routeId of Array.isArray(collection.routeIds) ? collection.routeIds : []) {
+        const route = routesById.get(routeId);
+        if (!route || includedRouteIds.has(routeId)) continue;
+        orderedRoutes.push(route);
+        includedRouteIds.add(routeId);
+      }
+    }
+    return orderedRoutes.concat(publicRoutes.filter((route) => !includedRouteIds.has(route.id)));
   }
 
   function getDraftDigitalWalks(data) {
@@ -137,12 +150,20 @@
     const privateLand = ["是", "否"].includes(privateLandStatus) && isPublicDigitalWalkText(privateLandNote)
       ? { status: privateLandStatus, note: privateLandNote }
       : null;
-    const coordinates = Number.isFinite(Number(stop.coordinates?.lat)) && Number.isFinite(Number(stop.coordinates?.lng))
+    const rawCoordinates = Number.isFinite(Number(stop.coordinates?.lat)) && Number.isFinite(Number(stop.coordinates?.lng))
       ? { lat: Number(stop.coordinates.lat), lng: Number(stop.coordinates.lng) }
       : null;
     const googleMapsUrl = /^https:\/\/maps\.app\.goo\.gl\//.test(String(stop.googleMapsUrl || ""))
       ? stop.googleMapsUrl
       : "";
+    const googleMapsNote = googleMapsUrl && isPublicDigitalWalkText(stop.googleMapsNote)
+      ? String(stop.googleMapsNote).trim()
+      : "";
+    const googleMapsButtonText = googleMapsUrl && isPublicDigitalWalkText(stop.googleMapsButtonText)
+      ? String(stop.googleMapsButtonText).trim()
+      : "";
+    const usesNearbyNavigation = /鄰近定位|附近/.test(`${googleMapsNote} ${googleMapsButtonText}`);
+    const coordinates = usesNearbyNavigation ? null : rawCoordinates;
 
     return {
       id: stop.id,
@@ -162,6 +183,8 @@
       images,
       coordinates,
       googleMapsUrl,
+      googleMapsNote,
+      googleMapsButtonText,
       recommendedMinutes: Number(stop.recommendedMinutes) || 0,
     };
   }
