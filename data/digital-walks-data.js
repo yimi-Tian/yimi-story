@@ -38,8 +38,8 @@ window.DIGITAL_WALKS_DATA = {
       "summary": "鹽館聚落線上數位走讀以地方信仰、生活地景與菸業記憶為主軸，依序認識福仙宮、舊土地公廟、清山寺、夫妻樹、晉南宮、傳統洗衣池及鹽館菸樓。透過現場照片與地方故事，呈現聚落信仰、居民生活及產業發展留下的文化痕跡。",
       "coverImage": "public/images/digital/digital-walks/DW-YG-001/cover.jpg",
       "routeMapImage": "public/images/digital/digital-walks/DW-YG-001/route-map/route-map.png",
-      "publicationStatus": "draft",
-      "publiclyListed": false,
+      "publicationStatus": "approved",
+      "publiclyListed": true,
       "stops": [
         {
           "routeId": "DW-YG-001",
@@ -96,7 +96,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "需自行補拍福仙宮完整橫式正面照"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -152,7 +152,7 @@ window.DIGITAL_WALKS_DATA = {
             "確認舊廟拆除、遷移或保留遺構的原因",
             "補拍遺構全貌及與福仙宮的空間關係"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -213,7 +213,7 @@ window.DIGITAL_WALKS_DATA = {
             "確認主祀神明、建廟沿革及地方祭典",
             "確認室內神壇照片是否可公開使用"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -272,7 +272,7 @@ window.DIGITAL_WALKS_DATA = {
             "樹種、樹齡及地方傳說細節待後續查證",
             "補拍橫式全景與樹幹交纏細節"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -331,7 +331,7 @@ window.DIGITAL_WALKS_DATA = {
             "確認「王爺廟」是否為地方慣用名稱",
             "補充主祀神明、建廟沿革及地方祭典資料"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -393,7 +393,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "洗衣池水源、建造年代及現今使用狀況待後續查證"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         },
         {
           "routeId": "DW-YG-001",
@@ -459,7 +459,7 @@ window.DIGITAL_WALKS_DATA = {
           "pendingItems": [
             "菸樓所有人、管理者、建造年代、使用家族及停止使用時間待後續查證"
           ],
-          "publicationStatus": "draft"
+          "publicationStatus": "approved"
         }
       ]
     },

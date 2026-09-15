@@ -61,7 +61,19 @@
   }
 
   function getPublicDigitalWalks(data) {
-    return selectByDigitalWalkVisibility(data?.routes, "public");
+    const publicRoutes = selectByDigitalWalkVisibility(data?.routes, "public");
+    const routesById = new Map(publicRoutes.map((route) => [route.id, route]));
+    const orderedRoutes = [];
+    const includedRouteIds = new Set();
+    for (const collection of selectByDigitalWalkVisibility(data?.collections, "public")) {
+      for (const routeId of Array.isArray(collection.routeIds) ? collection.routeIds : []) {
+        const route = routesById.get(routeId);
+        if (!route || includedRouteIds.has(routeId)) continue;
+        orderedRoutes.push(route);
+        includedRouteIds.add(routeId);
+      }
+    }
+    return orderedRoutes.concat(publicRoutes.filter((route) => !includedRouteIds.has(route.id)));
   }
 
   function getDraftDigitalWalks(data) {

@@ -223,8 +223,8 @@ test("兩條赤蘭溪路線以 collectionId 關聯，不依標題或地區文字
 });
 
 test("public 與 draft selectors 嚴格採用狀態及列表旗標的雙條件", () => {
-  assert.deepEqual(getPublicDigitalWalks(digitalWalks).map((route) => route.id), ["DW-WT-001"]);
-  assert.deepEqual(getDraftDigitalWalks(digitalWalks).map((route) => route.id), ["DW-YG-001"]);
+  assert.deepEqual(getPublicDigitalWalks(digitalWalks).map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
+  assert.deepEqual(getDraftDigitalWalks(digitalWalks).map((route) => route.id), []);
 
   const fixture = {
     routes: [
@@ -263,7 +263,7 @@ test("collection preview 依 routeIds 動態輸出 WT、YG 與實際站數", () 
   const routes = getDigitalWalksForCollection(digitalWalks, collection.id);
   assert.deepEqual(routes.map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
   assert.deepEqual(routes.map((route) => Number(route.stopCount)), [5, 7]);
-  assert.deepEqual(routes.map((route) => route.publicationStatus), ["approved", "draft"]);
+  assert.deepEqual(routes.map((route) => route.publicationStatus), ["approved", "approved"]);
   assert.match(collectionPreviewSource, /getDigitalWalksForCollection\(collection\.id\)/);
   assert.match(collectionPreviewSource, /routes\.map\(digitalWalkCollectionRouteCard\)/);
   assert.match(collectionPreviewSource, /route\.stopCount/);
@@ -318,8 +318,8 @@ test("public selector 與 renderer 不輸出 pending、rights 或內部待辦字
   const wantanStops = digitalWalks.routes.find((route) => route.id === "DW-WT-001").stops;
   const yanguanStops = digitalWalks.routes.find((route) => route.id === "DW-YG-001").stops;
   assert.ok(wantanStops.every((stop) => selectPublicDigitalWalkStop(stop)));
-  assert.ok(yanguanStops.every((stop) => selectPublicDigitalWalkStop(stop) === null));
-  const selectedStops = digitalWalkStops.map(selectApprovedStopFixture);
+  assert.ok(yanguanStops.every((stop) => selectPublicDigitalWalkStop(stop)));
+  const selectedStops = digitalWalkStops.map(selectPublicDigitalWalkStop);
   assert.equal(selectedStops.length, 12);
   for (const stop of selectedStops) {
     assert.ok(stop);
@@ -390,18 +390,20 @@ test("public sources 僅保留可對外來源，rights 只控制媒體而不直�
   assert.match(publicStopRendererSource, /digitalWalkPublicSourcesSection\(stop\.sources\)/);
 });
 
-test("正式 public renderer 只接受 approved + listed 的灣潭路線", () => {
+test("正式 public renderer 只接受 approved + listed 的灣潭與鹽館路線", () => {
   assert.match(source, /getPublicDigitalWalks\(\)\.find\(\(route\) => route\.id === detail\)/);
-  assert.deepEqual(getPublicDigitalWalks(digitalWalks).map((route) => route.id), ["DW-WT-001"]);
-  assert.deepEqual(getDraftDigitalWalks(digitalWalks).map((route) => route.id), ["DW-YG-001"]);
+  assert.deepEqual(getPublicDigitalWalks(digitalWalks).map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
+  assert.deepEqual(getDraftDigitalWalks(digitalWalks).map((route) => route.id), []);
   assert.match(publicCollectionSource, /getDigitalWalksForCollection\(collection\.id, "public"\)/);
   assert.match(publicCollectionSource, /href="#\/digital\/\$\{encodeURIComponent\(route\.id\)\}">進入數位走讀/);
 });
 
-test("正式赤蘭溪 collection 只輸出灣潭且不含內部預覽標示", () => {
+test("正式赤蘭溪 collection 依 routeIds 輸出灣潭、鹽館且不含內部預覽標示", () => {
+  const collection = getDigitalWalkCollection(digitalWalks, "chilan-walk", "public");
   const routes = getDigitalWalksForCollection(digitalWalks, "chilan-walk", "public");
-  assert.deepEqual(routes.map((route) => route.id), ["DW-WT-001"]);
-  assert.doesNotMatch(routes[0].summary, /鹽館/);
+  assert.deepEqual(collection.routeIds, ["DW-WT-001", "DW-YG-001"]);
+  assert.deepEqual(routes.map((route) => route.id), collection.routeIds);
+  assert.deepEqual(routes.map((route) => route.title), ["灣潭聚落線上數位走讀", "鹽館聚落線上數位走讀"]);
   assert.match(publicCollectionSource, /const publicSummary = routes\.length === 1/);
   assert.doesNotMatch(
     publicCollectionSource,
@@ -429,12 +431,12 @@ test("RC collection 明確只取灣潭路線且保留原 collection 雙路線關
   assert.doesNotMatch(route.summary, /鹽館/);
 });
 
-test("Stage 6B 鹽館 RC 使用 public-safe adapter 且七站維持草稿", () => {
+test("Stage 6C 鹽館 RC 使用 public-safe adapter 且七站已核准", () => {
   const route = digitalWalks.routes.find((item) => item.id === "DW-YG-001");
   const selected = route.stops.map(selectReleaseCandidateStop);
-  assert.equal(route.publicationStatus, "draft");
-  assert.equal(route.publiclyListed, false);
-  assert.ok(route.stops.every((stop) => stop.publicationStatus === "draft"));
+  assert.equal(route.publicationStatus, "approved");
+  assert.equal(route.publiclyListed, true);
+  assert.ok(route.stops.every((stop) => stop.publicationStatus === "approved"));
   assert.deepEqual(selected.map((stop) => stop.id), ["YG-01", "YG-02", "YG-03", "YG-04", "YG-05", "YG-06", "YG-07"]);
   assert.match(releaseCandidateSource, /const route = collectionRoutes\.find\(\(item\) => item\.id === identifier\)/);
   assert.match(releaseCandidateSource, /const isYanguanPreview = route\.id === "DW-YG-001"/);
@@ -493,6 +495,26 @@ test("Stage 6B 鹽館七站公開候選文案、圖片與觀看界線符合人�
     "public/images/digital/digital-walks/DW-YG-001/YG-07/03.jpg",
   ]);
   assert.doesNotMatch(JSON.stringify(selected["YG-07"]), /YG-07\/02\.jpg/);
+});
+
+test("Stage 6C 鹽館正式 route 與七站依序使用 public-safe renderer", () => {
+  const route = getPublicDigitalWalks(digitalWalks).find((item) => item.id === "DW-YG-001");
+  const selected = route.stops.map(selectPublicDigitalWalkStop);
+  assert.ok(route);
+  assert.deepEqual(selected.map((stop) => stop.id), ["YG-01", "YG-02", "YG-03", "YG-04", "YG-05", "YG-06", "YG-07"]);
+  assert.match(source, /const publicRoute = getPublicDigitalWalks\(\)\.find\(\(route\) => route\.id === detail\)/);
+  assert.match(source, /renderDigitalWalkPublicRouteDetail\(publicRoute\)/);
+  assert.match(source, /renderDigitalWalkPublicStopDetail\(publicRoute, stopId\)/);
+  assert.match(publicStopRendererSource, /const previousStop = stops\[stopIndex - 1\]/);
+  assert.match(publicStopRendererSource, /const nextStop = stops\[stopIndex \+ 1\]/);
+  for (const stop of selected) {
+    assert.ok(stop);
+    assert.equal(Object.hasOwn(stop, "pendingItems"), false);
+    assert.equal(Object.hasOwn(stop, "rights"), false);
+    assert.equal(Object.hasOwn(stop, "publicationStatus"), false);
+    assert.equal(Object.hasOwn(stop, "publiclyListed"), false);
+    assert.doesNotMatch(JSON.stringify(stop), /待確認|待補|待整理|待查|需訪談|正式發布前|草稿|draft/i);
+  }
 });
 
 test("Stage 6B 鹽館路線圖明示七站、五區段及非比例非導航", () => {
@@ -575,14 +597,14 @@ test("灣潭 RC 無 route map 時自然省略地圖區塊", () => {
   assert.match(publicRouteRendererSource, /digitalWalkRouteMap\(route\)/);
 });
 
-test("原 draft collection 與鹽館 draft preview 不受 RC 影響", () => {
+test("原 collection 預覽保留完整關聯，draft 清單在 promotion 後自然不列鹽館", () => {
   assert.match(collectionPreviewSource, /getDigitalWalksForCollection\(collection\.id\)/);
   assert.deepEqual(
     getDigitalWalksForCollection(digitalWalks, "chilan-walk").map((route) => route.id),
     ["DW-WT-001", "DW-YG-001"],
   );
   assert.match(source, /getDraftDigitalWalks\(\)\.find\(\(route\) => route\.id === detail\)/);
-  assert.ok(getDraftDigitalWalks(digitalWalks).some((route) => route.id === "DW-YG-001"));
+  assert.deepEqual(getDraftDigitalWalks(digitalWalks), []);
 });
 
 test("RC 單路線與既有手機樣式維持無水平溢位基礎", () => {
@@ -613,9 +635,9 @@ test("Stage 5B-1 以人工確認的 WT-03 公共道路觀看文字通過發布 g
   assert.equal(wantan.publicationStatus, "approved");
   assert.equal(wantan.publiclyListed, true);
   assert.ok(wantan.stops.every((stop) => stop.publicationStatus === "approved"));
-  assert.equal(yanguan.publicationStatus, "draft");
-  assert.equal(yanguan.publiclyListed, false);
-  assert.ok(yanguan.stops.every((stop) => stop.publicationStatus === "draft"));
+  assert.equal(yanguan.publicationStatus, "approved");
+  assert.equal(yanguan.publiclyListed, true);
+  assert.ok(yanguan.stops.every((stop) => stop.publicationStatus === "approved"));
 
   const publicWt03 = selectPublicDigitalWalkStop(wt03);
   assert.equal(publicWt03.coverImage, "");
