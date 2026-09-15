@@ -1299,10 +1299,14 @@ function digitalWalkRouteMap(route) {
 
   const alt = route.id === "DW-YG-001"
     ? "鹽館聚落數位走讀路線圖，共七個探索站點，依同址或鄰近關係整合為五個區段"
-    : `${route.title}路線圖`;
+    : route.id === "DW-WT-001"
+      ? "灣潭聚落數位走讀路線圖，共五個探索站點"
+      : `${route.title}路線圖`;
   const caption = route.id === "DW-YG-001"
     ? "本路線共 7 個探索站點，依同址或鄰近關係整合為 5 個區段。本圖呈現走讀順序與站點分組，為非比例、非導航示意圖；實際位置與動線請以各站導航及現場狀況為準。"
-    : "本圖為數位走讀示意圖，實際動線請依現場道路及導航資訊為準。";
+    : route.id === "DW-WT-001"
+      ? "本路線共 5 個探索站點。本圖呈現走讀順序與站點分布，為非比例、非導航示意圖；實際位置與動線請以各站導航及現場狀況為準。"
+      : "本圖為數位走讀示意圖，實際動線請依現場道路及導航資訊為準。";
 
   return `
     <section class="digital-walk-map-section" aria-labelledby="digital-walk-map-title">

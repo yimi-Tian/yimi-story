@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import test from "node:test";
 import { parseCsv } from "../../tools/content/csv.mjs";
@@ -590,11 +590,33 @@ test("RC route 與五站導覽全程維持 release-candidate namespace", () => {
   assert.match(releaseCandidateSource, /routeHrefBase: "#\/digital\/release-candidate"/);
 });
 
-test("灣潭 RC 無 route map 時自然省略地圖區塊", () => {
+test("灣潭正式 route 使用既有五站路線圖且不改站點順序", async () => {
   const route = digitalWalks.routes.find((item) => item.id === "DW-WT-001");
-  assert.equal(route.routeMapImage, null);
+  const wt03 = selectPublicDigitalWalkStop(route.stops.find((stop) => stop.id === "WT-03"));
+  assert.equal(route.routeMapImage, "public/images/digital/digital-walks/DW-WT-001/route-map/route-map.png");
+  assert.ok((await stat(new URL(route.routeMapImage, root))).isFile());
+  assert.equal(route.stopCount, 5);
+  assert.deepEqual(route.stops.map((stop) => [stop.id, stop.name]), [
+    ["WT-01", "泗洲佛祖寺"],
+    ["WT-02", "仙姑娘廟"],
+    ["WT-03", "百年芒果樹"],
+    ["WT-04", "灣潭溪"],
+    ["WT-05", "灣潭煙樓"],
+  ]);
+  assert.equal(wt03.coverImage, "");
+  assert.deepEqual(wt03.images, []);
   assert.match(source, /function digitalWalkRouteMap\(route\) \{[\s\S]*if \(!route\.routeMapImage\) return ""/);
   assert.match(publicRouteRendererSource, /digitalWalkRouteMap\(route\)/);
+  assert.match(source, /本路線共 5 個探索站點。本圖呈現走讀順序與站點分布，為非比例、非導航示意圖；實際位置與動線請以各站導航及現場狀況為準。/);
+});
+
+test("鹽館 route map 與赤蘭溪公開順序不受灣潭接線影響", () => {
+  const yanguan = digitalWalks.routes.find((item) => item.id === "DW-YG-001");
+  assert.equal(yanguan.routeMapImage, "public/images/digital/digital-walks/DW-YG-001/route-map/route-map.png");
+  assert.equal(yanguan.stopCount, 7);
+  assert.match(source, /本路線共 7 個探索站點，依同址或鄰近關係整合為 5 個區段/);
+  assert.deepEqual(getPublicDigitalWalks(digitalWalks).map((route) => route.id), ["DW-WT-001", "DW-YG-001"]);
+  assert.ok(digitalWalks.routes.every((route) => route.publicationStatus === "approved" && route.publiclyListed === true));
 });
 
 test("原 collection 預覽保留完整關聯，draft 清單在 promotion 後自然不列鹽館", () => {
