@@ -369,9 +369,12 @@ test("public mode 保留安全與私人土地提醒，且先提醒再提供導�
   assert.ok(selected.safetyNotes.length);
   assert.deepEqual(selected.privateLand, {
     status: "是",
-    note: "戶外為公共空間，無法進入內部拍攝。",
+    note: "建物不可進入；僅可從公共巷道外部觀看。",
   });
   assert.match(selected.googleMapsUrl, /^https:\/\/maps\.app\.goo\.gl\//);
+  assert.equal(selected.googleMapsButtonText, "導航至晉南宮附近");
+  assert.match(selected.googleMapsNote, /鄰近定位.*不提供菸樓精確定位/);
+  assert.equal(selected.coordinates, null);
   const safetyIndex = source.indexOf("<h3>安全提醒</h3>", source.indexOf("function digitalWalkReminderSection"));
   const privateLandIndex = source.indexOf("<h3>私人土地或進入提醒</h3>", safetyIndex);
   const mapIndex = source.indexOf("<h3>位置導航</h3>", privateLandIndex);
@@ -418,11 +421,84 @@ test("RC collection 明確只取灣潭路線且保留原 collection 雙路線關
   const collection = getDigitalWalkCollection(digitalWalks, "chilan-walk");
   const route = digitalWalks.routes.find((item) => item.id === "DW-WT-001");
   assert.deepEqual(collection.routeIds, ["DW-WT-001", "DW-YG-001"]);
-  assert.match(releaseCandidateSource, /getDigitalWalksForCollection\(collection\.id\)\.find\(\(item\) => item\.id === "DW-WT-001"\)/);
-  assert.doesNotMatch(releaseCandidateSource, /DW-YG-001|鹽館聚落線上數位走讀/);
+  assert.match(releaseCandidateSource, /const collectionRoutes = collection \? getDigitalWalksForCollection\(collection\.id\) : \[\]/);
+  assert.match(releaseCandidateSource, /const wantanRoute = collectionRoutes\.find\(\(item\) => item\.id === "DW-WT-001"\)/);
+  assert.match(releaseCandidateSource, /renderDigitalWalkReleaseCandidateCollection\(collection, wantanRoute\)/);
   assert.match(releaseCandidateSource, /const routes = route \? \[route\] : \[\]/);
   assert.match(releaseCandidateSource, /const releaseCandidateSummary = route\?\.summary \|\| collection\.summary/);
   assert.doesNotMatch(route.summary, /鹽館/);
+});
+
+test("Stage 6B 鹽館 RC 使用 public-safe adapter 且七站維持草稿", () => {
+  const route = digitalWalks.routes.find((item) => item.id === "DW-YG-001");
+  const selected = route.stops.map(selectReleaseCandidateStop);
+  assert.equal(route.publicationStatus, "draft");
+  assert.equal(route.publiclyListed, false);
+  assert.ok(route.stops.every((stop) => stop.publicationStatus === "draft"));
+  assert.deepEqual(selected.map((stop) => stop.id), ["YG-01", "YG-02", "YG-03", "YG-04", "YG-05", "YG-06", "YG-07"]);
+  assert.match(releaseCandidateSource, /const route = collectionRoutes\.find\(\(item\) => item\.id === identifier\)/);
+  assert.match(releaseCandidateSource, /const isYanguanPreview = route\.id === "DW-YG-001"/);
+  assert.match(releaseCandidateSource, /returnHref: isYanguanPreview\s*\? "#\/digital\/draft"\s*: `#\/digital\/release-candidate\/\$\{encodeURIComponent\(collection\.slug\)\}`/);
+  for (const stop of selected) {
+    assert.equal(Object.hasOwn(stop, "pendingItems"), false);
+    assert.equal(Object.hasOwn(stop, "rights"), false);
+    assert.equal(Object.hasOwn(stop, "publicationStatus"), false);
+    assert.doesNotMatch(JSON.stringify(stop), /待確認|待補|待整理|待查|內部編輯/);
+  }
+});
+
+test("Stage 6B 鹽館七站公開候選文案、圖片與觀看界線符合人工確認", () => {
+  const selected = Object.fromEntries(
+    digitalWalks.routes
+      .find((item) => item.id === "DW-YG-001")
+      .stops
+      .map((stop) => [stop.id, selectReleaseCandidateStop(stop)]),
+  );
+
+  assert.equal(selected["YG-01"].coverImage, "");
+  assert.deepEqual(selected["YG-01"].images, []);
+  assert.match(selected["YG-01"].description, /福仙宮.*水仙尊王.*龍泉/);
+
+  assert.match(selected["YG-02"].description, /舊土地公廟留下來的遺構/);
+  assert.match(selected["YG-02"].coverImage, /YG-02\/cover\.jpg$/);
+  assert.deepEqual(selected["YG-02"].images, ["public/images/digital/digital-walks/DW-YG-001/YG-02/01.JPG"]);
+
+  assert.match(selected["YG-03"].description, /清山寺是鹽館聚落中的信仰場域之一/);
+  assert.match(selected["YG-03"].coverImage, /YG-03\/cover\.jpg$/);
+  assert.deepEqual(selected["YG-03"].images, []);
+
+  assert.match(selected["YG-04"].description, /地方稱為「夫妻樹」/);
+  const yg04Safety = selected["YG-04"].safetyNotes.join(" ");
+  assert.match(yg04Safety, /道路沿線.*注意來車.*不進入周邊農地/);
+  assert.match(yg04Safety, /不攀爬.*破壞樹木/);
+  assert.doesNotMatch(JSON.stringify(selected["YG-04"]), /樹種|樹齡/);
+
+  assert.doesNotMatch(JSON.stringify(selected["YG-05"]), /王爺廟|主祀|沿革|祭典/);
+  assert.deepEqual(selected["YG-05"].images, []);
+
+  assert.match(selected["YG-06"].description, /過去確實供居民洗衣使用/);
+  assert.doesNotMatch(JSON.stringify(selected["YG-06"]), /水源|建造年代/);
+  assert.deepEqual(selected["YG-06"].privateLand, {
+    status: "否",
+    note: "位於晉南宮旁公共空間，不需進入私人土地或住家範圍即可觀看。",
+  });
+
+  assert.match(selected["YG-07"].description, /過去確實作為菸樓使用.*公共巷道/);
+  assert.doesNotMatch(JSON.stringify(selected["YG-07"]), /所有人|管理者|建造年代|使用家族|停用年份/);
+  assert.equal(selected["YG-07"].coordinates, null);
+  assert.equal(selected["YG-07"].googleMapsButtonText, "導航至晉南宮附近");
+  assert.match(selected["YG-07"].googleMapsNote, /鄰近定位/);
+  assert.deepEqual(selected["YG-07"].images, [
+    "public/images/digital/digital-walks/DW-YG-001/YG-07/01.JPG",
+    "public/images/digital/digital-walks/DW-YG-001/YG-07/03.jpg",
+  ]);
+  assert.doesNotMatch(JSON.stringify(selected["YG-07"]), /YG-07\/02\.jpg/);
+});
+
+test("Stage 6B 鹽館路線圖明示七站、五區段及非比例非導航", () => {
+  assert.match(source, /本路線共 7 個探索站點，依同址或鄰近關係整合為 5 個區段/);
+  assert.match(source, /為非比例、非導航示意圖/);
+  assert.match(source, /實際位置與動線請以各站導航及現場狀況為準/);
 });
 
 test("RC 灣潭五站全部經 public sanitizer 且不輸出內部欄位", () => {
