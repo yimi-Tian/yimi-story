@@ -485,7 +485,7 @@ window.DIGITAL_WALKS_DATA = {
       ],
       "summary": "灣潭聚落線上數位走讀以地方信仰、百年老樹、溪流水環境與煙樓產業記憶為主軸，依序認識泗洲佛祖寺、仙姑娘廟、百年芒果樹、灣潭溪及灣潭煙樓。透過現場照片與地方故事，呈現聚落信仰、居民生活、自然環境及產業發展留下的文化痕跡。",
       "coverImage": "public/images/digital/digital-walks/DW-WT-001/cover.JPG",
-      "routeMapImage": null,
+      "routeMapImage": "public/images/digital/digital-walks/DW-WT-001/route-map/route-map.png",
       "publicationStatus": "approved",
       "publiclyListed": true,
       "stops": [
