@@ -73,7 +73,7 @@ window.PLATFORM_HOME_DATA = {
   "platformStats": [
     {
       "label": "活動成果",
-      "value": "64",
+      "value": "65",
       "unit": "筆",
       "description": "歷年正式活動成果"
     },
