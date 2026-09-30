@@ -203,8 +203,7 @@ a.exploration-module-card:focus-visible {
 
 .exploration-flow-card h3,
 .guide-point-card h3,
-.exploration-panel h2,
-.ar-placeholder h2 {
+.exploration-panel h2 {
   margin: 0;
   color: var(--color-primary-dark);
 }
@@ -591,22 +590,6 @@ a.exploration-module-card:focus-visible {
   white-space: nowrap;
 }
 
-.ar-placeholder {
-  display: grid;
-  gap: 1rem;
-  align-items: center;
-  padding: 1.35rem;
-  background: linear-gradient(135deg, #ffffff 0%, var(--color-bg-soft) 100%);
-  border: 1px solid var(--color-border);
-  border-radius: 22px;
-  box-shadow: 0 12px 30px rgba(6, 75, 107, 0.08);
-}
-
-.ar-placeholder p {
-  margin: 0.6rem 0 0;
-  color: var(--color-text-muted);
-}
-
 .exploration-theme-link {
   display: grid;
   gap: 0.35rem;
@@ -645,9 +628,6 @@ a.exploration-module-card:focus-visible {
     grid-column: 1 / -1;
   }
 
-  .ar-placeholder {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
 }
 
 @media (min-width: 1080px) {

@@ -104,7 +104,7 @@ const siteData = {
       title: "地方探索",
       href: "#/digital/chilan-walk",
       kicker: "Explore",
-      description: "透過赤蘭溪數位走讀與 AR 走讀，認識流域聚落、地方故事與生活記憶。",
+      description: "透過赤蘭溪數位走讀與走讀闖關，認識流域聚落、地方故事與生活記憶。",
     },
     {
       title: "社團紀錄",
@@ -122,8 +122,8 @@ const siteData = {
   digitalTours: [
     {
       slug: "game",
-      title: "赤蘭溪闖關遊戲",
-      description: "結合守護靈赤靈、AR 相機互動與闖關任務，讓民眾以遊戲方式認識流域文化。",
+      title: "赤蘭溪走讀闖關",
+      description: "跟著守護靈赤靈，透過地圖、地方故事與四個任務認識流域文化。",
       image: "public/images/activities/112-014/cover.jpg",
       externalUrl: "https://cycc-yimi.github.io/grandma-memory-box/",
     },
@@ -202,34 +202,26 @@ const siteData = {
     },
   ],
   chilan: {
-    description:
-      "赤蘭溪流域文化館整合本校近年於赤蘭溪流域推動的地方調查、走讀課程、文化工作坊、學員創作與數位互動成果，透過課程與公共參與累積地方知識，並以赤靈 AR 闖關體驗作為民眾認識流域文化的互動入口。",
-    arUrl: "https://cycc-yimi.github.io/grandma-memory-box/",
-    note:
-      "本互動體驗網站結合赤靈角色、AR 相機互動與闖關任務，作為赤蘭溪地方知識教育推廣工具。",
-    questions: [
-      {
-        question: "赤蘭溪互動體驗主要希望民眾認識什麼？",
-        options: ["流域文化與地方故事", "線上購物流程", "都市交通規劃"],
-        answer: 0,
-      },
-      {
-        question: "赤靈在互動體驗中扮演什麼角色？",
-        options: ["引導角色", "抽獎系統", "報名表單"],
-        answer: 0,
-      },
-      {
-        question: "這個體驗結合哪一種數位互動？",
-        options: ["AR 相機互動", "純文字測驗", "資料庫管理"],
-        answer: 0,
-      },
+    title: "赤蘭溪走讀闖關",
+    description: "跟著赤靈走進灣潭與鹽館，透過地圖、地方故事與四個任務，認識赤蘭溪流域的生活記憶。",
+    externalUrl: "https://cycc-yimi.github.io/grandma-memory-box/",
+    playFacts: [
+      { label: "關卡數", value: "4 個關卡" },
+      { label: "每關點數", value: "2 點" },
+      { label: "完成點數", value: "共 8 點" },
+    ],
+    playSteps: [
+      "依照地圖指引，依序完成四個任務。",
+      "每關包含地方故事與選擇題，答對後可前往完整數位走讀。",
+      "進度會保存在目前使用的瀏覽器，重新整理後可繼續。",
+    ],
+    quests: [
+      { number: "第一關", title: "重建的巧手", location: "泗洲佛祖寺" },
+      { number: "第二關", title: "山谷的搬運手", location: "仙姑娘廟" },
+      { number: "第三關", title: "金黃色傳家寶", location: "鹽館菸樓（晉南宮附近）" },
+      { number: "第四關", title: "流動的日常", location: "晉南宮" },
     ],
   },
-};
-
-const gameState = {
-  points: 0,
-  answered: new Set(),
 };
 
 let activityCache = null;
@@ -964,13 +956,13 @@ function renderDigitalWalkCollectionPreview(collectionSlug) {
       </section>
     ` : ""}
 
-    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-collection-ar-title">
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-collection-quest-title">
       <div>
-        <span class="section-label">AR EXPERIENCE</span>
-        <h2 id="digital-walk-collection-ar-title">想走進現場？</h2>
-        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+        <span class="section-label">FIELD QUEST</span>
+        <h2 id="digital-walk-collection-quest-title">想走進現場？</h2>
+        <p>跟著赤靈完成四個走讀任務，從灣潭與鹽館的地方故事認識流域文化。</p>
       </div>
-      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+      <a class="button" href="#/digital/game">前往赤蘭溪走讀闖關</a>
     </section>
   `;
 }
@@ -1058,13 +1050,13 @@ function renderDigitalWalkPublicCollection(collection) {
       </section>
     ` : ""}
 
-    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-public-ar-title">
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-public-quest-title">
       <div>
-        <span class="section-label">AR EXPERIENCE</span>
-        <h2 id="digital-walk-public-ar-title">想走進現場？</h2>
-        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+        <span class="section-label">FIELD QUEST</span>
+        <h2 id="digital-walk-public-quest-title">想走進現場？</h2>
+        <p>跟著赤靈完成四個走讀任務，從灣潭與鹽館的地方故事認識流域文化。</p>
       </div>
-      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+      <a class="button" href="#/digital/game">前往赤蘭溪走讀闖關</a>
     </section>
   `;
 }
@@ -1185,13 +1177,13 @@ function renderDigitalWalkReleaseCandidateCollection(collection, route) {
       </section>
     ` : ""}
 
-    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-rc-ar-title">
+    <section class="digital-walk-collection-ar" aria-labelledby="digital-walk-rc-quest-title">
       <div>
-        <span class="section-label">AR EXPERIENCE</span>
-        <h2 id="digital-walk-rc-ar-title">想走進現場？</h2>
-        <p>透過既有的赤蘭溪 AR 走讀入口，以互動任務認識流域文化。</p>
+        <span class="section-label">FIELD QUEST</span>
+        <h2 id="digital-walk-rc-quest-title">想走進現場？</h2>
+        <p>跟著赤靈完成四個走讀任務，從灣潭與鹽館的地方故事認識流域文化。</p>
       </div>
-      <a class="button" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+      <a class="button" href="#/digital/game">前往赤蘭溪走讀闖關</a>
     </section>
   `;
 }
@@ -1737,28 +1729,49 @@ function digitalWalkReleaseCandidateNotice() {
 function renderChilanGame() {
   const app = document.querySelector("#app");
   app.innerHTML = `
-    ${pageHeader("赤蘭溪闖關遊戲", siteData.chilan.description)}
-    <section class="interactive-layout">
-      <div class="guardian-panel">
-        <div class="guardian-mark">赤靈</div>
-        <h2>以互動方式認識流域文化</h2>
-        <p>保留闖關答題、點數系統與赤靈 AR 入口，讓成果網站能連結既有的赤蘭溪互動體驗。</p>
-        <div class="point-box">
-          <span>目前點數</span>
-          <strong id="point-count">${gameState.points}</strong>
+    ${pageHeader(siteData.chilan.title, siteData.chilan.description)}
+    <section class="quest-entry-guide" aria-labelledby="quest-entry-guide-title">
+      <div class="quest-entry-guardian-row">
+        <div class="guardian-mark" aria-hidden="true">赤靈</div>
+        <div>
+          <span class="section-label">CHILAN RIVER QUEST</span>
+          <h2 id="quest-entry-guide-title">遊玩方式</h2>
+          <p>開啟正式闖關網站後，依照地圖指引走訪現場，閱讀地方故事並完成任務。</p>
         </div>
-        <button class="button" type="button" id="summon-ar">召喚赤靈，開始流域闖關</button>
       </div>
-      <div class="quiz-panel">
-        ${siteData.chilan.questions.map((item, index) => questionCard(item, index)).join("")}
+      <dl class="quest-entry-metrics">
+        ${siteData.chilan.playFacts.map((item) => `<div><dt>${item.label}</dt><dd>${item.value}</dd></div>`).join("")}
+      </dl>
+      <ol class="quest-entry-steps">
+        ${siteData.chilan.playSteps.map((item) => `<li>${item}</li>`).join("")}
+      </ol>
+      <div class="quest-entry-actions">
+        <a class="button quest-entry-primary" href="${siteData.chilan.externalUrl}" target="_blank" rel="noopener noreferrer">召喚赤靈，開始走讀闖關</a>
+        <a class="button secondary" href="#/digital/chilan-walk">查看赤蘭溪數位走讀</a>
       </div>
     </section>
-    <p class="interactive-note">${siteData.chilan.note}</p>
+    <section class="quest-entry-levels" aria-labelledby="quest-entry-levels-title">
+      <div class="theme-section-heading">
+        <div>
+          <span class="section-label">FOUR QUESTS</span>
+          <h2 id="quest-entry-levels-title">四個走讀關卡</h2>
+        </div>
+        <p>入口頁只提供關卡與地點摘要；完整故事與題目請前往正式闖關網站。</p>
+      </div>
+      <div class="quest-entry-level-grid">
+        ${siteData.chilan.quests.map((quest, index) => `
+          <article class="quest-entry-level-card">
+            <span class="quest-entry-level-number">${String(index + 1).padStart(2, "0")}</span>
+            <div>
+              <span>${quest.number}</span>
+              <h3>${quest.title}</h3>
+              <p>${quest.location}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+    </section>
   `;
-  document.querySelectorAll("[data-answer]").forEach((button) => {
-    button.addEventListener("click", handleAnswer);
-  });
-  document.querySelector("#summon-ar").addEventListener("click", summonChiling);
 }
 
 function renderEarlyLifePodcast() {
@@ -3824,26 +3837,6 @@ function emptyYearBlock(year) {
   `;
 }
 
-function questionCard(item, index) {
-  return `
-    <article class="question-card" data-question="${index}">
-      <h3>${index + 1}. ${item.question}</h3>
-      <div class="answer-list">
-        ${item.options
-          .map(
-            (option, optionIndex) => `
-              <button type="button" data-answer="${optionIndex}" data-question-index="${index}">
-                ${option}
-              </button>
-            `
-          )
-          .join("")}
-      </div>
-      <p class="answer-feedback" aria-live="polite"></p>
-    </article>
-  `;
-}
-
 function getActivities() {
   if (activityCache) return activityCache;
   activityCache = parseCsv(ACTIVITY_CSV)
@@ -4026,35 +4019,6 @@ function unique(values) {
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("zh-Hant");
-}
-
-function handleAnswer(event) {
-  const button = event.currentTarget;
-  const questionIndex = Number(button.dataset.questionIndex);
-  const answerIndex = Number(button.dataset.answer);
-  const question = siteData.chilan.questions[questionIndex];
-  const card = button.closest(".question-card");
-  const feedback = card.querySelector(".answer-feedback");
-
-  card.querySelectorAll("button").forEach((item) => {
-    item.disabled = true;
-  });
-  if (answerIndex === question.answer) {
-    feedback.textContent = "答對了，獲得 10 點！";
-    feedback.className = "answer-feedback correct";
-    if (!gameState.answered.has(questionIndex)) {
-      gameState.points += 10;
-      gameState.answered.add(questionIndex);
-    }
-  } else {
-    feedback.textContent = `再想想，正確答案是「${question.options[question.answer]}」。`;
-    feedback.className = "answer-feedback wrong";
-  }
-  document.querySelector("#point-count").textContent = gameState.points;
-}
-
-function summonChiling() {
-  window.open(siteData.chilan.arUrl, "_blank", "noopener,noreferrer");
 }
 
 function slugFromHref(href) {

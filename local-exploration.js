@@ -355,26 +355,11 @@
       <section class="exploration-section exploration-panel" aria-labelledby="exploration-next-title">
         <span class="section-label">EXPLORE CHILAN RIVER</span>
         <h2 id="exploration-next-title">繼續探索赤蘭溪</h2>
-        <p>透過線上數位走讀認識灣潭聚落，也可以前往 AR 走讀展開實地探索。</p>
+        <p>透過線上數位走讀認識灣潭與鹽館，也可以跟著赤靈完成四個地方走讀任務。</p>
         <div class="theme-banner-actions">
           <a class="button" href="#/digital/chilan-walk">前往赤蘭溪數位走讀</a>
-          <a class="button secondary" href="#/digital/game">前往赤蘭溪 AR走讀</a>
+          <a class="button secondary" href="#/digital/game">前往赤蘭溪走讀闖關</a>
         </div>
-      </section>
-    `;
-  }
-
-  function renderArPanel(module) {
-    const description = module.detailContent?.arDescription;
-    if (!hasValue(description) && !hasValue(module.arStatus)) return "";
-    return `
-      <section class="exploration-section ar-placeholder" aria-labelledby="ar-placeholder-title">
-        <div>
-          <span class="section-label">AR EXPERIENCE</span>
-          <h2 id="ar-placeholder-title">AR 體驗預留區</h2>
-          ${hasValue(description) ? `<p>${description}</p>` : ""}
-        </div>
-        ${statusPill(module.arStatus)}
       </section>
     `;
   }
