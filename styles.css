@@ -188,7 +188,8 @@ button {
 .theme-card p,
 .showcase-card p,
 .placeholder-feature p,
-.guardian-panel p,
+.quest-entry-guide p,
+.quest-entry-level-card p,
 .info-row p {
   margin: 0;
   color: var(--muted);
@@ -369,8 +370,8 @@ button {
 .podcast-card,
 .podcast-intro,
 .empty-year-block,
-.guardian-panel,
-.quiz-panel,
+.quest-entry-guide,
+.quest-entry-levels,
 .placeholder-feature {
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid var(--cream-line);
@@ -1955,7 +1956,7 @@ button {
 .portal-card h2,
 .theme-card h2,
 .showcase-card h2,
-.guardian-panel h2,
+.quest-entry-guide h2,
 .placeholder-feature h2 {
   margin: 0;
   font-size: 1.35rem;
@@ -2829,16 +2830,27 @@ button.text-link {
   border: 1px solid var(--cream-line);
 }
 
-.interactive-layout {
+.quest-entry-guide,
+.quest-entry-levels {
   display: grid;
+  gap: 1.25rem;
+  margin: 1rem 0 2rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
+  background: #fff;
+  border: 1px solid var(--cream-line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.quest-entry-guardian-row {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
-.guardian-panel,
-.quiz-panel {
+.quest-entry-guardian-row > div:last-child {
   display: grid;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 0.45rem;
 }
 
 .guardian-mark {
@@ -2853,83 +2865,108 @@ button.text-link {
   font-weight: 900;
 }
 
-.point-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.8rem 0.9rem;
-  background: var(--paper-soft);
-  border: 1px solid var(--cream-line);
-  border-radius: 8px;
-}
-
-.point-box span {
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.point-box strong {
-  color: var(--stream-dark);
-  font-size: 2rem;
-}
-
-.question-card {
+.quest-entry-metrics {
   display: grid;
-  gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.quest-entry-metrics div {
+  display: grid;
+  gap: 0.25rem;
   padding: 0.9rem;
   background: var(--paper-soft);
   border: 1px solid var(--cream-line);
   border-radius: 8px;
 }
 
-.question-card h3 {
+.quest-entry-metrics dt,
+.quest-entry-level-card > div > span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.quest-entry-metrics dd {
   margin: 0;
-  font-size: 1.05rem;
-}
-
-.answer-list {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.answer-list button {
-  padding: 0.65rem 0.75rem;
-  color: var(--coffee);
-  background: #fff;
-  border: 1px solid var(--cream-line);
-  border-radius: 8px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.answer-list button:disabled {
-  cursor: default;
-  opacity: 0.72;
-}
-
-.answer-feedback {
-  min-height: 1.5rem;
-  margin: 0;
+  color: var(--stream-dark);
+  font-size: 1.15rem;
   font-weight: 900;
 }
 
-.answer-feedback.correct {
-  color: var(--stream-dark);
+.quest-entry-steps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding-left: 1.4rem;
+  color: var(--coffee);
 }
 
-.answer-feedback.wrong {
-  color: #9b4d35;
+.quest-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.interactive-note {
-  margin: 1rem 0 0;
-  padding: 0.85rem 1rem;
-  color: var(--muted);
-  background: rgba(255, 250, 242, 0.78);
+.quest-entry-primary {
+  min-height: 46px;
+}
+
+.quest-entry-level-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.quest-entry-level-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+  padding: 1rem;
+  background: var(--paper-soft);
   border: 1px solid var(--cream-line);
   border-radius: 8px;
-  font-size: 0.95rem;
+}
+
+.quest-entry-level-number {
+  display: grid;
+  width: 2.6rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: #fff;
+  background: var(--stream-dark);
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.quest-entry-level-card h3 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.12rem;
+}
+
+@media (max-width: 719px) {
+  .quest-entry-guardian-row {
+    align-items: flex-start;
+  }
+
+  .quest-entry-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-entry-actions {
+    display: grid;
+  }
+
+  .quest-entry-actions .button {
+    width: 100%;
+    min-height: 46px;
+    text-align: center;
+  }
+
+  .quest-entry-level-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .showcase-card {
@@ -3855,10 +3892,13 @@ code {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .interactive-layout,
   .placeholder-feature {
     grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.2fr);
     align-items: start;
+  }
+
+  .quest-entry-level-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .podcast-intro {

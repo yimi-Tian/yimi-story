@@ -45,7 +45,7 @@
       "icon": "探",
       "iconSrc": "",
       "name": "地方探索",
-      "description": "透過數位走讀與 AR 走讀認識赤蘭溪地方故事。",
+      "description": "透過數位走讀與走讀闖關認識赤蘭溪地方故事。",
       "href": "index.html#/digital/chilan-walk"
     },
     {
@@ -234,8 +234,8 @@
   "latest": [
     {
       "type": "地方探索",
-      "title": "赤蘭溪 AR 探索",
-      "summary": "沿著流域故事，認識聚落生活與地方記憶。",
+      "title": "赤蘭溪走讀闖關",
+      "summary": "跟著赤靈完成四個任務，認識灣潭與鹽館的地方記憶。",
       "date": "2026-06-28",
       "image": "assets/images/platform-home/latest-river.jpg",
       "href": "index.html#/digital/game"

@@ -21,6 +21,7 @@ const source = await readFile(new URL("script.js", root), "utf8");
 const platformSource = await readFile(new URL("js/platform-home.js", root), "utf8");
 const explorationSource = await readFile(new URL("local-exploration.js", root), "utf8");
 const explorationDataSource = await readFile(new URL("local-exploration-data.js", root), "utf8");
+const platformHomeDataSource = await readFile(new URL("data/platform-home-data.js", root), "utf8");
 const styles = await readFile(new URL("styles.css", root), "utf8");
 const platformStyles = await readFile(new URL("css/platform-home.css", root), "utf8");
 const index = await readFile(new URL("index.html", root), "utf8");
@@ -29,6 +30,11 @@ const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), 
 const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
 const explorationModules = JSON.parse(await readFile(new URL("data/exploration-modules.json", root), "utf8"));
 const platformHome = JSON.parse(await readFile(new URL("data/platform-home.json", root), "utf8"));
+const platformHomeRuntime = JSON.parse(
+  platformHomeDataSource
+    .replace(/^window\.PLATFORM_HOME_DATA\s*=\s*/, "")
+    .replace(/;\s*$/, ""),
+);
 const activities = parseCsv(await readFile(new URL("activities.csv", root), "utf8"));
 const collectionPreviewSource = source.slice(
   source.indexOf("function renderDigitalWalkCollectionPreview"),
@@ -49,6 +55,10 @@ const publicStopRendererSource = source.slice(
 const releaseCandidateSource = source.slice(
   source.indexOf("function renderDigitalWalkReleaseCandidate"),
   source.indexOf("function renderDigitalWalkDraftList"),
+);
+const chilanGameSource = source.slice(
+  source.indexOf("function renderChilanGame"),
+  source.indexOf("function renderEarlyLifePodcast"),
 );
 const publicRouteRendererSource = source.slice(
   source.indexOf("function renderDigitalWalkPublicRouteDetail"),
@@ -88,7 +98,7 @@ test("赤蘭溪舊詳細頁改為地方知識並保留三個背景主題", () =>
   assert.deepEqual(chilan.guidePoints.map((point) => point.code), ["RL001", "RL002", "RL003"]);
   assert.match(explorationDataSource, /title: "赤蘭溪地方知識"/);
   assert.match(explorationSource, /前往赤蘭溪數位走讀/);
-  assert.match(explorationSource, /前往赤蘭溪 AR走讀/);
+  assert.match(explorationSource, /前往赤蘭溪走讀闖關/);
   assert.match(explorationSource, /並非 GPS 導航|地方知識主題示意圖/);
 
   const detailRenderer = explorationSource.slice(
@@ -111,15 +121,16 @@ test("舊規劃模組沒有公開入口且直接舊網址安全導回新版入�
   assert.ok(explorationModules.modules.some((module) => module.id === "food-agriculture-place"));
 });
 
-test("平台首頁改接正式地方探索入口、真正 AR 與赤蘭溪背景知識", () => {
+test("平台首頁改接正式地方探索、走讀闖關與赤蘭溪背景知識", () => {
   const explorationHall = platformHome.halls.find((hall) => hall.name === "地方探索");
   const chilanKnowledge = platformHome.featuredResults.find((item) => item.id === "chilan-river-exploration");
-  const arItem = platformHome.latest.find((item) => item.title === "赤蘭溪 AR 探索");
+  const questItem = platformHome.latest.find((item) => item.title === "赤蘭溪走讀闖關");
   assert.equal(explorationHall.href, "index.html#/digital/chilan-walk");
   assert.equal(chilanKnowledge.link, "index.html#/explore/chilan-river");
   assert.equal(chilanKnowledge.title, "赤蘭溪地方知識");
-  assert.equal(arItem.href, "index.html#/digital/game");
+  assert.equal(questItem.href, "index.html#/digital/game");
   assert.ok(!platformHome.latest.some((item) => item.title === "朴子醫療文化"));
+  assert.deepEqual(platformHomeRuntime, platformHome);
 });
 
 test("共用封面 resolver 依 explicit、gallery、legacy、placeholder 決定順序", () => {
@@ -184,14 +195,47 @@ test("導覽顯示新資訊架構、移除活動照片入口並保留舊 route r
   assert.match(source, /\["activity-photos", "photos"\]\.includes\(route\.detail\)[\s\S]*location\.replace\("#\/overview"\)/);
 });
 
-test("地方探索公開選單只顯示赤蘭溪 AR 與已發布數位走讀", () => {
+test("地方探索公開選單只顯示赤蘭溪走讀闖關與已發布數位走讀", () => {
   assert.match(index, /data-nav="themes">主題館[\s\S]*?#\/themes\/food-agriculture[\s\S]*?#\/themes\/marine-education[\s\S]*?#\/themes\/local-culture[\s\S]*?#\/themes\/environmental-education/);
-  assert.match(index, /data-nav="explore">地方探索[\s\S]*?<div class="nav-menu">\s*<a href="#\/digital\/game">赤蘭溪 AR走讀<\/a>\s*<a href="#\/digital\/chilan-walk">赤蘭溪數位走讀<\/a>\s*<\/div>/);
+  assert.match(index, /data-nav="explore">地方探索[\s\S]*?<div class="nav-menu">\s*<a href="#\/digital\/game">赤蘭溪走讀闖關<\/a>\s*<a href="#\/digital\/chilan-walk">赤蘭溪數位走讀<\/a>\s*<\/div>/);
   assert.doesNotMatch(index, /赤蘭溪探索模組|朴子醫療文化探索|海線生活探索|食農地方探索/);
   assert.doesNotMatch(index, /#\/digital\/(?:DW-WT-001|DW-YG-001|puzi-medical)/);
   assert.match(source, /slug: "chilan-walk"/);
   assert.match(source, /slug: "puzi-medical"/);
   assert.match(source, /detail === "game"[\s\S]*renderChilanGame/);
+});
+
+test("赤蘭溪走讀闖關入口改接外部四關並移除平台三題計分", () => {
+  assert.match(source, /title: "赤蘭溪走讀闖關"/);
+  assert.match(source, /4 個關卡/);
+  assert.match(source, /label: "每關點數", value: "2 點"/);
+  assert.match(source, /共 8 點/);
+  for (const value of [
+    "重建的巧手",
+    "泗洲佛祖寺",
+    "山谷的搬運手",
+    "仙姑娘廟",
+    "金黃色傳家寶",
+    "鹽館菸樓（晉南宮附近）",
+    "流動的日常",
+    "晉南宮",
+  ]) {
+    assert.match(source, new RegExp(value));
+  }
+  assert.match(chilanGameSource, /href="\$\{siteData\.chilan\.externalUrl\}" target="_blank" rel="noopener noreferrer">召喚赤靈，開始走讀闖關<\/a>/);
+  assert.match(source, /externalUrl: "https:\/\/cycc-yimi\.github\.io\/grandma-memory-box\/"/);
+  assert.match(chilanGameSource, /href="#\/digital\/chilan-walk">查看赤蘭溪數位走讀<\/a>/);
+  assert.doesNotMatch(source, /const gameState|function questionCard|function handleAnswer|summonChiling|data-answer|point-count|獲得 10 點|30 分|30分/);
+  assert.doesNotMatch(chilanGameSource, /quiz|questions|答錯|正確答案/);
+});
+
+test("公開入口統一走讀闖關名稱且不宣稱 AR 相機互動", () => {
+  for (const publicText of [index, JSON.stringify(platformHome), chilanGameSource, explorationSource]) {
+    assert.doesNotMatch(publicText, /赤蘭溪 AR走讀|赤蘭溪 AR 探索|AR 相機互動/);
+  }
+  assert.equal((source.match(/前往赤蘭溪走讀闖關/g) || []).length, 3);
+  assert.match(styles, /@media \(max-width: 719px\)[\s\S]*?\.quest-entry-level-grid\s*\{[\s\S]*?grid-template-columns: 1fr/);
+  assert.match(styles, /\.quest-entry-actions \.button[\s\S]*?min-height: 46px/);
 });
 
 test("赤蘭溪 collection 以固定 slug 與有序 routeIds 建立 canonical 關係", () => {
@@ -271,7 +315,7 @@ test("collection preview 依 routeIds 動態輸出 WT、YG 與實際站數", () 
   assert.doesNotMatch(collectionPreviewSource, /DW-WT-001|DW-YG-001|灣潭聚落線上數位走讀|鹽館聚落線上數位走讀/);
 });
 
-test("collection preview 移除 ABOUT 段落並依路線、背景、AR 排序", () => {
+test("collection preview 移除 ABOUT 段落並依路線、背景、走讀闖關排序", () => {
   assert.doesNotMatch(collectionPreviewSource, /ABOUT THE COLLECTION|digital-walk-collection-position|digital-walk-position-title/);
   const routesIndex = collectionPreviewSource.indexOf("digital-walk-collection-routes");
   const knowledgeIndex = collectionPreviewSource.indexOf("digital-walk-knowledge-section");
@@ -289,7 +333,7 @@ test("collection preview 唯讀使用 RL 公開摘要且排除內部整理欄位
   assert.doesNotMatch(`${chilanKnowledgeSource}${collectionPreviewSource}`, /pendingItems|photoDirections|guidePointStatus|資料整理中|建置中/);
 });
 
-test("collection Hero 不使用圖片，AR CTA 導向既有公開入口", () => {
+test("collection Hero 不使用圖片，走讀闖關 CTA 導向既有公開入口", () => {
   const heroSource = collectionPreviewSource.slice(
     collectionPreviewSource.indexOf("digital-walk-collection-hero"),
     collectionPreviewSource.indexOf("digitalWalkDraftNotice"),
