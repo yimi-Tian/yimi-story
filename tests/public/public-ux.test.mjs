@@ -117,8 +117,37 @@ const selectReleaseCandidateStop = (stop) => selectPublicDigitalWalkStop({
   publicationStatus: "approved",
 });
 
+test("SPA 新導航回頁首且瀏覽歷史可還原各 entry 的捲動位置", () => {
+  assert.match(source, /const scrollPositions = new Map\(\)/);
+  assert.match(source, /history\.replaceState\(\{ \.\.\.state, yimiScrollEntryKey: key \}, ""\)/);
+  assert.match(source, /window\.addEventListener\("scroll", rememberScrollPosition, \{ passive: true \}\)/);
+  assert.match(source, /scrollPositions\.set\(ensureScrollEntryKey\(\), \{[\s\S]*x: window\.scrollX,[\s\S]*y: window\.scrollY/);
+  assert.match(source, /window\.addEventListener\("popstate", \(\) => \{[\s\S]*restoreScrollFromHistory = true/);
+  assert.match(source, /if \(!restoreScrollFromHistory\) ensureScrollEntryKey\(true\)/);
+  assert.match(source, /const savedPosition = restoreScrollFromHistory \? scrollPositions\.get\(entryKey\) : null/);
+  assert.match(source, /top: savedPosition\?\.y \?\? 0,[\s\S]*left: savedPosition\?\.x \?\? 0/);
+  assert.match(source, /restoreScrollFromHistory = false;[\s\S]*requestAnimationFrame/);
+  assert.doesNotMatch(source, /requestAnimationFrame\(\(\) => window\.scrollTo\(\{ top: 0, left: 0/);
+});
+
+test("成果、主題、社團與數位走讀共用捲動還原且 redirect 不沿用舊位置", () => {
+  assert.match(source, /if \(route\.page === "overview"\) renderOverview\(\)/);
+  assert.match(source, /else if \(route\.page === "themes"\) renderThemes\(route\.detail\)/);
+  assert.match(source, /else if \(route\.page === "clubs"\) renderClubs\(route\.detail\)/);
+  assert.match(source, /else if \(route\.page === "digital" \|\| route\.page === "chilan"\) renderDigitalTours/);
+  assert.match(source, /function replaceLegacyRoute\(hash\) \{[\s\S]*restoreScrollFromHistory = false;[\s\S]*scrollPositions\.delete\(ensureScrollEntryKey\(\)\);[\s\S]*window\.location\.replace\(hash\)/);
+  assert.match(source, /replaceLegacyRoute\("#\/digital\/chilan-walk"\)/);
+  assert.match(source, /replaceLegacyRoute\("#\/clubs\/wood-repair"\)/);
+});
+
+test("公開聯絡手機保留正確 tel 連結且不再誤標為 LINE", () => {
+  assert.match(source, /<dt>聯絡手機<\/dt><dd><a href="tel:0905935899">0905-935-899<\/a><\/dd>/);
+  assert.doesNotMatch(source, /<dt>\s*(?:Line|LINE)\s*<\/dt>[\s\S]{0,120}tel:0905935899/);
+  assert.doesNotMatch(`${index}\n${platform}`, />\s*(?:Line|LINE)\s*</);
+});
+
 test("舊地方探索館導向正式赤蘭溪數位走讀且公開導覽不再連館頁", () => {
-  assert.match(source, /route\.page === "explore" && !route\.detail[\s\S]*window\.location\.replace\("#\/digital\/chilan-walk"\)/);
+  assert.match(source, /route\.page === "explore" && !route\.detail[\s\S]*replaceLegacyRoute\("#\/digital\/chilan-walk"\)/);
   assert.match(index, /class="nav-trigger" href="#\/digital\/chilan-walk" data-nav="explore">地方探索<\/a>/);
   assert.match(platform, /href="index\.html#\/digital\/chilan-walk">地方探索<\/a>/);
   assert.doesNotMatch(index, /class="nav-trigger" href="#\/explore"/);
@@ -225,7 +254,7 @@ test("導覽顯示新資訊架構、移除活動照片入口並保留舊 route r
   assert.doesNotMatch(index, /#\/showcase\/activity-photos/);
   assert.doesNotMatch(index, /查看照片成果/);
   assert.equal(showcase.categories.some((item) => item.id === "activity-photos"), false);
-  assert.match(source, /\["activity-photos", "photos"\]\.includes\(route\.detail\)[\s\S]*location\.replace\("#\/overview"\)/);
+  assert.match(source, /\["activity-photos", "photos"\]\.includes\(route\.detail\)[\s\S]*replaceLegacyRoute\("#\/overview"\)/);
 });
 
 test("地方探索公開選單只顯示赤蘭溪走讀闖關與已發布數位走讀", () => {
@@ -939,7 +968,7 @@ test("正式學習成果只顯示可用分類並讓空分類舊 route 靜默導�
   for (const categoryId of ["walking-records", "video-records", "publication-materials", "old-photos"]) {
     assert.doesNotMatch(index, new RegExp(`#/showcase/${categoryId}`));
   }
-  assert.match(source, /route\.page === "showcase" && \["walking-records", "video-records", "publication-materials", "old-photos"\]\.includes\(route\.detail\)[\s\S]*window\.location\.replace\("#\/showcase"\)/);
+  assert.match(source, /route\.page === "showcase" && \["walking-records", "video-records", "publication-materials", "old-photos"\]\.includes\(route\.detail\)[\s\S]*replaceLegacyRoute\("#\/showcase"\)/);
   assert.match(source, /const publicCategories = showcaseData\.categories\.filter\(\(category\) => isBrowsableShowcaseCategory\(category\.id\)\)/);
   assert.match(source, /publicCategories\.map\(\(category\) => showcaseCategoryCard\(category, categoryCounts\)\)/);
   assert.match(source, /瀏覽班級學習與共同成果/);
@@ -973,7 +1002,7 @@ test("零筆成果使用中性空狀態且 legacy digital route 導回正式入�
   assert.match(emptyYearSource, /目前沒有符合條件的公開成果/);
   assert.doesNotMatch(emptyYearSource, /資料待補|內容建置中|尚待補充/);
   assert.match(source, /count \? `\$\{count\} 件活動已匯入` : "目前沒有公開成果"/);
-  assert.match(source, /route\.page === "digital" && \["", "early-life", "puzi-medical"\]\.includes\(route\.detail\)[\s\S]*window\.location\.replace\("#\/digital\/chilan-walk"\)/);
+  assert.match(source, /route\.page === "digital" && \["", "early-life", "puzi-medical"\]\.includes\(route\.detail\)[\s\S]*replaceLegacyRoute\("#\/digital\/chilan-walk"\)/);
   assert.match(source, /getDigitalWalkCollection\(detail, "public"\)[\s\S]*renderDigitalWalkPublicCollection\(publicCollection\)/);
   assert.match(source, /route\.detail === "class-results" \|\| route\.detail === "student-works"/);
   assert.match(source, /function getPublicClubs\(\)[\s\S]*publicationStatus === "approved"/);
