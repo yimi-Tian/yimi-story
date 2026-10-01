@@ -225,14 +225,58 @@ const siteData = {
 };
 
 let activityCache = null;
+const scrollPositions = new Map();
+let scrollEntrySequence = 0;
+let restoreScrollFromHistory = false;
 
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-window.addEventListener("hashchange", render);
+ensureScrollEntryKey();
+window.addEventListener("scroll", rememberScrollPosition, { passive: true });
+window.addEventListener("popstate", () => {
+  restoreScrollFromHistory = true;
+});
+window.addEventListener("hashchange", () => {
+  if (!restoreScrollFromHistory) ensureScrollEntryKey(true);
+  render();
+});
 document.addEventListener("DOMContentLoaded", () => {
   syncClubNavigation();
   initNavDropdowns();
   render();
 });
+
+function ensureScrollEntryKey(forceNew = false) {
+  const state = history.state && typeof history.state === "object" ? history.state : {};
+  if (!forceNew && state.yimiScrollEntryKey) return state.yimiScrollEntryKey;
+  scrollEntrySequence += 1;
+  const key = `yimi-scroll-${Date.now()}-${scrollEntrySequence}`;
+  history.replaceState({ ...state, yimiScrollEntryKey: key }, "");
+  return key;
+}
+
+function rememberScrollPosition() {
+  scrollPositions.set(ensureScrollEntryKey(), {
+    x: window.scrollX,
+    y: window.scrollY,
+  });
+}
+
+function restoreScrollPositionAfterRender() {
+  const entryKey = ensureScrollEntryKey();
+  const savedPosition = restoreScrollFromHistory ? scrollPositions.get(entryKey) : null;
+  restoreScrollFromHistory = false;
+  requestAnimationFrame(() => window.scrollTo({
+    top: savedPosition?.y ?? 0,
+    left: savedPosition?.x ?? 0,
+    behavior: "auto",
+  }));
+}
+
+function replaceLegacyRoute(hash) {
+  restoreScrollFromHistory = false;
+  scrollPositions.delete(ensureScrollEntryKey());
+  window.location.replace(hash);
+}
 
 function getRoute() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
@@ -248,29 +292,29 @@ function getRoute() {
 function render() {
   const route = getRoute();
   if (route.page === "explore" && !route.detail) {
-    window.location.replace("#/digital/chilan-walk");
+    replaceLegacyRoute("#/digital/chilan-walk");
     return;
   }
   const isLegacyWoodRepairTheme =
     (route.page === "themes" || route.page === "theme") && route.detail === "wood-repair";
   if (isLegacyWoodRepairTheme) {
-    window.location.replace("#/clubs/wood-repair");
+    replaceLegacyRoute("#/clubs/wood-repair");
     return;
   }
   if (route.page === "clubs" && route.detail === "multi-dance") {
-    window.location.replace("#/clubs");
+    replaceLegacyRoute("#/clubs");
     return;
   }
   if (route.page === "showcase" && ["activity-photos", "photos"].includes(route.detail)) {
-    window.location.replace("#/overview");
+    replaceLegacyRoute("#/overview");
     return;
   }
   if (route.page === "showcase" && ["walking-records", "video-records", "publication-materials", "old-photos"].includes(route.detail)) {
-    window.location.replace("#/showcase");
+    replaceLegacyRoute("#/showcase");
     return;
   }
   if (route.page === "digital" && ["", "early-life", "puzi-medical"].includes(route.detail)) {
-    window.location.replace("#/digital/chilan-walk");
+    replaceLegacyRoute("#/digital/chilan-walk");
     return;
   }
   const app = document.querySelector("#app");
@@ -302,7 +346,7 @@ function render() {
   else renderHome();
   initCategoryExpanders();
   bindImageFallbacks();
-  requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+  restoreScrollPositionAfterRender();
 }
 
 function updateNav(page) {
@@ -2120,7 +2164,7 @@ function renderAbout() {
         <div><dt>電子郵件</dt><dd><a href="mailto:cycc222@gmail.com">cycc222@gmail.com</a></dd></div>
         <div><dt>地址</dt><dd>校本部－嘉義縣中埔鄉91號B1<br>朴子分校－嘉義縣朴子市山通路7號B1</dd></div>
         <div><dt>Facebook</dt><dd><a href="https://www.facebook.com/IMDCC" target="_blank" rel="noopener noreferrer">邑米社區大學 Facebook</a></dd></div>
-        <div><dt>Line</dt><dd><a href="tel:0905935899">0905935899</a></dd></div>
+        <div><dt>聯絡手機</dt><dd><a href="tel:0905935899">0905-935-899</a></dd></div>
         <div><dt>服務時間</dt><dd>校本部－週一至週五 08:30–17:00<br>朴子分校－週二至週五 09:00–16:30</dd></div>
       </dl>
     </section>
