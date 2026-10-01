@@ -872,7 +872,7 @@ test("正式社團頁隱藏 pending 圖說與內部資料狀態，草稿仍保�
   assert.match(clubNotesRendererSource, /function renderClubSources\(club, isDraft\) \{\s*if \(!isDraft\) return "";/);
   assert.match(clubNotesRendererSource, /function renderClubPendingItems\(club, isDraft\) \{\s*if \(!isDraft\) return "";/);
   assert.match(clubNotesRendererSource, /isDraft[\s\S]*pendingItems\.map/);
-  assert.match(source, /本網站內容作為邑米社區大學課程、活動及地方學習成果紀錄使用/);
+  assert.match(source, /本網站內容作為邑米社區大學課程、活動及地方學習成果紀錄使用。部分地方文史、照片及田野資料由課程、活動參與者或社區夥伴提供；如涉及資料來源、著作權、肖像權或內容更正事項，歡迎聯繫邑米社區大學，我們將協助確認、修正或下架。/);
   assert.match(index, /若內容涉及權利、來源補充或需更正，歡迎聯繫邑米社區大學/);
   assert.match(platform, /若內容涉及權利、來源補充或需更正，歡迎聯繫邑米社區大學/);
 });
