@@ -77,9 +77,21 @@ const clubDetailRendererSource = source.slice(
   source.indexOf("function renderClubDetail"),
   source.indexOf("function getClubName"),
 );
+const clubOverviewRendererSource = source.slice(
+  source.indexOf("function renderClubs"),
+  source.indexOf("function renderShowcase"),
+);
+const clubOverviewCardsSource = source.slice(
+  source.indexOf("function clubServiceCards"),
+  source.indexOf("function getActivityPhotoCandidates"),
+);
 const clubServiceRendererSource = source.slice(
   source.indexOf("function clubServiceRecordCard"),
   source.indexOf("function clubRepresentativeActivityCard"),
+);
+const clubNotesRendererSource = source.slice(
+  source.indexOf("function renderClubSources"),
+  source.indexOf("function clubDetailBlock"),
 );
 const clubActivityRendererSource = source.slice(
   source.indexOf("function clubActivityCard"),
@@ -762,7 +774,9 @@ test("木工修繕社 renderer 支援新舊 serviceRecord 並避免重複代表�
   assert.match(clubDetailRendererSource, /club\.serviceRecords\.map\(clubServiceRecordCard\)/);
   assert.match(clubDetailRendererSource, /club\.id === "wood-repair" \? "相關成果故事" : "相關成果活動"/);
   assert.match(clubServiceRendererSource, /typeof item === "string"[\s\S]*<h3>\$\{item\}<\/h3>/);
-  assert.match(clubServiceRendererSource, /item\.title[\s\S]*item\.date[\s\S]*item\.location[\s\S]*item\.summary/);
+  assert.match(clubServiceRendererSource, /item\.title[\s\S]*clubServiceRecordMetaItems\(item, relatedActivity\)[\s\S]*item\.summary/);
+  assert.match(clubServiceRendererSource, /const date = String\(item\.date/);
+  assert.match(clubServiceRendererSource, /const location = String\(item\.location/);
   assert.match(clubServiceRendererSource, /#\/overview\/activity\/\$\{encodeURIComponent\(relatedActivity\.id\)\}\/\$\{encodeURIComponent/);
   assert.match(clubServiceRendererSource, /查看完整成果故事/);
   assert.doesNotMatch(clubServiceRendererSource, /\[object Object\]/);
@@ -822,12 +836,45 @@ test("薩克斯風圖片維持公開權利但不與個別場次強制對應", ()
   assert.match(clubDetailRendererSource, /club\.id === "saxophone-group" \? "演出紀錄" : "社區服務紀錄"/);
   assert.match(clubDetailRendererSource, /club-service-grid\$\{club\.id === "saxophone-group" \? " is-performance" : ""\}/);
   assert.match(clubDetailRendererSource, /club\.id === "saxophone-group" && Array\.isArray\(club\.serviceRecords\)[\s\S]*筆演出紀錄/);
-  assert.match(clubDetailRendererSource, /activities\.length \|\| \(!isDraft && club\.id !== "saxophone-group"\)/);
+  assert.match(clubDetailRendererSource, /\$\{activities\.map\(\(activity\) => clubActivityCard/);
+  assert.doesNotMatch(clubDetailRendererSource, /clubEmptyState\("此社團相關成果活動目前為資料整理中/);
   assert.match(clubServiceRendererSource, /typeof item === "string"/);
   assert.doesNotMatch(clubServiceRendererSource, /\[object Object\]/);
   assert.match(styles, /\.club-service-grid\.is-performance\s*\{[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.club-service-grid\.is-performance,[\s\S]*grid-template-columns:\s*1fr/);
   assert.deepEqual(clubsRuntime, clubs);
+});
+
+test("社團 dropdown 由正式公開 selector 動態產生且不顯示整理中入口", () => {
+  const publicClubs = clubs.clubs
+    .filter((club) => club.publicationStatus === "approved" && club.publiclyListed === true && club.pageMode !== "preparing" && club.category !== "preparing")
+    .sort((a, b) => Number(a.displayOrder) - Number(b.displayOrder));
+  assert.deepEqual(publicClubs.map((club) => club.id), ["wood-repair", "saxophone-group"]);
+  assert.deepEqual(publicClubs.map((club) => club.shortTitle), ["木工修繕社", "薩克斯風自主演出團體"]);
+  assert.match(index, /<div class="nav-menu" data-club-nav-menu><\/div>/);
+  assert.doesNotMatch(index, /社團紀錄資料整理中|#\/clubs\/club-records-preparing/);
+  assert.match(source, /function syncClubNavigation\(\)[\s\S]*getPublicClubs\(\)[\s\S]*getClubShortTitle\(club\)/);
+});
+
+test("社團總覽與詳細頁正確顯示結構化服務紀錄且年份不重複", () => {
+  assert.match(clubOverviewCardsSource, /records\.map\(clubServiceOverviewCard\)/);
+  assert.match(clubOverviewCardsSource, /const title = isStructured \? record\.title : record/);
+  assert.match(clubOverviewCardsSource, /getClubShortTitle\(club\)/);
+  assert.doesNotMatch(clubOverviewCardsSource, /<h3>\$\{item\.record\}<\/h3>/);
+  assert.match(clubServiceRendererSource, /dateIncludesYear[\s\S]*year && !dateIncludesYear[\s\S]*date[\s\S]*location/);
+  assert.doesNotMatch(clubServiceRendererSource, /<span>\$\{year\} 年<\/span>[\s\S]*<span>\$\{item\.date\}<\/span>/);
+  assert.doesNotMatch(clubOverviewCardsSource, /\[object Object\]/);
+});
+
+test("正式社團頁隱藏 pending 圖說與內部資料狀態，草稿仍保留", () => {
+  assert.match(clubDetailRendererSource, /photo\.activitySourceStatus !== "pending"/);
+  assert.match(clubDetailRendererSource, /isDraft \|\| !hasPendingGallerySources/);
+  assert.match(clubNotesRendererSource, /function renderClubSources\(club, isDraft\) \{\s*if \(!isDraft\) return "";/);
+  assert.match(clubNotesRendererSource, /function renderClubPendingItems\(club, isDraft\) \{\s*if \(!isDraft\) return "";/);
+  assert.match(clubNotesRendererSource, /isDraft[\s\S]*pendingItems\.map/);
+  assert.match(source, /本網站內容作為邑米社區大學課程、活動及地方學習成果紀錄使用/);
+  assert.match(index, /若內容涉及權利、來源補充或需更正，歡迎聯繫邑米社區大學/);
+  assert.match(platform, /若內容涉及權利、來源補充或需更正，歡迎聯繫邑米社區大學/);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {
