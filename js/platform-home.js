@@ -17,7 +17,7 @@
       return { ...hall, name: "成果故事", description: "瀏覽邑米推動的活動、計畫、公共參與與地方行動。" };
     }
     if (href.includes("#/showcase")) {
-      return { ...hall, name: "學習成果", description: "瀏覽班級學習、走讀、影音、出版與地方素材。" };
+      return { ...hall, name: "學習成果", description: "瀏覽各地班級的學習花絮、課程實作與共同成果。" };
     }
     if (href.includes("#/explore")) return { ...hall, name: "地方探索" };
     if (href === "#platform-about") return { ...hall, href: "index.html#/about" };
@@ -289,7 +289,12 @@
   }
 
   function renderNews(news) {
-    document.querySelector("#news-list").innerHTML = news.map((item) => `
+    const section = document.querySelector(".news-section");
+    const container = document.querySelector("#news-list");
+    const publicNews = Array.isArray(news) ? news.filter((item) => item?.href && item.href !== "#") : [];
+    if (!section || !container) return;
+    section.hidden = publicNews.length === 0;
+    container.innerHTML = publicNews.map((item) => `
       <a class="news-item" href="${escapeHtml(item.href)}">
         <time datetime="${escapeHtml(item.date)}">${escapeHtml(formatDate(item.date))}</time>
         <span class="news-category">${escapeHtml(item.category)}</span>

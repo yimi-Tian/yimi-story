@@ -85,19 +85,19 @@
     },
     {
       "label": "地方主題",
-      "value": "5",
+      "value": "4",
       "unit": "大",
       "description": "地方議題成果脈絡"
     },
     {
       "label": "探索入口",
-      "value": "4",
+      "value": "2",
       "unit": "個",
       "description": "地方知識探索模組"
     },
     {
       "label": "社團行動",
-      "value": "3",
+      "value": "2",
       "unit": "個",
       "description": "學員自主行動紀錄"
     },
@@ -302,18 +302,5 @@
       "unit": "組"
     }
   ],
-  "news": [
-    {
-      "date": "2026-06-28",
-      "category": "平台更新",
-      "title": "邑米地方知識探索平台 V1.0 首頁測試中",
-      "href": "#"
-    },
-    {
-      "date": "",
-      "category": "預留",
-      "title": "後續活動公告與課程資訊將於此處更新",
-      "href": "#"
-    }
-  ]
+  "news": []
 }
