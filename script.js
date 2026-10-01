@@ -265,6 +265,14 @@ function render() {
     window.location.replace("#/overview");
     return;
   }
+  if (route.page === "showcase" && ["walking-records", "video-records", "publication-materials", "old-photos"].includes(route.detail)) {
+    window.location.replace("#/showcase");
+    return;
+  }
+  if (route.page === "digital" && ["", "early-life", "puzi-medical"].includes(route.detail)) {
+    window.location.replace("#/digital/chilan-walk");
+    return;
+  }
   const app = document.querySelector("#app");
   app.classList.toggle("year-page", route.page === "overview" && route.detail === "year");
   app.classList.toggle("class-result-page", route.page === "showcase" && (route.detail === "class-results" || route.detail === "student-works"));
@@ -1919,6 +1927,7 @@ function renderShowcase() {
   }
   const approvedClassResults = getApprovedClassResults();
   const classResultItems = buildClassResultItems(approvedClassResults);
+  const publicCategories = showcaseData.categories.filter((category) => isBrowsableShowcaseCategory(category.id));
   const requestedCategoryId = route.detail === "student-works" ? "class-results" : route.detail;
   const selectedCategoryId = showcaseData.categories.some((category) => category.id === requestedCategoryId) ? requestedCategoryId : "";
   const isClassResultsPage = selectedCategoryId === "class-results";
@@ -1933,21 +1942,20 @@ function renderShowcase() {
   app.innerHTML = `
     ${isClassResultsPage
       ? pageHeader("班級花絮與成果", "以課程與班級為單位，持續整理歷年學習花絮、課程實作與共同成果。")
-      : pageHeader("學習成果", "瀏覽班級學習、走讀、影音與出版成果。")}
+      : pageHeader("學習成果", "瀏覽各地班級的學習花絮、課程實作與共同成果。")}
     ${isClassResultsPage ? "" : `
     <section class="showcase-intro-card" aria-label="學習成果說明">
       <div>
         <span class="section-label">LEARNING RESULTS</span>
-        <h2>瀏覽班級學習、走讀、影音與出版成果</h2>
-        <p>從班級花絮與共同成果出發，逐步整理走讀紀錄、影片、出版教材與地方老照片，讓學習留下的作品與地方素材更容易被找到。</p>
+        <h2>瀏覽班級學習與共同成果</h2>
+        <p>從課程紀錄、實作過程到共同成果，保存不同班級持續累積的學習風景。</p>
         <div class="showcase-actions">
           <a class="button" href="#/showcase/class-results">瀏覽學習成果</a>
         </div>
       </div>
       <div class="showcase-quick-stats">
         <article><strong>${approvedClassResults.length}</strong><span>筆班級成果</span></article>
-        <article><strong>${showcaseData.categories.length}</strong><span>類學習成果</span></article>
-        <article><strong>${showcaseData.categories.length - 1}</strong><span>類持續整理</span></article>
+        <article><strong>${publicCategories.length}</strong><span>類學習成果</span></article>
       </div>
     </section>
 
@@ -1960,7 +1968,7 @@ function renderShowcase() {
         <p>活動照片已整合到成果故事的活動詳細頁；這裡專注呈現學習後留下的成果與地方素材。</p>
       </div>
       <div class="showcase-category-grid">
-        ${showcaseData.categories.map((category) => showcaseCategoryCard(category, categoryCounts)).join("")}
+        ${publicCategories.map((category) => showcaseCategoryCard(category, categoryCounts)).join("")}
       </div>
     </section>
 
@@ -3817,7 +3825,7 @@ function yearStatusPill(year, activities) {
   return `
     <div class="year-status ${count ? "ready" : ""}">
       <strong>${year} 年</strong>
-      <span>${count ? `${count} 件活動已匯入` : "資料待補"}</span>
+      <span>${count ? `${count} 件活動已匯入` : "目前沒有公開成果"}</span>
     </div>
   `;
 }
@@ -3917,8 +3925,8 @@ function combineDetailValues(...values) {
 function emptyYearBlock(year) {
   return `
     <section class="empty-year-block">
-      <h2>${year} 年資料待補</h2>
-      <p>這個年度目前還沒有匯入活動資料。之後補上資料後，地區與 SDGs 分類會自動顯示相關活動、成果與照片。</p>
+      <h2>目前沒有符合條件的公開成果</h2>
+      <p>${year} 年目前沒有這個條件下的公開成果，請選擇其他年度或分類。</p>
     </section>
   `;
 }

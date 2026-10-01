@@ -929,9 +929,53 @@ test("班級卡摘要使用 CSS 兩行 clamp、SDG 精簡、CTA 靠底", () => {
   assert.match(source, /hiddenClassSdgs[\s\S]*\+\$\{hiddenClassSdgs\}/);
 });
 
-test("班級與活動卡片維持 lazy loading，空分類使用不可操作狀態", () => {
+test("班級與活動卡片維持 lazy loading", () => {
   assert.match(source, /activityMiniCard[\s\S]*loading="lazy"/);
   assert.match(source, /lazyImage \? ' loading="lazy"'/);
-  assert.match(source, /<span class="showcase-card-link is-disabled" aria-disabled="true">/);
-  assert.doesNotMatch(source, /class="showcase-card-link is-disabled" href=/);
+});
+
+test("正式學習成果只顯示可用分類並讓空分類舊 route 靜默導回", () => {
+  assert.match(index, /#\/showcase\/class-results/);
+  for (const categoryId of ["walking-records", "video-records", "publication-materials", "old-photos"]) {
+    assert.doesNotMatch(index, new RegExp(`#/showcase/${categoryId}`));
+  }
+  assert.match(source, /route\.page === "showcase" && \["walking-records", "video-records", "publication-materials", "old-photos"\]\.includes\(route\.detail\)[\s\S]*window\.location\.replace\("#\/showcase"\)/);
+  assert.match(source, /const publicCategories = showcaseData\.categories\.filter\(\(category\) => isBrowsableShowcaseCategory\(category\.id\)\)/);
+  assert.match(source, /publicCategories\.map\(\(category\) => showcaseCategoryCard\(category, categoryCounts\)\)/);
+  assert.match(source, /瀏覽班級學習與共同成果/);
+  assert.match(platformSource, /瀏覽各地班級的學習花絮、課程實作與共同成果/);
+});
+
+test("首頁移除測試消息、修正統計並隱藏未啟用 YouTube", () => {
+  assert.deepEqual(platformHome.news, []);
+  assert.deepEqual(platformHomeRuntime, platformHome);
+  assert.doesNotMatch(platformHomeDataSource, /首頁測試中|後續活動公告|"category": "預留"/);
+  assert.match(platformSource, /section\.hidden = publicNews\.length === 0/);
+  assert.deepEqual(
+    Object.fromEntries(platformHome.platformStats.map((item) => [item.label, item.value])),
+    {
+      活動成果: "65",
+      照片素材: "120",
+      地方主題: "4",
+      探索入口: "2",
+      社團行動: "2",
+      服務鄉鎮: "10",
+    },
+  );
+  assert.doesNotMatch(platform, /YouTube|連結預留|href="#"/);
+});
+
+test("零筆成果使用中性空狀態且 legacy digital route 導回正式入口", () => {
+  const emptyYearSource = source.slice(
+    source.indexOf("function emptyYearBlock"),
+    source.indexOf("function getActivities"),
+  );
+  assert.match(emptyYearSource, /目前沒有符合條件的公開成果/);
+  assert.doesNotMatch(emptyYearSource, /資料待補|內容建置中|尚待補充/);
+  assert.match(source, /count \? `\$\{count\} 件活動已匯入` : "目前沒有公開成果"/);
+  assert.match(source, /route\.page === "digital" && \["", "early-life", "puzi-medical"\]\.includes\(route\.detail\)[\s\S]*window\.location\.replace\("#\/digital\/chilan-walk"\)/);
+  assert.match(source, /getDigitalWalkCollection\(detail, "public"\)[\s\S]*renderDigitalWalkPublicCollection\(publicCollection\)/);
+  assert.match(source, /route\.detail === "class-results" \|\| route\.detail === "student-works"/);
+  assert.match(source, /function getPublicClubs\(\)[\s\S]*publicationStatus === "approved"/);
+  assert.match(source, /function renderThemes\(/);
 });
