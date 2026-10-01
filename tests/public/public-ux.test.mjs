@@ -757,7 +757,8 @@ test("木工修繕社以三年里程碑與三筆服務紀錄關聯正式成果�
 });
 
 test("木工修繕社 renderer 支援新舊 serviceRecord 並避免重複代表成果", () => {
-  assert.match(clubDetailRendererSource, /visibleRepresentative = !isDraft && club\.id === "wood-repair" \? \[\] : representative/);
+  assert.match(clubDetailRendererSource, /hidesPublicRepresentative = !isDraft && \["wood-repair", "saxophone-group"\]\.includes\(club\.id\)/);
+  assert.match(clubDetailRendererSource, /visibleRepresentative = hidesPublicRepresentative \? \[\] : representative/);
   assert.match(clubDetailRendererSource, /club\.serviceRecords\.map\(clubServiceRecordCard\)/);
   assert.match(clubDetailRendererSource, /club\.id === "wood-repair" \? "相關成果故事" : "相關成果活動"/);
   assert.match(clubServiceRendererSource, /typeof item === "string"[\s\S]*<h3>\$\{item\}<\/h3>/);
@@ -778,6 +779,55 @@ test("木工修繕社維持環境永續關聯並將自動 gallery 限制為四�
   assert.match(clubDetailRendererSource, /const maxGalleryItems[\s\S]*\.slice\(0, maxGalleryItems\)/);
   assert.match(syncStaticDataSource, /\["113-002", "114-022", "115-002"\]/);
   assert.match(syncStaticDataSource, /三筆結構化服務紀錄/);
+});
+
+test("薩克斯風學員自主演出團體以保守身份正式公開", () => {
+  const club = clubs.clubs.find((item) => item.id === "saxophone-group");
+  assert.ok(club);
+  assert.equal(club.name, "薩克斯風學員自主演出團體");
+  assert.equal(club.shortTitle, "薩克斯風自主演出團體");
+  assert.equal(club.status, "持續活動中");
+  assert.equal(club.pageMode, "full");
+  assert.equal(club.publicationStatus, "approved");
+  assert.equal(club.publiclyListed, true);
+  assert.equal(club.startYear, null);
+  assert.equal(club.earliestRecordYear, 114);
+  assert.equal(club.earliestRecordLabel, "現有活動紀錄自114年起");
+  assert.equal(club.instructor, "吳昭志老師");
+  assert.doesNotMatch(club.name, /薩克斯風社|薩克斯風樂團|正式社團|核准社團/);
+  assert.doesNotMatch(`${club.description}${club.introduction}${club.actionConcept}`, /正式成立|社團法人|核准社團|固定成員制度|正式組織章程/);
+});
+
+test("薩克斯風八筆演出紀錄沿用 serviceRecords 且不建立假關聯", () => {
+  const club = clubs.clubs.find((item) => item.id === "saxophone-group");
+  const expectedDates = ["114/03/25", "114/04/12", "114/06/14", "114/07/16", "114/11/08", "114/12/14", "115/03/07", "115/06/16"];
+  assert.equal(club.representativeActivities.length, 8);
+  assert.equal(club.serviceRecords.length, 8);
+  assert.deepEqual(club.serviceRecords.map((item) => item.date), expectedDates);
+  assert.ok(club.serviceRecords.every((item) => item.year && item.date && item.title && item.location && item.summary));
+  assert.ok(club.serviceRecords.every((item) => !Object.hasOwn(item, "image") && !Object.hasOwn(item, "relatedActivityId")));
+  assert.deepEqual(club.relatedActivityIds, []);
+  assert.equal(Object.hasOwn(club, "relatedThemeIds"), false);
+  assert.equal(Object.hasOwn(club, "relatedClassResultIds"), false);
+  assert.doesNotMatch(JSON.stringify(club), /CR-115-002|CR-115-024/);
+});
+
+test("薩克斯風圖片維持公開權利但不與個別場次強制對應", () => {
+  const club = clubs.clubs.find((item) => item.id === "saxophone-group");
+  assert.equal(club.coverImageRightsStatus, "approved");
+  assert.equal(club.coverImageActivitySourceStatus, "pending");
+  assert.equal(club.gallery.length, 4);
+  assert.ok(club.gallery.every((item) => item.rightsStatus === "approved" && item.activitySourceStatus === "pending"));
+  assert.match(club.rightsNote, /照片已確認可公開使用[\s\S]*不作為特定場次之證明/);
+  assert.match(clubDetailRendererSource, /club\.id === "saxophone-group" \? "演出紀錄" : "社區服務紀錄"/);
+  assert.match(clubDetailRendererSource, /club-service-grid\$\{club\.id === "saxophone-group" \? " is-performance" : ""\}/);
+  assert.match(clubDetailRendererSource, /club\.id === "saxophone-group" && Array\.isArray\(club\.serviceRecords\)[\s\S]*筆演出紀錄/);
+  assert.match(clubDetailRendererSource, /activities\.length \|\| \(!isDraft && club\.id !== "saxophone-group"\)/);
+  assert.match(clubServiceRendererSource, /typeof item === "string"/);
+  assert.doesNotMatch(clubServiceRendererSource, /\[object Object\]/);
+  assert.match(styles, /\.club-service-grid\.is-performance\s*\{[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.club-service-grid\.is-performance,[\s\S]*grid-template-columns:\s*1fr/);
+  assert.deepEqual(clubsRuntime, clubs);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {

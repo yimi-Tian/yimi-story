@@ -3435,6 +3435,10 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
+.club-service-grid.is-performance {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .club-record-card,
 .club-service-card,
 .club-detail-block,
@@ -3796,6 +3800,7 @@ code {
 
   .club-milestone-grid,
   .club-representative-grid,
+  .club-service-grid.is-performance,
   .club-detail-grid.is-compact {
     grid-template-columns: 1fr;
   }

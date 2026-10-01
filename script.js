@@ -2745,7 +2745,8 @@ function renderClubDetail(club) {
   const representative = Array.isArray(club.representativeActivities)
     ? club.representativeActivities.filter((item) => hasThemeValue(typeof item === "string" ? item : item?.title))
     : [];
-  const visibleRepresentative = !isDraft && club.id === "wood-repair" ? [] : representative;
+  const hidesPublicRepresentative = !isDraft && ["wood-repair", "saxophone-group"].includes(club.id);
+  const visibleRepresentative = hidesPublicRepresentative ? [] : representative;
   const maxGalleryItems = Number.isInteger(Number(club.maxGalleryItems)) && Number(club.maxGalleryItems) > 0
     ? Number(club.maxGalleryItems)
     : 6;
@@ -2766,7 +2767,13 @@ function renderClubDetail(club) {
           : "",
         representative.length ? `${representative.length} 項代表活動` : "",
       ].filter(Boolean)
-    : [activities.length ? `${activities.length} 筆正式成果` : "資料整理中"];
+    : [
+        club.id === "saxophone-group" && Array.isArray(club.serviceRecords)
+          ? `${club.serviceRecords.length} 筆演出紀錄`
+          : activities.length
+            ? `${activities.length} 筆正式成果`
+            : "資料整理中",
+      ];
   app.innerHTML = `
     <div class="theme-detail-back">
       <a class="theme-back-link" href="${isDraft ? "#/clubs/draft" : "#/clubs"}">← ${isDraft ? "返回社團草稿" : "返回社團紀錄"}</a>
@@ -2833,14 +2840,14 @@ function renderClubDetail(club) {
     ${
       Array.isArray(club.serviceRecords) && club.serviceRecords.length
         ? `<section class="club-page-section">
-            <div class="section-heading"><div><span class="section-label">SERVICE</span><h2>社區服務紀錄</h2></div></div>
-            <div class="club-service-grid">${club.serviceRecords.map(clubServiceRecordCard).join("")}</div>
+            <div class="section-heading"><div><span class="section-label">SERVICE</span><h2>${club.id === "saxophone-group" ? "演出紀錄" : "社區服務紀錄"}</h2></div></div>
+            <div class="club-service-grid${club.id === "saxophone-group" ? " is-performance" : ""}">${club.serviceRecords.map(clubServiceRecordCard).join("")}</div>
           </section>`
         : ""
     }
 
     ${
-      activities.length || !isDraft
+      activities.length || (!isDraft && club.id !== "saxophone-group")
         ? `<section class="club-page-section">
             <div class="section-heading">
               <div>
