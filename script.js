@@ -13,6 +13,10 @@ const safeShowcaseData = {
       id: "class-results",
       title: "班級花絮與成果",
       description: "班級花絮與成果資料整理中。",
+      route: "#/showcase/class-results",
+      order: 1,
+      publicationStatus: "approved",
+      publiclyListed: true,
       emptyMessage: "班級花絮與成果資料整理中，後續將呈現各課程的學習花絮與共同成果。",
     },
   ],
@@ -51,6 +55,9 @@ function imageFallbackData(src, fallbacks = []) {
 }
 const classResultsData = typeof window !== "undefined" && Array.isArray(window.CLASS_RESULTS_DATA)
   ? window.CLASS_RESULTS_DATA
+  : [];
+const walkingRecordsData = typeof window !== "undefined" && Array.isArray(window.WALKING_RECORDS_DATA)
+  ? window.WALKING_RECORDS_DATA
   : [];
 const digitalWalksData = typeof window !== "undefined" && Array.isArray(window.DIGITAL_WALKS_DATA?.routes)
   ? window.DIGITAL_WALKS_DATA
@@ -241,6 +248,7 @@ window.addEventListener("hashchange", () => {
 });
 document.addEventListener("DOMContentLoaded", () => {
   syncClubNavigation();
+  syncShowcaseNavigation();
   initNavDropdowns();
   render();
 });
@@ -309,7 +317,7 @@ function render() {
     replaceLegacyRoute("#/overview");
     return;
   }
-  if (route.page === "showcase" && ["walking-records", "video-records", "publication-materials", "old-photos"].includes(route.detail)) {
+  if (route.page === "showcase" && ["video-records", "publication-materials", "old-photos"].includes(route.detail)) {
     replaceLegacyRoute("#/showcase");
     return;
   }
@@ -390,6 +398,14 @@ function syncClubNavigation() {
   if (!menu) return;
   menu.innerHTML = getPublicClubs()
     .map((club) => `<a href="#/clubs/${club.id}">${getClubShortTitle(club)}</a>`)
+    .join("");
+}
+
+function syncShowcaseNavigation() {
+  const menu = document.querySelector("[data-showcase-nav-menu]");
+  if (!menu) return;
+  menu.innerHTML = getPublicShowcaseCategories()
+    .map((category) => `<a href="${category.route || `#/showcase/${category.id}`}">${category.title}</a>`)
     .join("");
 }
 
@@ -1961,6 +1977,32 @@ function renderClubDraftList(clubs) {
   `;
 }
 
+function getPublicWalkingRecords() {
+  if (typeof publicUx?.getPublicWalkingRecords === "function") {
+    return publicUx.getPublicWalkingRecords(walkingRecordsData);
+  }
+  return walkingRecordsData
+    .filter((record) => record?.publicationStatus === "approved" && record.publiclyListed === true)
+    .sort((a, b) => Number(b.year || 0) - Number(a.year || 0)
+      || String(a.id || "").localeCompare(String(b.id || ""), "en", { numeric: true }));
+}
+
+function getShowcaseCategoryCount(categoryId) {
+  if (categoryId === "class-results") return getApprovedClassResults().length;
+  if (categoryId === "walking-records") return getPublicWalkingRecords().length;
+  return 0;
+}
+
+function getPublicShowcaseCategories() {
+  return showcaseData.categories
+    .filter((category) => (
+      category?.publicationStatus === "approved"
+      && category.publiclyListed === true
+      && getShowcaseCategoryCount(category.id) > 0
+    ))
+    .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+}
+
 function renderShowcase() {
   const app = document.querySelector("#app");
   const route = getRoute();
@@ -1969,71 +2011,50 @@ function renderShowcase() {
     renderClassResultDetail(classResultId);
     return;
   }
-  const approvedClassResults = getApprovedClassResults();
-  const classResultItems = buildClassResultItems(approvedClassResults);
-  const publicCategories = showcaseData.categories.filter((category) => isBrowsableShowcaseCategory(category.id));
-  const requestedCategoryId = route.detail === "student-works" ? "class-results" : route.detail;
-  const selectedCategoryId = showcaseData.categories.some((category) => category.id === requestedCategoryId) ? requestedCategoryId : "";
-  const isClassResultsPage = selectedCategoryId === "class-results";
-  const selectedCategory = showcaseData.categories.find((category) => category.id === selectedCategoryId);
-  if (selectedCategory && !isBrowsableShowcaseCategory(selectedCategory.id)) {
-    renderLearningCategoryNotice(selectedCategory);
+  const walkingRecordId = route.detail === "walking-records" ? route.id : "";
+  if (walkingRecordId) {
+    renderWalkingRecordDetail(walkingRecordId);
     return;
   }
+  const approvedClassResults = getApprovedClassResults();
+  const classResultItems = buildClassResultItems(approvedClassResults);
+  const walkingRecords = getPublicWalkingRecords();
+  const publicCategories = getPublicShowcaseCategories();
+  const requestedCategoryId = route.detail === "student-works" ? "class-results" : route.detail;
+  const selectedCategoryId = publicCategories.some((category) => category.id === requestedCategoryId) ? requestedCategoryId : "";
+  const isClassResultsPage = selectedCategoryId === "class-results";
+  const isWalkingRecordsPage = selectedCategoryId === "walking-records";
   const classResultDistricts = unique(classResultItems.flatMap((item) => item.districts).filter(Boolean))
     .sort((a, b) => a.localeCompare(b, "zh-Hant"));
-  const categoryCounts = { "class-results": approvedClassResults.length };
+  const categoryCounts = {
+    "class-results": approvedClassResults.length,
+    "walking-records": walkingRecords.length,
+  };
   app.innerHTML = `
     ${isClassResultsPage
       ? pageHeader("班級花絮與成果", "以課程與班級為單位，持續整理歷年學習花絮、課程實作與共同成果。")
-      : pageHeader("學習成果", "瀏覽各地班級的學習花絮、課程實作與共同成果。")}
-    ${isClassResultsPage ? "" : `
-    <section class="showcase-intro-card" aria-label="學習成果說明">
-      <div>
-        <span class="section-label">LEARNING RESULTS</span>
-        <h2>瀏覽班級學習與共同成果</h2>
-        <p>從課程紀錄、實作過程到共同成果，保存不同班級持續累積的學習風景。</p>
-        <div class="showcase-actions">
-          <a class="button" href="#/showcase/class-results">瀏覽學習成果</a>
-        </div>
-      </div>
-      <div class="showcase-quick-stats">
-        <article><strong>${approvedClassResults.length}</strong><span>筆班級成果</span></article>
-        <article><strong>${publicCategories.length}</strong><span>類學習成果</span></article>
-      </div>
-    </section>
-
+      : isWalkingRecordsPage
+        ? pageHeader("走讀與田野紀錄", "以地方走讀、聚落踏查、流域觀察與田野紀錄，整理邑米社大走進地方的學習足跡。")
+        : pageHeader("學習成果", "整理課程實作、走讀田野與共同成果，留下不同學習現場的紀錄。")}
+    ${!selectedCategoryId ? `
     <section class="showcase-page-section" aria-labelledby="showcase-category-title">
       <div class="section-heading">
         <div>
-          <span class="section-label">CATEGORIES</span>
+          <span class="section-label">成果分類</span>
           <h2 id="showcase-category-title">學習成果分類</h2>
         </div>
-        <p>活動照片已整合到成果故事的活動詳細頁；這裡專注呈現學習後留下的成果與地方素材。</p>
+        <p>依成果類型進入班級學習或走讀田野紀錄。</p>
       </div>
       <div class="showcase-category-grid">
         ${publicCategories.map((category) => showcaseCategoryCard(category, categoryCounts)).join("")}
       </div>
     </section>
-
-    <section class="showcase-page-section" aria-labelledby="showcase-featured-title">
-      <div class="section-heading">
-        <div>
-          <span class="section-label">FEATURED</span>
-          <h2 id="showcase-featured-title">班級成果精選</h2>
-        </div>
-        <p>先從近期整理完成的班級成果開始瀏覽。</p>
-      </div>
-      <div class="showcase-featured-grid is-class-results">
-        ${classResultItems.slice(0, 4).map(showcasePhotoCard).join("") || showcaseEmptyState("目前尚無可顯示的班級成果。")}
-      </div>
-    </section>
-    `}
+    ` : ""}
 
     ${isClassResultsPage ? `<section class="showcase-page-section" id="showcase-photo-results" aria-labelledby="showcase-photo-title">
       <div class="section-heading showcase-filter-heading">
         <div>
-          <span class="section-label">CLASS HIGHLIGHTS</span>
+          <span class="section-label">班級成果</span>
           <h2 id="showcase-photo-title">瀏覽課程紀錄</h2>
         </div>
         <p>依地區或關鍵字尋找課程，查看各班歷年累積的學習花絮與共同成果。</p>
@@ -2050,8 +2071,112 @@ function renderShowcase() {
         <button class="button secondary load-more-button" type="button" id="class-results-load-more">載入更多</button>
       </div>
     </section>` : ""}
+    ${isWalkingRecordsPage ? `<section class="showcase-page-section" aria-labelledby="walking-record-list-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-label">走讀與田野</span>
+          <h2 id="walking-record-list-title">走進地方的學習足跡</h2>
+        </div>
+        <p>從地點、路線與現場觀察，閱讀每一次走入地方所留下的紀錄。</p>
+      </div>
+      <div class="walking-record-grid">
+        ${walkingRecords.map(walkingRecordCard).join("")}
+      </div>
+    </section>` : ""}
   `;
   if (isClassResultsPage) bindClassResultFilters(classResultItems);
+}
+
+function walkingRecordCard(record) {
+  const meta = [
+    `${record.year} 年／${record.date}`,
+    (record.townships || []).join("、"),
+    record.location,
+  ].filter(Boolean);
+  return `
+    <article class="walking-record-card">
+      <img src="${record.coverImage}" alt="${record.title}" loading="lazy">
+      <div class="walking-record-card-body">
+        <div class="walking-record-card-meta">${meta.map((item) => `<span>${item}</span>`).join("")}</div>
+        <h3>${record.title}</h3>
+        <p>${record.summary}</p>
+        <a class="walking-record-card-link" href="#/showcase/walking-records/${record.id}">查看紀錄</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderWalkingRecordDetail(recordId) {
+  const app = document.querySelector("#app");
+  const record = getPublicWalkingRecords().find((item) => item.id === recordId);
+  if (!record) {
+    app.innerHTML = `
+      ${pageHeader("找不到這筆走讀與田野紀錄", "這筆紀錄目前不存在或尚未公開。")}
+      <section class="showcase-page-section walking-record-fallback">
+        <a class="button secondary" href="#/showcase/walking-records">返回走讀與田野紀錄</a>
+      </section>
+    `;
+    return;
+  }
+
+  const stops = Array.isArray(record.stops) ? record.stops.filter((stop) => stop?.name) : [];
+  const fieldNotes = Array.isArray(record.fieldNotes) ? record.fieldNotes.filter(Boolean) : [];
+  const gallery = unique(record.gallery || []).filter((image) => image && image !== record.coverImage);
+  const relatedActivities = (record.relatedActivityIds || [])
+    .map((activityId) => getActivities().find((activity) => activity.id === activityId))
+    .filter(Boolean);
+  const publicDigitalWalks = new Map(getPublicDigitalWalks().map((walk) => [walk.id, walk]));
+  const relatedDigitalWalks = (record.relatedDigitalWalkIds || [])
+    .map((routeId) => publicDigitalWalks.get(routeId))
+    .filter(Boolean);
+
+  app.innerHTML = `
+    <section class="walking-record-detail-head">
+      <div class="detail-back-links">
+        <button class="text-link history-back-link" type="button">回到上一頁</button>
+        <a class="text-link" href="#/showcase/walking-records">返回走讀與田野紀錄</a>
+      </div>
+      <span class="page-kicker">走讀與田野紀錄</span>
+      <h1>${record.title}</h1>
+      <div class="walking-record-detail-meta">
+        <span>${record.year} 年／${record.date}</span>
+        <span>${record.townships.join("、")}</span>
+        <span>${record.location}</span>
+      </div>
+      <p>${record.summary}</p>
+    </section>
+    <section class="walking-record-cover">
+      <img src="${record.coverImage}" alt="${record.title}">
+    </section>
+    ${record.routeSummary ? `<section class="walking-record-section"><h2>走讀範圍</h2><p>${record.routeSummary}</p></section>` : ""}
+    ${stops.length ? `<section class="walking-record-section"><h2>沿途紀錄</h2><div class="walking-record-stop-grid">${stops.map((stop) => `
+      <article class="walking-record-stop">
+        <h3>${stop.name}</h3>
+        ${stop.note ? `<p>${stop.note}</p>` : ""}
+      </article>
+    `).join("")}</div></section>` : ""}
+    ${fieldNotes.length ? `<section class="walking-record-section"><h2>田野筆記</h2><ul class="walking-record-note-list">${fieldNotes.map((note) => `<li>${note}</li>`).join("")}</ul></section>` : ""}
+    ${gallery.length ? `<section class="walking-record-section"><h2>現場影像</h2><div class="walking-record-gallery">${gallery.map((image) => `<img src="${image}" alt="${record.title}現場紀錄" loading="lazy">`).join("")}</div></section>` : ""}
+    ${relatedActivities.length ? `<section class="walking-record-section"><h2>相關成果故事</h2><div class="walking-record-related-grid">${relatedActivities.map((activity) => `
+      <article class="walking-record-related-card">
+        <h3>${activity.name}</h3>
+        <p>${activity.year} 年｜${activity.date}｜${activity.districts.join("、")}</p>
+        <a href="#/overview/activity/${encodeURIComponent(activity.id)}/${activity.year}">查看完整成果故事</a>
+      </article>
+    `).join("")}</div></section>` : ""}
+    ${relatedDigitalWalks.length ? `<section class="walking-record-section"><h2>延伸數位走讀</h2><div class="walking-record-related-grid">${relatedDigitalWalks.map((walk) => `
+      <article class="walking-record-related-card">
+        <h3>${walk.title}</h3>
+        <p>${walk.summary || walk.description || ""}</p>
+        <a href="#/digital/${encodeURIComponent(walk.id)}">前往${walk.title}</a>
+      </article>
+    `).join("")}</div></section>` : ""}
+  `;
+
+  app.querySelector(".history-back-link")?.addEventListener("click", () => {
+    if (window.history.length > 1) window.history.back();
+    else window.location.hash = "#/showcase/walking-records";
+  });
 }
 
 function renderLearningCategoryNotice(category) {
@@ -2229,7 +2354,7 @@ function pageHeader(title, subtitle, options = {}) {
     digital: "走進現場，用故事、任務與數位體驗認識地方。",
     chilan: "走進現場，用故事、任務與數位體驗認識地方。",
     clubs: "讓學習走出教室，陪伴地方一起前進。",
-    showcase: "以影像、圖文與創作，保存地方學習的精彩片段。",
+    showcase: "整理課程實作、走讀田野與共同成果，留下不同學習現場的紀錄。",
     about: "從學習出發，陪伴地方累積知識與行動。",
   };
   const displaySubtitle = route.detail ? subtitle : hallIntroductions[routePage] || subtitle;
@@ -3399,7 +3524,7 @@ function renderClassResultDetail(classResultId) {
 }
 
 function isBrowsableShowcaseCategory(categoryId) {
-  return categoryId === "activity-photos" || categoryId === "class-results";
+  return getPublicShowcaseCategories().some((category) => category.id === categoryId);
 }
 
 function showcaseCategoryCard(category, counts = {}) {
@@ -3412,12 +3537,16 @@ function showcaseCategoryCard(category, counts = {}) {
       <div class="showcase-category-body">
         <div class="showcase-card-heading">
           <h3>${category.title}</h3>
-          <span class="showcase-status">${isBrowsable ? `${count} 筆素材` : category.status}</span>
+          <span class="showcase-status">${isBrowsable
+            ? category.id === "class-results"
+              ? `${count} 筆班級成果`
+              : `${count} 筆走讀與田野紀錄`
+            : category.status}</span>
         </div>
         <p>${category.description}</p>
       </div>
       ${isBrowsable
-        ? `<a class="showcase-card-link" href="#/showcase/${category.id}">${category.buttonText || "查看內容"}</a>`
+        ? `<a class="showcase-card-link" href="${category.route || `#/showcase/${category.id}`}">${category.buttonText || "查看內容"}</a>`
         : `<span class="showcase-card-link is-disabled" aria-disabled="true">${category.buttonText || "內容整理中"}</span>`}
     </article>
   `;

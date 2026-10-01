@@ -45,6 +45,14 @@
     return Math.min(Math.max(0, Number(total) || 0), Math.max(0, Number(current) || 0) + increment);
   }
 
+  function getPublicWalkingRecords(data) {
+    return (Array.isArray(data) ? data : [])
+      .filter((record) => record?.publicationStatus === "approved" && record.publiclyListed === true)
+      .slice()
+      .sort((a, b) => Number(b.year || 0) - Number(a.year || 0)
+        || String(a.id || "").localeCompare(String(b.id || ""), "en", { numeric: true }));
+  }
+
   function isPublicDigitalWalk(item) {
     return item?.publicationStatus === "approved" && item.publiclyListed === true;
   }
@@ -194,6 +202,7 @@
     nextVisibleCount,
     resolvePublicCover,
     visibleBatch,
+    getPublicWalkingRecords,
     getPublicDigitalWalks,
     getDraftDigitalWalks,
     getDigitalWalkCollection,
