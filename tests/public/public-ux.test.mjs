@@ -82,7 +82,7 @@ const clubOverviewRendererSource = source.slice(
   source.indexOf("function renderShowcase"),
 );
 const clubOverviewCardsSource = source.slice(
-  source.indexOf("function clubServiceCards"),
+  source.indexOf("const clubOverviewCopy"),
   source.indexOf("function getActivityPhotoCandidates"),
 );
 const clubServiceRendererSource = source.slice(
@@ -856,11 +856,30 @@ test("社團 dropdown 由正式公開 selector 動態產生且不顯示整理中
   assert.match(source, /function syncClubNavigation\(\)[\s\S]*getPublicClubs\(\)[\s\S]*getClubShortTitle\(club\)/);
 });
 
-test("社團總覽與詳細頁正確顯示結構化服務紀錄且年份不重複", () => {
-  assert.match(clubOverviewCardsSource, /records\.map\(clubServiceOverviewCard\)/);
-  assert.match(clubOverviewCardsSource, /const title = isStructured \? record\.title : record/);
-  assert.match(clubOverviewCardsSource, /getClubShortTitle\(club\)/);
-  assert.doesNotMatch(clubOverviewCardsSource, /<h3>\$\{item\.record\}<\/h3>/);
+test("社團總覽改為兩張團體入口卡並保留詳細頁完整紀錄", () => {
+  const publicClubs = clubs.clubs
+    .filter((club) => club.publicationStatus === "approved" && club.publiclyListed === true && club.pageMode !== "preparing" && club.category !== "preparing")
+    .sort((a, b) => Number(a.displayOrder) - Number(b.displayOrder));
+  const woodRepair = publicClubs.find((club) => club.id === "wood-repair");
+  const saxophone = publicClubs.find((club) => club.id === "saxophone-group");
+  assert.equal(publicClubs.length, 2);
+  assert.equal(woodRepair.serviceRecords.length, 3);
+  assert.equal(woodRepair.serviceRecords.at(-1).year, 115);
+  assert.equal(woodRepair.serviceRecords.at(-1).title, "木藝傳情・修繕送暖");
+  assert.equal(saxophone.serviceRecords.length, 8);
+  assert.equal(saxophone.serviceRecords.at(-1).date, "115/06/16");
+  assert.equal(saxophone.serviceRecords.at(-1).title, "新港板頭厝公益演出");
+  assert.match(clubOverviewRendererSource, /clubs\.map\(clubOverviewCard\)/);
+  assert.match(clubOverviewRendererSource, /<h2 id="club-list-title">參與團體<\/h2>/);
+  assert.doesNotMatch(clubOverviewRendererSource, /clubServiceCards|club-service-records|社區服務紀錄|featured-club-actions/);
+  assert.match(clubOverviewCardsSource, /"wood-repair": \{ recordLabel: "服務紀錄", cta: "查看社團紀錄" \}/);
+  assert.match(clubOverviewCardsSource, /"saxophone-group": \{ recordLabel: "演出紀錄", cta: "查看團體紀錄" \}/);
+  assert.match(clubOverviewCardsSource, /getClubLatestStructuredRecord\(item\)/);
+  assert.match(clubOverviewCardsSource, /getClubShortTitle\(item\)/);
+  assert.match(clubOverviewCardsSource, /href="#\/clubs\/\$\{item\.id\}"/);
+  assert.match(styles, /\.club-entry-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*\.club-entry-grid,[\s\S]*grid-template-columns:\s*1fr/);
+  assert.match(styles, /\.club-entry-cta\s*\{[\s\S]*min-height:\s*44px/);
   assert.match(clubServiceRendererSource, /dateIncludesYear[\s\S]*year && !dateIncludesYear[\s\S]*date[\s\S]*location/);
   assert.doesNotMatch(clubServiceRendererSource, /<span>\$\{year\} 年<\/span>[\s\S]*<span>\$\{item\.date\}<\/span>/);
   assert.doesNotMatch(clubOverviewCardsSource, /\[object Object\]/);
