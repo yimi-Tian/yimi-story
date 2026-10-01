@@ -22,12 +22,21 @@ const platformSource = await readFile(new URL("js/platform-home.js", root), "utf
 const explorationSource = await readFile(new URL("local-exploration.js", root), "utf8");
 const explorationDataSource = await readFile(new URL("local-exploration-data.js", root), "utf8");
 const platformHomeDataSource = await readFile(new URL("data/platform-home-data.js", root), "utf8");
+const clubsDataSource = await readFile(new URL("data/clubs-data.js", root), "utf8");
+const syncStaticDataSource = await readFile(new URL("tools/sync-static-data.mjs", root), "utf8");
 const styles = await readFile(new URL("styles.css", root), "utf8");
 const platformStyles = await readFile(new URL("css/platform-home.css", root), "utf8");
 const index = await readFile(new URL("index.html", root), "utf8");
 const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
 const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
+const clubs = JSON.parse(await readFile(new URL("data/clubs.json", root), "utf8"));
+const clubsRuntime = JSON.parse(
+  clubsDataSource
+    .replace(/^\/\/.*\r?\n/, "")
+    .replace(/^window\.CLUBS_DATA\s*=\s*/, "")
+    .replace(/;\s*$/, ""),
+);
 const explorationModules = JSON.parse(await readFile(new URL("data/exploration-modules.json", root), "utf8"));
 const platformHome = JSON.parse(await readFile(new URL("data/platform-home.json", root), "utf8"));
 const platformHomeRuntime = JSON.parse(
@@ -63,6 +72,18 @@ const chilanGameSource = source.slice(
 const publicRouteRendererSource = source.slice(
   source.indexOf("function renderDigitalWalkPublicRouteDetail"),
   source.indexOf("function digitalWalkPublicStopCard"),
+);
+const clubDetailRendererSource = source.slice(
+  source.indexOf("function renderClubDetail"),
+  source.indexOf("function getClubName"),
+);
+const clubServiceRendererSource = source.slice(
+  source.indexOf("function clubServiceRecordCard"),
+  source.indexOf("function clubRepresentativeActivityCard"),
+);
+const clubActivityRendererSource = source.slice(
+  source.indexOf("function clubActivityCard"),
+  source.indexOf("function clubActivityImageCandidates"),
 );
 const draftStopRendererSource = source.slice(
   source.indexOf("function renderDigitalWalkStopDetail"),
@@ -713,6 +734,50 @@ test("Stage 5B-1 以人工確認的 WT-03 公共道路觀看文字通過發布 g
 
   assert.match(source, /renderDigitalWalkPublicCollection\(publicCollection\)/);
   assert.match(index, /href="#\/digital\/chilan-walk">赤蘭溪數位走讀<\/a>/);
+});
+
+test("木工修繕社以三年里程碑與三筆服務紀錄關聯正式成果故事", () => {
+  const club = clubs.clubs.find((item) => item.id === "wood-repair");
+  assert.ok(club);
+  assert.equal(club.publicationStatus, "approved");
+  assert.equal(club.publiclyListed, true);
+  assert.deepEqual(club.relatedActivityIds, ["113-002", "114-022", "115-002"]);
+  assert.deepEqual(club.milestones.map((item) => [item.year, item.title, item.relatedActivityId]), [
+    [113, "六腳復興咱ㄟ厝", "113-002"],
+    [114, "永續木作共好計畫", "114-022"],
+    [115, "木藝傳情・修繕送暖", "115-002"],
+  ]);
+  assert.equal(club.serviceRecords.length, 3);
+  assert.deepEqual(club.serviceRecords.map((item) => item.relatedActivityId), club.relatedActivityIds);
+  assert.ok(club.serviceRecords.every((item) => item.year && item.date && item.title && item.location && item.summary));
+  assert.ok(club.relatedActivityIds.every((id) => activities.some((activity) => activity["活動ID"] === id && activity["是否公開"] === "是")));
+  assert.doesNotMatch(JSON.stringify(club), /CR-115-002|敏道學園/);
+  assert.equal(activities.some((activity) => activity["年度"] === "115" && /敏道學園|敏道家園/.test(activity["活動地點"])), false);
+  assert.deepEqual(clubsRuntime, clubs);
+});
+
+test("木工修繕社 renderer 支援新舊 serviceRecord 並避免重複代表成果", () => {
+  assert.match(clubDetailRendererSource, /visibleRepresentative = !isDraft && club\.id === "wood-repair" \? \[\] : representative/);
+  assert.match(clubDetailRendererSource, /club\.serviceRecords\.map\(clubServiceRecordCard\)/);
+  assert.match(clubDetailRendererSource, /club\.id === "wood-repair" \? "相關成果故事" : "相關成果活動"/);
+  assert.match(clubServiceRendererSource, /typeof item === "string"[\s\S]*<h3>\$\{item\}<\/h3>/);
+  assert.match(clubServiceRendererSource, /item\.title[\s\S]*item\.date[\s\S]*item\.location[\s\S]*item\.summary/);
+  assert.match(clubServiceRendererSource, /#\/overview\/activity\/\$\{encodeURIComponent\(relatedActivity\.id\)\}\/\$\{encodeURIComponent/);
+  assert.match(clubServiceRendererSource, /查看完整成果故事/);
+  assert.doesNotMatch(clubServiceRendererSource, /\[object Object\]/);
+  assert.match(clubActivityRendererSource, /options\.showStoryCta[\s\S]*查看完整成果故事/);
+  assert.match(styles, /\.club-story-link,[\s\S]*\.club-activity-cta[\s\S]*min-height:\s*44px/);
+  const activity = activities.find((item) => item["活動ID"] === "115-002");
+  assert.equal(`#/overview/activity/${activity["活動ID"]}/${activity["年度"]}`, "#/overview/activity/115-002/115");
+});
+
+test("木工修繕社維持環境永續關聯並將自動 gallery 限制為四張", () => {
+  const club = clubs.clubs.find((item) => item.id === "wood-repair");
+  assert.deepEqual(club.relatedThemeIds, ["environmental-education"]);
+  assert.equal(club.maxGalleryItems, 4);
+  assert.match(clubDetailRendererSource, /const maxGalleryItems[\s\S]*\.slice\(0, maxGalleryItems\)/);
+  assert.match(syncStaticDataSource, /\["113-002", "114-022", "115-002"\]/);
+  assert.match(syncStaticDataSource, /三筆結構化服務紀錄/);
 });
 
 test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", () => {

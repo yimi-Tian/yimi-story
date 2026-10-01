@@ -14,9 +14,9 @@ window.CLUBS_DATA = {
       "memberCount": null,
       "instructor": null,
       "mainAreas": [],
-      "description": "木工修繕社由木工課程延伸而來，學員透過家具修繕、木材再利用與公益服務，將課堂所學轉化為社區行動，協助弱勢機構與地方場域改善生活空間。",
-      "introduction": "木工修繕社由木工課程延伸而來，學員透過持續練習與社區服務，將木工技術應用於家具修繕、木材再利用與公益行動，讓課堂學習回到地方需求。",
-      "actionConcept": "以修繕代替汰換，減少資源浪費；以學習回應地方需要，讓社大課程成果轉化為社區服務。",
+      "description": "木工修繕社將木工課程所學轉化為家具修繕、木材再利用與公益服務，回應社福機構與地方場域的實際需要。",
+      "introduction": "學員從工具操作、材料判斷與修繕練習出發，走入老屋與社福機構，依場域需求修復家具及木製設施，讓課堂技術成為可持續累積的社區服務能力。",
+      "actionConcept": "以修繕代替汰換，延長木製物件使用年限；透過木材再利用與團隊服務，回應社區需求。",
       "actionTypes": [
         "木工修繕",
         "木材再利用",
@@ -25,8 +25,22 @@ window.CLUBS_DATA = {
       ],
       "milestones": [
         {
-          "year": null,
-          "description": "從老屋修繕、地方空間再利用到社福機構家具修繕，逐步累積木工課程連結社區服務的行動脈絡。"
+          "year": 113,
+          "title": "六腳復興咱ㄟ厝",
+          "description": "透過老屋修繕與木工實作，認識地方空間再利用。",
+          "relatedActivityId": "113-002"
+        },
+        {
+          "year": 114,
+          "title": "永續木作共好計畫",
+          "description": "走入敏道家園修繕家具，將木材再利用轉化為社福服務。",
+          "relatedActivityId": "114-022"
+        },
+        {
+          "year": 115,
+          "title": "木藝傳情・修繕送暖",
+          "description": "協助聖心教養院修繕家具與生活空間中的木製設施。",
+          "relatedActivityId": "115-002"
         }
       ],
       "representativeActivities": [
@@ -40,19 +54,42 @@ window.CLUBS_DATA = {
         }
       ],
       "serviceRecords": [
-        "家具修繕與木材再利用",
-        "社福機構服務與生活空間改善",
-        "地方空間修繕與老屋保存學習"
+        {
+          "year": 113,
+          "date": "8/13－8/15",
+          "title": "六腳復興咱ㄟ厝",
+          "location": "六腳興厝",
+          "summary": "以老屋修繕與木工實作認識傳統建築，並練習地方空間再利用。",
+          "relatedActivityId": "113-002"
+        },
+        {
+          "year": 114,
+          "date": "8/2、8/9、8/10、8/16、8/17",
+          "title": "永續木作共好計畫",
+          "location": "敏道家園",
+          "summary": "回應機構需求，完成45件木製家具修繕及10組身心障礙者專用碗。",
+          "relatedActivityId": "114-022"
+        },
+        {
+          "year": 115,
+          "date": "8/1～8/29",
+          "title": "木藝傳情・修繕送暖",
+          "location": "聖心教養院",
+          "summary": "40人次參與院區家具與木製設施修繕，共完成約15件修繕項目。",
+          "relatedActivityId": "115-002"
+        }
       ],
       "relatedActivityIds": [
         "113-002",
-        "114-022"
+        "114-022",
+        "115-002"
       ],
       "relatedThemeIds": [
         "environmental-education"
       ],
       "coverImage": "public/images/activities/113-002/01.JPG",
       "gallery": [],
+      "maxGalleryItems": 4,
       "sources": [],
       "rightsNote": "",
       "pendingItems": [],

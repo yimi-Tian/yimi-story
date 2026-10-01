@@ -3621,14 +3621,47 @@ code {
 
 .club-service-card {
   display: grid;
+  align-content: start;
   gap: 0.5rem;
 }
 
-.club-service-card span {
+.club-service-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.club-service-meta span,
+.club-service-card > span {
   color: var(--color-accent, #d98b45);
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+}
+
+.club-service-card p {
+  margin: 0;
+  color: var(--color-text-muted, #5f6f76);
+  line-height: 1.75;
+}
+
+.club-story-link,
+.club-activity-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary, #0b6fa4);
+  font-weight: 900;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.club-story-link {
+  align-self: start;
+  margin-top: auto;
+}
+
+.club-activity-cta {
+  margin-top: 0.15rem;
 }
 
 .club-activity-card img {

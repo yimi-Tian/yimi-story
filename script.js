@@ -2745,13 +2745,16 @@ function renderClubDetail(club) {
   const representative = Array.isArray(club.representativeActivities)
     ? club.representativeActivities.filter((item) => hasThemeValue(typeof item === "string" ? item : item?.title))
     : [];
+  const visibleRepresentative = !isDraft && club.id === "wood-repair" ? [] : representative;
+  const maxGalleryItems = Number.isInteger(Number(club.maxGalleryItems)) && Number(club.maxGalleryItems) > 0
+    ? Number(club.maxGalleryItems)
+    : 6;
   const directGallery = (Array.isArray(club.gallery) ? club.gallery : [])
     .map((item) => typeof item === "string" ? { src: item, alt: `${name}相關照片` } : item)
     .filter((item) => hasThemeValue(item?.src));
   const linkedGallery = unique(activities.flatMap((activity) => [activity.cover, ...(activity.photos || [])]).filter(hasThemeValue))
-    .slice(0, 6)
     .map((src) => ({ src, alt: `${name}相關照片` }));
-  const gallery = directGallery.length ? directGallery : linkedGallery;
+  const gallery = (directGallery.length ? directGallery : linkedGallery).slice(0, maxGalleryItems);
   const metaItems = isDraft
     ? [
         hasThemeValue(club.earliestRecordYear)
@@ -2817,11 +2820,11 @@ function renderClubDetail(club) {
     }
 
     ${
-      representative.length
+      visibleRepresentative.length
         ? `<section class="club-page-section">
             <div class="section-heading"><div><span class="section-label">RESULTS</span><h2>${isDraft ? "代表活動" : "代表成果"}</h2></div></div>
             <div class="${isDraft ? "club-representative-grid" : "club-result-list"}">
-              ${representative.map((item) => isDraft ? clubRepresentativeActivityCard(item) : `<article>${typeof item === "string" ? item : item.title}</article>`).join("")}
+              ${visibleRepresentative.map((item) => isDraft ? clubRepresentativeActivityCard(item) : `<article>${typeof item === "string" ? item : item.title}</article>`).join("")}
             </div>
           </section>`
         : ""
@@ -2831,7 +2834,7 @@ function renderClubDetail(club) {
       Array.isArray(club.serviceRecords) && club.serviceRecords.length
         ? `<section class="club-page-section">
             <div class="section-heading"><div><span class="section-label">SERVICE</span><h2>社區服務紀錄</h2></div></div>
-            <div class="club-service-grid">${club.serviceRecords.map((item) => `<article class="club-service-card"><span>服務紀錄</span><h3>${item}</h3></article>`).join("")}</div>
+            <div class="club-service-grid">${club.serviceRecords.map(clubServiceRecordCard).join("")}</div>
           </section>`
         : ""
     }
@@ -2842,12 +2845,12 @@ function renderClubDetail(club) {
             <div class="section-heading">
               <div>
                 <span class="section-label">ACTIVITIES</span>
-                <h2>相關成果活動</h2>
+                <h2>${club.id === "wood-repair" ? "相關成果故事" : "相關成果活動"}</h2>
               </div>
-              <p>活動卡片會導回成果故事館正式活動詳細頁。</p>
+              <p>${club.id === "wood-repair" ? "保留社團行動摘要，完整內容請前往正式成果故事。" : "活動卡片會導回成果故事館正式活動詳細頁。"}</p>
             </div>
             <div class="club-action-grid">
-              ${activities.length ? activities.map(clubActivityCard).join("") : clubEmptyState("此社團相關成果活動目前為資料整理中。")}
+              ${activities.length ? activities.map((activity) => clubActivityCard(activity, { showStoryCta: club.id === "wood-repair" })).join("") : clubEmptyState("此社團相關成果活動目前為資料整理中。")}
             </div>
           </section>`
         : ""
@@ -2900,6 +2903,32 @@ function getClubDescription(club) {
 function getClubCardTags(club) {
   const tags = Array.isArray(club?.cardTags) && club.cardTags.length ? club.cardTags : club?.actionTypes;
   return Array.isArray(tags) ? tags.filter(hasThemeValue).slice(0, 4) : [];
+}
+
+function clubServiceRecordCard(item) {
+  if (typeof item === "string") {
+    return `<article class="club-service-card"><span>服務紀錄</span><h3>${item}</h3></article>`;
+  }
+  if (!item || typeof item !== "object" || !hasThemeValue(item.title)) return "";
+  const relatedActivity = hasThemeValue(item.relatedActivityId)
+    ? getActivities().find((activity) => activity.id === item.relatedActivityId)
+    : null;
+  const year = item.year || relatedActivity?.year || "";
+  const activityHref = relatedActivity
+    ? `#/overview/activity/${encodeURIComponent(relatedActivity.id)}/${encodeURIComponent(relatedActivity.year || year)}`
+    : "";
+  return `
+    <article class="club-service-card">
+      <div class="club-service-meta">
+        ${hasThemeValue(year) ? `<span>${year} 年</span>` : ""}
+        ${hasThemeValue(item.date) ? `<span>${item.date}</span>` : ""}
+        ${hasThemeValue(item.location) ? `<span>${item.location}</span>` : ""}
+      </div>
+      <h3>${item.title}</h3>
+      ${hasThemeValue(item.summary) ? `<p>${item.summary}</p>` : ""}
+      ${activityHref ? `<a class="club-story-link" href="${activityHref}">查看完整成果故事 →</a>` : ""}
+    </article>
+  `;
 }
 
 function clubRepresentativeActivityCard(item) {
@@ -2985,7 +3014,7 @@ function renderClubTags(tags) {
   return items.length ? `<div class="club-tag-list">${items.map((tag) => `<span>${tag}</span>`).join("")}</div>` : "";
 }
 
-function clubActivityCard(activity) {
+function clubActivityCard(activity, options = {}) {
   if (!activity || !activity.id || !activity.name) return "";
   const imageCandidates = unique(clubActivityImageCandidates(activity));
   const image = imageCandidates[0] || PLACEHOLDER;
@@ -3009,6 +3038,7 @@ function clubActivityCard(activity) {
         }
         ${hasThemeValue(activity.summary) ? `<p>${activity.summary}</p>` : ""}
         ${renderThemeTags(activity.sdgs)}
+        ${options.showStoryCta ? `<span class="club-activity-cta">查看完整成果故事 →</span>` : ""}
       </div>
     </a>
   `;

@@ -256,8 +256,25 @@ async function validateClubs(data) {
   if (!woodRepair || woodRepair.publicationStatus !== "approved" || woodRepair.publiclyListed !== true) {
     throw new Error("木工修繕社必須維持正式公開狀態與既有路由 wood-repair。");
   }
-  if (JSON.stringify(woodRepair.relatedActivityIds) !== JSON.stringify(["113-002", "114-022"])) {
-    throw new Error("木工修繕社 relatedActivityIds 必須維持 113-002、114-022。");
+  const expectedWoodRepairActivityIds = ["113-002", "114-022", "115-002"];
+  if (JSON.stringify(woodRepair.relatedActivityIds) !== JSON.stringify(expectedWoodRepairActivityIds)) {
+    throw new Error("木工修繕社 relatedActivityIds 必須維持 113-002、114-022、115-002。");
+  }
+  if (
+    !Array.isArray(woodRepair.serviceRecords)
+    || woodRepair.serviceRecords.length !== 3
+    || woodRepair.serviceRecords.some((record) => (
+      !record
+      || typeof record !== "object"
+      || !record.year
+      || !record.title
+      || !record.location
+      || !record.summary
+      || !expectedWoodRepairActivityIds.includes(record.relatedActivityId)
+    ))
+    || JSON.stringify(woodRepair.serviceRecords.map((record) => record.relatedActivityId)) !== JSON.stringify(expectedWoodRepairActivityIds)
+  ) {
+    throw new Error("木工修繕社必須保留三筆結構化服務紀錄，並依序關聯 113-002、114-022、115-002。");
   }
 
   const danceClub = clubs.find((club) => club.id === DANCE_CLUB_ID);
