@@ -1,0 +1,237 @@
+// Generated from data/walking-records.json by tools/sync-static-data.mjs. Do not edit by hand.
+window.WALKING_RECORDS_DATA = [
+  {
+    "id": "WR-112-001",
+    "title": "樸仔樹腳老城走畫",
+    "year": 112,
+    "date": "8/5",
+    "townships": [
+      "朴子市"
+    ],
+    "location": "配天宮、榮昌戲院、玉勝巷",
+    "summary": "走訪配天宮、榮昌戲院與玉勝巷，觀察朴子老城的建築、街巷與影劇相關場域，並以現地速寫留下沿途所見。",
+    "routeSummary": "本次紀錄涵蓋配天宮、榮昌戲院與玉勝巷等朴子老城場域，包含建築、街巷與影劇文化的現地觀察。",
+    "stops": [
+      {
+        "name": "配天宮"
+      },
+      {
+        "name": "榮昌戲院",
+        "note": "從戲院建築與影劇文化認識朴子老城記憶。"
+      },
+      {
+        "name": "玉勝巷",
+        "note": "觀察街巷空間並進行現地速寫。"
+      }
+    ],
+    "fieldNotes": [
+      "參與者透過現地速寫記錄建築與街巷，將沿途觀察轉化為手繪紀錄。"
+    ],
+    "coverImage": "public/images/activities/112-002/cover.jpg",
+    "gallery": [
+      "public/images/activities/112-002/01.jpg",
+      "public/images/activities/112-002/02.jpg",
+      "public/images/activities/112-002/03.jpg",
+      "public/images/activities/112-002/04.jpg",
+      "public/images/activities/112-002/05.jpg"
+    ],
+    "relatedActivityIds": [
+      "112-002"
+    ],
+    "relatedDigitalWalkIds": [],
+    "sourceNotes": [],
+    "publicationStatus": "approved",
+    "publiclyListed": true
+  },
+  {
+    "id": "WR-112-002",
+    "title": "崎仔頭取水與草鞋工藝走讀",
+    "year": 112,
+    "date": "11/23",
+    "townships": [
+      "水上鄉"
+    ],
+    "location": "崎仔頭",
+    "summary": "走進崎仔頭，從龍泉土地公與自然湧泉了解端午取午時水的地方記憶，也走訪草鞋製作與小草鞋文創工坊。",
+    "routeSummary": "本次紀錄涵蓋龍泉土地公、自然湧泉與草鞋工坊等崎仔頭地方場域。",
+    "stops": [
+      {
+        "name": "龍泉土地公",
+        "note": "從地方信仰認識湧泉與端午取午時水的生活記憶。"
+      },
+      {
+        "name": "湧泉",
+        "note": "觀察自然湧泉與地方取水經驗的關係。"
+      },
+      {
+        "name": "草鞋工坊",
+        "note": "從草鞋製作與文創工坊認識地方工藝的延續。"
+      }
+    ],
+    "fieldNotes": [
+      "現場由耆老與在地婦女分享取水習慣與草鞋工藝記憶。"
+    ],
+    "coverImage": "public/images/activities/112-010/cover.jpg",
+    "gallery": [
+      "public/images/activities/112-010/01.jpg",
+      "public/images/activities/112-010/02.jpg",
+      "public/images/activities/112-010/03.jpg",
+      "public/images/activities/112-010/04.jpg",
+      "public/images/activities/112-010/05.jpg"
+    ],
+    "relatedActivityIds": [
+      "112-010"
+    ],
+    "relatedDigitalWalkIds": [],
+    "sourceNotes": [],
+    "publicationStatus": "approved",
+    "publiclyListed": true
+  },
+  {
+    "id": "WR-112-003",
+    "title": "猿樹港聚落田野走讀",
+    "year": 112,
+    "date": "11/26",
+    "townships": [
+      "東石鄉"
+    ],
+    "location": "西崙村、副瀨村、東石",
+    "summary": "走訪西崙村、副瀨村與東石，記錄古井、三合院、鳥類棲地、義愛公故事與地方祭典；返程時，學員也分享個人與家族記憶。",
+    "routeSummary": "本次紀錄涵蓋西崙村、副瀨村與東石三處聚落範圍，沿途內容包括古井、三合院、鳥類棲地、地方信仰與祭典。",
+    "stops": [
+      {
+        "name": "西崙村"
+      },
+      {
+        "name": "副瀨村"
+      },
+      {
+        "name": "東石"
+      }
+    ],
+    "fieldNotes": [
+      "沿途內容包含古井、三合院、鳥類棲地、義愛公故事與地方祭典。",
+      "村長及富安宮等在地人士帶領走訪；返程分享中，學員把現場所見連結個人與家族記憶。"
+    ],
+    "coverImage": "public/images/activities/112-011/cover.jpg",
+    "gallery": [
+      "public/images/activities/112-011/01.jpg",
+      "public/images/activities/112-011/02.jpg",
+      "public/images/activities/112-011/03.jpg",
+      "public/images/activities/112-011/04.jpg",
+      "public/images/activities/112-011/05.jpg"
+    ],
+    "relatedActivityIds": [
+      "112-011"
+    ],
+    "relatedDigitalWalkIds": [],
+    "sourceNotes": [],
+    "publicationStatus": "approved",
+    "publiclyListed": true
+  },
+  {
+    "id": "WR-112-004",
+    "title": "赤蘭溪三界埔與鹽館田野紀錄",
+    "year": 112,
+    "date": "11/29、12/06",
+    "townships": [
+      "水上鄉",
+      "中埔鄉"
+    ],
+    "location": "水上三界埔、中埔鹽館、沄水溪、後坑仔溪",
+    "summary": "分兩次走訪水上三界埔與中埔鹽館，紀錄範圍包含沄水溪、後坑仔溪、聚落信仰、竹管仔厝、菸樓、水圳與生活遺跡。",
+    "routeSummary": "田野範圍分別涵蓋水上三界埔、中埔鹽館，以及沄水溪、後坑仔溪等水路與生活遺跡。",
+    "stops": [
+      {
+        "name": "三界埔",
+        "note": "水上場次走訪的聚落範圍。"
+      },
+      {
+        "name": "沄水溪",
+        "note": "水上場次觀察的水路之一。"
+      },
+      {
+        "name": "鹽館",
+        "note": "中埔場次走訪的聚落範圍。"
+      },
+      {
+        "name": "後坑仔溪",
+        "note": "中埔場次觀察的水路之一。"
+      },
+      {
+        "name": "竹管仔厝"
+      },
+      {
+        "name": "菸樓"
+      }
+    ],
+    "fieldNotes": [
+      "沿途觀察內容包含水圳、聚落信仰與生活遺跡。",
+      "居民應答與生活經驗分享，留下聚落變遷、產業與用水文化的現場紀錄。"
+    ],
+    "coverImage": "public/images/activities/112-014/cover.jpg",
+    "gallery": [
+      "public/images/activities/112-014/01.jpg",
+      "public/images/activities/112-014/02.jpg",
+      "public/images/activities/112-014/03.jpg",
+      "public/images/activities/112-014/04.jpg",
+      "public/images/activities/112-014/05.jpg"
+    ],
+    "relatedActivityIds": [
+      "112-014"
+    ],
+    "relatedDigitalWalkIds": [
+      "DW-YG-001"
+    ],
+    "sourceNotes": [],
+    "publicationStatus": "approved",
+    "publiclyListed": true
+  },
+  {
+    "id": "WR-114-001",
+    "title": "新港船仔媽廟街散策",
+    "year": 114,
+    "date": "11/5",
+    "townships": [
+      "新港鄉"
+    ],
+    "location": "新港奉天宮、大興宮、培桂堂、源發號、金長利",
+    "summary": "從新港奉天宮與船仔媽傳說出發，走訪大興宮、培桂堂、源發號與金長利，認識廟街信仰、歷史據點與地方產業。",
+    "routeSummary": "本次紀錄涵蓋新港奉天宮、大興宮、培桂堂、源發號與金長利等廟街文化地點。",
+    "stops": [
+      {
+        "name": "新港奉天宮",
+        "note": "從奉天宮與船仔媽傳說認識新港信仰。"
+      },
+      {
+        "name": "大興宮"
+      },
+      {
+        "name": "培桂堂"
+      },
+      {
+        "name": "源發號"
+      },
+      {
+        "name": "金長利"
+      }
+    ],
+    "fieldNotes": [],
+    "coverImage": "public/images/activities/114-018/01.jpg",
+    "gallery": [
+      "public/images/activities/114-018/02.jpg",
+      "public/images/activities/114-018/03.jpg",
+      "public/images/activities/114-018/04.jpg",
+      "public/images/activities/114-018/05.jpg",
+      "public/images/activities/114-018/06.jpg",
+      "public/images/activities/114-018/07.jpg"
+    ],
+    "relatedActivityIds": [
+      "114-018"
+    ],
+    "relatedDigitalWalkIds": [],
+    "sourceNotes": [],
+    "publicationStatus": "approved",
+    "publiclyListed": true
+  }
+];

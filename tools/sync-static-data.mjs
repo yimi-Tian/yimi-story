@@ -2,6 +2,7 @@ import { readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadContentSettings, validateImageReference } from "./content/validate-image-url.mjs";
+import { parseCsv } from "./content/csv.mjs";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const contentSettings = await loadContentSettings();
@@ -22,6 +23,12 @@ const targets = [
     js: "data/class-results-data.js",
     globalName: "CLASS_RESULTS_DATA",
     validate: validateClassResults,
+  },
+  {
+    json: "data/walking-records.json",
+    js: "data/walking-records-data.js",
+    globalName: "WALKING_RECORDS_DATA",
+    validate: validateWalkingRecords,
   },
   {
     json: "data/digital-walks.json",
@@ -107,6 +114,85 @@ async function validateClassResults(data) {
     for (const imagePath of [item.coverImage, ...images]) {
       if (/^https:\/\//i.test(imagePath)) {
         const validation = await validateImageReference(imagePath, { settings: contentSettings, field: `${item.id}.images` });
+        if (!validation.valid) throw new Error(validation.errors.map((issue) => issue.message).join("\n"));
+      } else {
+        await assertExactRelativePath(imagePath);
+      }
+    }
+  }
+}
+
+async function validateWalkingRecords(data) {
+  if (!Array.isArray(data)) throw new Error("走讀與田野紀錄資料必須為陣列。");
+
+  const activities = parseCsv(await readFile(resolve(siteRoot, "activities.csv"), "utf8"));
+  const publicActivityIds = new Set(
+    activities
+      .filter((activity) => activity["是否公開"] === "是")
+      .map((activity) => activity["活動ID"]),
+  );
+  const digitalWalks = JSON.parse(await readFile(resolve(siteRoot, "data/digital-walks.json"), "utf8"));
+  const digitalWalkIds = new Set((digitalWalks.routes || []).map((route) => route.id));
+  const ids = new Set();
+
+  for (const record of data) {
+    assertUnique(ids, record.id, "走讀與田野紀錄 ID");
+    if (!/^WR-\d{3}-\d{3}$/.test(record.id)) {
+      throw new Error(`走讀與田野紀錄 ID 格式不正確：${record.id}`);
+    }
+    for (const field of ["title", "date", "location", "summary", "coverImage"]) {
+      if (typeof record[field] !== "string" || !record[field].trim()) {
+        throw new Error(`走讀與田野紀錄 ${record.id} 缺少必要欄位：${field}`);
+      }
+    }
+    if (!Number.isInteger(record.year) || record.year < 100) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 的 year 格式不正確。`);
+    }
+    if (!Array.isArray(record.townships) || !record.townships.length || record.townships.some((item) => !String(item).trim())) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 必須包含至少一個鄉鎮。`);
+    }
+    if (!Array.isArray(record.relatedActivityIds) || !record.relatedActivityIds.length) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 必須關聯至少一筆成果故事。`);
+    }
+    for (const activityId of record.relatedActivityIds) {
+      if (!publicActivityIds.has(activityId)) {
+        throw new Error(`走讀與田野紀錄 ${record.id} 關聯不存在或未公開的活動：${activityId}`);
+      }
+    }
+    if (!Array.isArray(record.relatedDigitalWalkIds)) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 的 relatedDigitalWalkIds 必須為陣列。`);
+    }
+    for (const routeId of record.relatedDigitalWalkIds) {
+      if (!digitalWalkIds.has(routeId)) {
+        throw new Error(`走讀與田野紀錄 ${record.id} 關聯不存在的數位走讀：${routeId}`);
+      }
+    }
+    if (!["approved", "draft"].includes(record.publicationStatus) || typeof record.publiclyListed !== "boolean") {
+      throw new Error(`走讀與田野紀錄 ${record.id} 的公開狀態不完整。`);
+    }
+    if (record.publicationStatus === "approved" && record.publiclyListed !== true) {
+      throw new Error(`正式走讀與田野紀錄 ${record.id} 必須 publiclyListed=true。`);
+    }
+    if (record.publicationStatus === "draft" && record.publiclyListed !== false) {
+      throw new Error(`草稿走讀與田野紀錄 ${record.id} 必須 publiclyListed=false。`);
+    }
+
+    const stops = Array.isArray(record.stops) ? record.stops : [];
+    if (stops.some((stop) => !stop || typeof stop.name !== "string" || !stop.name.trim() || (stop.note !== undefined && typeof stop.note !== "string"))) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 的 stops 格式不正確。`);
+    }
+    const fieldNotes = Array.isArray(record.fieldNotes) ? record.fieldNotes.filter((item) => String(item).trim()) : [];
+    if (!String(record.routeSummary || "").trim() && !stops.length && !fieldNotes.length) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 至少需要 routeSummary、stops 或 fieldNotes 其中一項。`);
+    }
+
+    const gallery = Array.isArray(record.gallery) ? record.gallery : [];
+    if (gallery.includes(record.coverImage) || new Set(gallery).size !== gallery.length) {
+      throw new Error(`走讀與田野紀錄 ${record.id} 的 gallery 不得重複或包含封面。`);
+    }
+    for (const imagePath of [record.coverImage, ...gallery]) {
+      if (/^https:\/\//i.test(imagePath)) {
+        const validation = await validateImageReference(imagePath, { settings: contentSettings, field: `${record.id}.images` });
         if (!validation.valid) throw new Error(validation.errors.map((issue) => issue.message).join("\n"));
       } else {
         await assertExactRelativePath(imagePath);

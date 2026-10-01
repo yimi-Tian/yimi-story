@@ -10,6 +10,7 @@ const {
   nextVisibleCount,
   resolvePublicCover,
   visibleBatch,
+  getPublicWalkingRecords,
   getPublicDigitalWalks,
   getDraftDigitalWalks,
   getDigitalWalkCollection,
@@ -29,6 +30,14 @@ const platformStyles = await readFile(new URL("css/platform-home.css", root), "u
 const index = await readFile(new URL("index.html", root), "utf8");
 const platform = await readFile(new URL("platform.html", root), "utf8");
 const showcase = JSON.parse(await readFile(new URL("data/showcase.json", root), "utf8"));
+const walkingRecords = JSON.parse(await readFile(new URL("data/walking-records.json", root), "utf8"));
+const walkingRecordsDataSource = await readFile(new URL("data/walking-records-data.js", root), "utf8");
+const walkingRecordsRuntime = JSON.parse(
+  walkingRecordsDataSource
+    .replace(/^\/\/.*\r?\n/, "")
+    .replace(/^window\.WALKING_RECORDS_DATA\s*=\s*/, "")
+    .replace(/;\s*$/, ""),
+);
 const digitalWalks = JSON.parse(await readFile(new URL("data/digital-walks.json", root), "utf8"));
 const clubs = JSON.parse(await readFile(new URL("data/clubs.json", root), "utf8"));
 const clubsRuntime = JSON.parse(
@@ -963,16 +972,93 @@ test("班級與活動卡片維持 lazy loading", () => {
   assert.match(source, /lazyImage \? ' loading="lazy"'/);
 });
 
-test("正式學習成果只顯示可用分類並讓空分類舊 route 靜默導回", () => {
-  assert.match(index, /#\/showcase\/class-results/);
-  for (const categoryId of ["walking-records", "video-records", "publication-materials", "old-photos"]) {
-    assert.doesNotMatch(index, new RegExp(`#/showcase/${categoryId}`));
+test("學習成果正式形成班級成果與走讀田野兩個分類", () => {
+  assert.deepEqual(showcase.categories.map((category) => category.id), ["class-results", "walking-records"]);
+  assert.ok(showcase.categories.every((category) => category.publicationStatus === "approved" && category.publiclyListed === true));
+  assert.match(index, /data-showcase-nav-menu/);
+  assert.match(index, /data\/walking-records-data\.js/);
+  assert.match(source, /function syncShowcaseNavigation\(\)[\s\S]*getPublicShowcaseCategories\(\)/);
+  assert.match(source, /56|approvedClassResults\.length/);
+  assert.match(source, /5 筆走讀與田野紀錄|walkingRecords\.length/);
+  assert.doesNotMatch(source, /瀏覽班級學習與共同成果/);
+  assert.doesNotMatch(source, /1 類學習成果/);
+  assert.match(source, /route\.page === "showcase" && \["video-records", "publication-materials", "old-photos"\]\.includes\(route\.detail\)[\s\S]*replaceLegacyRoute\("#\/showcase"\)/);
+});
+
+test("walking records master 與 runtime fallback 一致且五筆皆正式公開", () => {
+  assert.deepEqual(walkingRecordsRuntime, walkingRecords);
+  assert.equal(walkingRecords.length, 5);
+  assert.equal(getPublicWalkingRecords(walkingRecords).length, 5);
+  assert.equal(new Set(walkingRecords.map((record) => record.id)).size, 5);
+  assert.ok(walkingRecords.every((record) => /^WR-\d{3}-\d{3}$/.test(record.id)));
+  assert.ok(walkingRecords.every((record) => record.publicationStatus === "approved" && record.publiclyListed === true));
+});
+
+test("walking records 關聯既有公開 activity 與有效 digital walk", () => {
+  const publicActivityIds = new Set(activities.filter((activity) => activity["是否公開"] === "是").map((activity) => activity["活動ID"]));
+  const digitalWalkIds = new Set(digitalWalks.routes.map((route) => route.id));
+  for (const record of walkingRecords) {
+    assert.ok(record.relatedActivityIds.length >= 1);
+    assert.ok(record.relatedActivityIds.every((id) => publicActivityIds.has(id)));
+    assert.ok(record.relatedDigitalWalkIds.every((id) => digitalWalkIds.has(id)));
+    assert.ok(!record.gallery.includes(record.coverImage));
+    assert.equal(new Set(record.gallery).size, record.gallery.length);
   }
-  assert.match(source, /route\.page === "showcase" && \["walking-records", "video-records", "publication-materials", "old-photos"\]\.includes\(route\.detail\)[\s\S]*replaceLegacyRoute\("#\/showcase"\)/);
-  assert.match(source, /const publicCategories = showcaseData\.categories\.filter\(\(category\) => isBrowsableShowcaseCategory\(category\.id\)\)/);
-  assert.match(source, /publicCategories\.map\(\(category\) => showcaseCategoryCard\(category, categoryCounts\)\)/);
-  assert.match(source, /瀏覽班級學習與共同成果/);
-  assert.match(platformSource, /瀏覽各地班級的學習花絮、課程實作與共同成果/);
+  const chilanRecord = walkingRecords.find((record) => record.id === "WR-112-004");
+  assert.deepEqual(chilanRecord.townships, ["水上鄉", "中埔鄉"]);
+  assert.deepEqual(chilanRecord.relatedDigitalWalkIds, ["DW-YG-001"]);
+});
+
+test("walking public selector 同時要求 approved 與 publiclyListed 並穩定排序", () => {
+  const selected = getPublicWalkingRecords([
+    ...walkingRecords,
+    { ...walkingRecords[0], id: "WR-115-999", year: 115, publicationStatus: "draft", publiclyListed: false },
+    { ...walkingRecords[0], id: "WR-115-998", year: 115, publicationStatus: "approved", publiclyListed: false },
+  ]);
+  assert.deepEqual(selected.map((record) => record.id), ["WR-114-001", "WR-112-001", "WR-112-002", "WR-112-003", "WR-112-004"]);
+});
+
+test("walking list、detail 與 unknown ID route 使用公開安全版型", () => {
+  assert.match(source, /route\.detail === "walking-records" \? route\.id/);
+  assert.match(source, /#\/showcase\/walking-records\/\$\{record\.id\}/);
+  assert.match(source, /找不到這筆走讀與田野紀錄/);
+  assert.match(source, /返回走讀與田野紀錄/);
+  assert.match(source, /record\.routeSummary \? `[\s\S]*走讀範圍/);
+  assert.match(source, /stops\.length \? `[\s\S]*沿途紀錄/);
+  assert.match(source, /fieldNotes\.length \? `[\s\S]*田野筆記/);
+  assert.match(source, /gallery\.length \? `[\s\S]*現場影像/);
+  assert.doesNotMatch(source.slice(source.indexOf("function renderWalkingRecordDetail"), source.indexOf("function renderLearningCategoryNotice")), /尚無資料|資料待補|待確認|內容整理中|IN PROGRESS/);
+});
+
+test("walking records 樣式提供三欄、平板兩欄與手機單欄", () => {
+  assert.match(styles, /\.walking-record-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /min-width:\s*761px[\s\S]*max-width:\s*1023px[\s\S]*\.walking-record-grid\s*\{[\s\S]*repeat\(2/);
+  assert.match(styles, /max-width:\s*760px[\s\S]*\.walking-record-grid,[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(styles, /\.walking-record-card-link,[\s\S]*min-height:\s*44px/);
+  assert.match(styles, /\.walking-record-card-body > p[\s\S]*-webkit-line-clamp:\s*3/);
+});
+
+test("walking records validator 與 static-data target 已建立", () => {
+  assert.match(syncStaticDataSource, /json: "data\/walking-records\.json"[\s\S]*globalName: "WALKING_RECORDS_DATA"[\s\S]*validate: validateWalkingRecords/);
+  assert.match(syncStaticDataSource, /function validateWalkingRecords/);
+  assert.match(syncStaticDataSource, /\^WR-\\d\{3\}-\\d\{3\}\$/);
+  assert.match(syncStaticDataSource, /relatedActivityIds[\s\S]*publicActivityIds/);
+  assert.match(syncStaticDataSource, /relatedDigitalWalkIds[\s\S]*digitalWalkIds/);
+});
+
+test("class results、digital walks、clubs 與 themes 維持既有公開資料", async () => {
+  const classResults = JSON.parse(await readFile(new URL("data/class-results.json", root), "utf8"));
+  assert.equal(classResults.filter((item) => item.publicationStatus === "approved").length, 56);
+  const publicWalks = getPublicDigitalWalks(digitalWalks);
+  assert.equal(publicWalks.length, 2);
+  assert.equal(publicWalks.reduce((total, walk) => total + walk.stops.length, 0), 12);
+  assert.equal(clubs.clubs.filter((club) => (
+    club.publicationStatus === "approved"
+    && club.publiclyListed === true
+    && club.pageMode !== "preparing"
+    && club.category !== "preparing"
+  )).length, 2);
+  assert.equal((await readFile(new URL("data/themes.json", root), "utf8")).includes('"id"'), true);
 });
 
 test("首頁移除測試消息、修正統計並隱藏未啟用 YouTube", () => {
