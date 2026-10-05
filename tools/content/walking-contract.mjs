@@ -9,6 +9,29 @@ export const WALKING_TYPES = Object.freeze([
   "其他",
 ]);
 
+export const WALKING_RECORD_KEYS = Object.freeze([
+  "type",
+  "titleOverride",
+  "summary",
+  "routeSummary",
+  "stops",
+  "fieldNotes",
+  "digitalWalkId",
+  "coverAssetId",
+]);
+
+export const WALKING_STOP_KEYS = Object.freeze(["name", "note"]);
+
+function unknownProperties(source, allowedKeys) {
+  const allowed = new Set(allowedKeys);
+  return Object.fromEntries(
+    Object.keys(source)
+      .filter((key) => !allowed.has(key))
+      .sort()
+      .map((key) => [key, source[key]]),
+  );
+}
+
 function trimmed(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -25,7 +48,11 @@ export function normalizeWalkingRecord(value) {
     ? source.stops
       .map((stop) => {
         const row = stop && typeof stop === "object" && !Array.isArray(stop) ? stop : {};
-        return { name: trimmed(row.name), note: nullableText(row.note) };
+        return {
+          ...unknownProperties(row, WALKING_STOP_KEYS),
+          name: trimmed(row.name),
+          note: nullableText(row.note),
+        };
       })
       .filter((stop) => stop.name || stop.note)
     : [];
@@ -34,6 +61,7 @@ export function normalizeWalkingRecord(value) {
     : [];
 
   return {
+    ...unknownProperties(source, WALKING_RECORD_KEYS),
     type: trimmed(source.type),
     titleOverride: nullableText(source.titleOverride),
     summary: trimmed(source.summary),

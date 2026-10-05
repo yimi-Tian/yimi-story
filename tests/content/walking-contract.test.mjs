@@ -1,8 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { normalizeActivity } from "../../tools/content/normalize-activity.mjs";
 import { validateActivity } from "../../tools/content/validate-activity.mjs";
-import { effectiveWalkingTitle, normalizeWalkingRecord, WALKING_TYPES } from "../../tools/content/walking-contract.mjs";
+import {
+  effectiveWalkingTitle,
+  normalizeWalkingRecord,
+  WALKING_RECORD_KEYS,
+  WALKING_STOP_KEYS,
+  WALKING_TYPES,
+} from "../../tools/content/walking-contract.mjs";
 import { legacyWalkingFixtures } from "./fixtures/legacy-walking-records.mjs";
 
 const settings = { allowedDistricts: ["朴子市"], allowedExternalImageHosts: [] };
@@ -58,6 +65,53 @@ test("Walking type 僅接受正式 enum", () => {
   const result = validateActivity(activity(validWalking({ type: "__PENDING_MANUAL_CLASSIFICATION__" })), { settings });
   assert.ok(result.errors.some((issue) => issue.code === "walking.type"));
   assert.deepEqual(WALKING_TYPES, ["地方走讀", "聚落踏查", "流域觀察", "生態觀察", "訪談／口述", "文史採集", "產業地景", "其他"]);
+});
+
+test("Walking root 未知欄位在 normalize 後仍由 runtime validator 拒絕", () => {
+  const normalized = normalizeActivity(activity(validWalking({ unexpected: true }))).data;
+  const result = validateActivity(normalized, { settings });
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((issue) => issue.field === "walkingRecord.unexpected" && issue.message.includes("unexpected")));
+});
+
+test("Walking root 多個未知欄位逐一指出 key", () => {
+  const result = validateActivity(activity(validWalking({ alpha: true, omega: false })), { settings });
+  assert.equal(result.valid, false);
+  assert.deepEqual(
+    result.errors.filter((issue) => issue.code === "object.unsupportedProperty").map((issue) => issue.field).sort(),
+    ["walkingRecord.alpha", "walkingRecord.omega"],
+  );
+});
+
+test("第一個 stop 未知欄位在 normalize 後仍由 runtime validator 拒絕", () => {
+  const normalized = normalizeActivity(activity(validWalking({
+    stops: [{ name: "三界埔", note: null, unexpected: true }],
+  }))).data;
+  const result = validateActivity(normalized, { settings });
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((issue) => issue.field === "walkingRecord.stops[0].unexpected" && issue.message.includes("unexpected")));
+});
+
+test("第二個 stop 未知欄位回報正確 index 與 key", () => {
+  const result = validateActivity(activity(validWalking({
+    stops: [{ name: "第一站", note: null }, { name: "第二站", note: "說明", foo: true }],
+  })), { settings });
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((issue) => issue.field === "walkingRecord.stops[1].foo" && issue.message.includes("foo")));
+});
+
+test("合法 stop note 為 null 或文字皆通過", () => {
+  for (const note of [null, "現場觀察說明"]) {
+    const result = validateActivity(activity(validWalking({ stops: [{ name: "第一站", note }] })), { settings });
+    assert.equal(result.valid, true);
+  }
+});
+
+test("runtime Walking allowed keys 與 JSON Schema properties 保持一致", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../schemas/activity.schema.json", import.meta.url), "utf8"));
+  const walkingSchema = schema.properties.walkingRecord.oneOf.find((entry) => entry.type === "object");
+  assert.deepEqual([...WALKING_RECORD_KEYS].sort(), Object.keys(walkingSchema.properties).sort());
+  assert.deepEqual([...WALKING_STOP_KEYS].sort(), Object.keys(walkingSchema.properties.stops.items.properties).sort());
 });
 
 test("Walking summary 必填且限制 20～1500 字", () => {

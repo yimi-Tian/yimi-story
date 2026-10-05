@@ -4,7 +4,7 @@ import {
   detectDuplicateParagraphs,
   isStrictIsoDate,
 } from "./normalize-common.mjs";
-import { WALKING_TYPES } from "./walking-contract.mjs";
+import { WALKING_RECORD_KEYS, WALKING_STOP_KEYS, WALKING_TYPES } from "./walking-contract.mjs";
 
 function validateString(result, field, value, minimum, maximum) {
   if (typeof value !== "string" || value.length < minimum || value.length > maximum) {
@@ -22,12 +22,23 @@ function validateHttpsUrl(result, field, value) {
   }
 }
 
+function validateAllowedKeys(result, value, allowedKeys, path) {
+  const allowed = new Set(allowedKeys);
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) {
+      addIssue(result, "errors", `${path}.${key}`, "object.unsupportedProperty", `${path} contains unsupported property: ${key}`);
+    }
+  }
+}
+
 function validateWalkingRecord(result, walkingRecord) {
   if (walkingRecord === null || walkingRecord === undefined) return;
   if (!walkingRecord || typeof walkingRecord !== "object" || Array.isArray(walkingRecord)) {
     addIssue(result, "errors", "walkingRecord", "walking.type", "walkingRecord 必須為物件或 null。");
     return;
   }
+
+  validateAllowedKeys(result, walkingRecord, WALKING_RECORD_KEYS, "walkingRecord");
 
   if (!WALKING_TYPES.includes(walkingRecord.type)) {
     addIssue(result, "errors", "walkingRecord.type", "walking.type", "走讀類型不在允許清單中。");
@@ -50,6 +61,9 @@ function validateWalkingRecord(result, walkingRecord) {
     addIssue(result, "errors", "walkingRecord.stops", "walking.stops.array", "走訪站點必須為陣列。");
   } else {
     for (const [index, stop] of stops.entries()) {
+      if (stop && typeof stop === "object" && !Array.isArray(stop)) {
+        validateAllowedKeys(result, stop, WALKING_STOP_KEYS, `walkingRecord.stops[${index}]`);
+      }
       if (!stop || typeof stop !== "object" || Array.isArray(stop) || typeof stop.name !== "string" || !stop.name.trim() || stop.name.length > 150) {
         addIssue(result, "errors", `walkingRecord.stops[${index}].name`, "walking.stop.name", "站點名稱必填且最多 150 字。");
       }
