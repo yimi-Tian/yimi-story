@@ -14,8 +14,10 @@ const root = resolve(import.meta.dirname, "../..");
 const expectedHashes = {
   "data/class-results.json": "fa31e8a55b528a89ed7257867340967fa81f5072ab897cdcbf21aa804802083d",
   "data/class-results-data.js": "135adf9bc46a3a389a51963c3aaa9bb27c4a5a49bf9721ba81a9d39170191587",
-  "activities.csv": "8d8b8a3c76e8686715bbaf27b6b6acc6f8774d327563fdcf4911187f5cfa7a9c",
-  "activities-data.js": "ee64d4de73c1ccb5c5d4dd8000f742075d6a6d989b94019fdc21fd2d648dcdb7",
+  "activities.csv": "e78a6bceff8e842532f3bc255a6249a9ee6f463e8ba49ee0b1b8bd3cef16e207",
+  "activities-data.js": "e3e144510f3cc88d906d8fdc95998921c9bb760833ce5593b7156fb0db3537fd",
+  "data/platform-home.json": "c42fd5ecb9e8f6db5b5f1110a66b2f53f070db2e62b1d4c3b8a3432929a148b2",
+  "data/platform-home-data.js": "1c60bf625c942fd241d37fc45c6e838c3c400b4bc9bdad500862eefee41e3ee2",
 };
 
 function untrackedFiles() {
@@ -33,18 +35,18 @@ test("既有正式資料檔內容未被階段 1 修改", async () => {
   }
 });
 
-test("dry-run 轉換 56 筆班級與 64 筆活動，且不改變未追蹤檔案", async () => {
+test("dry-run 轉換 56 筆班級與 65 筆活動，且不改變未追蹤檔案", async () => {
   const before = untrackedFiles();
   const result = await runExistingContentDryRun({ siteRoot: root });
   const after = untrackedFiles();
   assert.deepEqual(after, before);
   assert.equal(result.report.classResultSourceCount, 56);
   assert.equal(result.report.classResultSuccessCount, 56);
-  assert.equal(result.report.activitySourceCount, 64);
-  assert.equal(result.report.activitySuccessCount, 64);
+  assert.equal(result.report.activitySourceCount, 65);
+  assert.equal(result.report.activitySuccessCount, 65);
   assert.equal(result.report.validationErrorCount, 0);
-  assert.equal(result.report.unparsedLegacyDateCount, 64);
-  assert.equal(result.report.httpsImageCount, 3);
+  assert.equal(result.report.unparsedLegacyDateCount, 65);
+  assert.equal(result.report.httpsImageCount, 13);
 });
 
 test("既有圖片參照與筆數通過 deterministic exporter 回歸", async () => {
@@ -58,7 +60,7 @@ test("既有圖片參照與筆數通過 deterministic exporter 回歸", async ()
     legacyImport: true,
   });
   assert.equal(classOutput.published.length, 56);
-  assert.equal(activityOutput.rows.length, 64);
+  assert.equal(activityOutput.rows.length, 65);
 
   const originalActivities = result.activitySource;
   const exportedActivities = parseCsv(activityOutput.csvText);
@@ -77,7 +79,7 @@ test("既有圖片參照與筆數通過 deterministic exporter 回歸", async ()
   assert.deepEqual(parseCsv(context.window.ACTIVITIES_CSV), exportedActivities);
 });
 
-test("首頁活動統計反映第一筆正式發布後的 64 筆", async () => {
+test("首頁活動統計反映目前正式發布後的 65 筆", async () => {
   const home = JSON.parse(await readFile(resolve(root, "data/platform-home.json"), "utf8"));
-  assert.equal(home.platformStats.find((item) => item.label === "活動成果")?.value, "64");
+  assert.equal(home.platformStats.find((item) => item.label === "活動成果")?.value, "65");
 });
