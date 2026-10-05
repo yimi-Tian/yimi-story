@@ -14,7 +14,7 @@ const model: DraftPreviewModel = {
     id: "112-015", year: 112, name: "<script>alert(1)</script>", startDate: null, endDate: null, dateLabel: "112年春季",
     districts: ["水上鄉"], venue: "場地", projectName: null, activityType: "成果", topic: "地方", sdgs: [],
     summary: "<img src=x onerror=alert(1)>", participants: 20, partnerOrganizations: null, leader: null, keywords: [],
-    videoUrl: null, relatedUrl: null, featured: false, publicNotes: "公開備註", coverAssetId: null, galleryAssetIds: ["image"],
+    videoUrl: null, relatedUrl: null, featured: false, publicNotes: "公開備註", coverAssetId: null, galleryAssetIds: ["image"], walkingRecord: null,
   },
 };
 

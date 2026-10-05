@@ -28,7 +28,8 @@
     "internalNotes",
     "publicNotes",
     "coverAssetId",
-    "galleryAssetIds"
+    "galleryAssetIds",
+    "walkingRecord"
   ],
   "properties": {
     "id": { "type": "string", "pattern": "^\\d{3}-\\d{3}$" },
@@ -78,6 +79,52 @@
       "maxItems": 30,
       "uniqueItems": true,
       "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+    },
+    "walkingRecord": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "titleOverride",
+            "summary",
+            "routeSummary",
+            "stops",
+            "fieldNotes",
+            "digitalWalkId",
+            "coverAssetId"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["地方走讀", "聚落踏查", "流域觀察", "生態觀察", "訪談／口述", "文史採集", "產業地景", "其他"]
+            },
+            "titleOverride": { "type": ["string", "null"], "minLength": 1, "maxLength": 150 },
+            "summary": { "type": "string", "minLength": 20, "maxLength": 1500 },
+            "routeSummary": { "type": ["string", "null"], "minLength": 1, "maxLength": 1500 },
+            "stops": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "note"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1, "maxLength": 150 },
+                  "note": { "type": ["string", "null"], "minLength": 1, "maxLength": 1000 }
+                }
+              }
+            },
+            "fieldNotes": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 1000 }
+            },
+            "digitalWalkId": { "type": ["string", "null"], "minLength": 1, "maxLength": 200 },
+            "coverAssetId": { "type": ["string", "null"], "minLength": 1, "maxLength": 200 }
+          }
+        }
+      ]
     }
   }
 }

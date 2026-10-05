@@ -4,6 +4,7 @@ import {
   detectDuplicateParagraphs,
   isStrictIsoDate,
 } from "./normalize-common.mjs";
+import { WALKING_TYPES } from "./walking-contract.mjs";
 
 function validateString(result, field, value, minimum, maximum) {
   if (typeof value !== "string" || value.length < minimum || value.length > maximum) {
@@ -18,6 +19,65 @@ function validateHttpsUrl(result, field, value) {
     if (url.protocol !== "https:") throw new Error();
   } catch {
     addIssue(result, "errors", field, "url.httpsOnly", `${field} 只允許完整 HTTPS URL 或 null。`);
+  }
+}
+
+function validateWalkingRecord(result, walkingRecord) {
+  if (walkingRecord === null || walkingRecord === undefined) return;
+  if (!walkingRecord || typeof walkingRecord !== "object" || Array.isArray(walkingRecord)) {
+    addIssue(result, "errors", "walkingRecord", "walking.type", "walkingRecord 必須為物件或 null。");
+    return;
+  }
+
+  if (!WALKING_TYPES.includes(walkingRecord.type)) {
+    addIssue(result, "errors", "walkingRecord.type", "walking.type", "走讀類型不在允許清單中。");
+  }
+
+  const summary = typeof walkingRecord.summary === "string" ? walkingRecord.summary.trim() : "";
+  if (summary.length < 20 || summary.length > 1500) {
+    addIssue(result, "errors", "walkingRecord.summary", "walking.summary.length", "走讀摘要長度必須為 20–1500 字。");
+  }
+
+  if (walkingRecord.titleOverride !== null && (typeof walkingRecord.titleOverride !== "string" || !walkingRecord.titleOverride.trim() || walkingRecord.titleOverride.length > 150)) {
+    addIssue(result, "errors", "walkingRecord.titleOverride", "walking.titleOverride.invalid", "走讀頁標題最多 150 字或 null。");
+  }
+  if (walkingRecord.routeSummary !== null && (typeof walkingRecord.routeSummary !== "string" || !walkingRecord.routeSummary.trim() || walkingRecord.routeSummary.length > 1500)) {
+    addIssue(result, "errors", "walkingRecord.routeSummary", "walking.routeSummary.invalid", "走讀範圍摘要最多 1500 字或 null。");
+  }
+
+  const stops = Array.isArray(walkingRecord.stops) ? walkingRecord.stops : null;
+  if (!stops) {
+    addIssue(result, "errors", "walkingRecord.stops", "walking.stops.array", "走訪站點必須為陣列。");
+  } else {
+    for (const [index, stop] of stops.entries()) {
+      if (!stop || typeof stop !== "object" || Array.isArray(stop) || typeof stop.name !== "string" || !stop.name.trim() || stop.name.length > 150) {
+        addIssue(result, "errors", `walkingRecord.stops[${index}].name`, "walking.stop.name", "站點名稱必填且最多 150 字。");
+      }
+      if (stop && typeof stop === "object" && !Array.isArray(stop) && stop.note !== null && (typeof stop.note !== "string" || !stop.note.trim() || stop.note.length > 1000)) {
+        addIssue(result, "errors", `walkingRecord.stops[${index}].note`, "walking.stop.note", "站點說明最多 1000 字或 null。");
+      }
+    }
+  }
+
+  const fieldNotes = Array.isArray(walkingRecord.fieldNotes) ? walkingRecord.fieldNotes : null;
+  if (!fieldNotes) {
+    addIssue(result, "errors", "walkingRecord.fieldNotes", "walking.fieldNotes.array", "現場觀察重點必須為陣列。");
+  } else if (fieldNotes.some((note) => typeof note !== "string" || !note.trim() || note.length > 1000)) {
+    addIssue(result, "errors", "walkingRecord.fieldNotes", "walking.fieldNotes.value", "每筆現場觀察重點必須為 1–1000 字。");
+  }
+
+  if (walkingRecord.digitalWalkId !== null && (typeof walkingRecord.digitalWalkId !== "string" || !walkingRecord.digitalWalkId.trim() || walkingRecord.digitalWalkId.length > 200)) {
+    addIssue(result, "errors", "walkingRecord.digitalWalkId", "walking.digitalWalkId.invalid", "Digital Walk ID 必須為非空字串或 null。");
+  }
+  if (walkingRecord.coverAssetId !== null && (typeof walkingRecord.coverAssetId !== "string" || !walkingRecord.coverAssetId.trim() || walkingRecord.coverAssetId.length > 200)) {
+    addIssue(result, "errors", "walkingRecord.coverAssetId", "walking.coverAssetId.invalid", "走讀封面 asset ID 必須為非空字串或 null。");
+  }
+
+  const hasRouteSummary = typeof walkingRecord.routeSummary === "string" && Boolean(walkingRecord.routeSummary.trim());
+  const hasValidStop = Boolean(stops?.some((stop) => stop && typeof stop.name === "string" && stop.name.trim()));
+  const hasFieldNote = Boolean(fieldNotes?.some((note) => typeof note === "string" && note.trim()));
+  if (!hasRouteSummary && !hasValidStop && !hasFieldNote) {
+    addIssue(result, "errors", "walkingRecord", "walking.content.required", "走讀範圍摘要、有效站點或現場觀察重點至少需填寫一項。");
   }
 }
 
@@ -66,6 +126,7 @@ export function validateActivity(data, options = {}) {
   if (data.coverAssetId !== null && (typeof data.coverAssetId !== "string" || !data.coverAssetId || data.coverAssetId.length > 200)) addIssue(result, "errors", "coverAssetId", "asset.invalid", "coverAssetId 必須為非空字串或 null。");
   if (!Array.isArray(data.galleryAssetIds) || data.galleryAssetIds.length > 30 || new Set(data.galleryAssetIds).size !== data.galleryAssetIds.length) addIssue(result, "errors", "galleryAssetIds", "asset.gallery", "galleryAssetIds 最多 30 個且不得重複。");
   if (data.coverAssetId && (data.galleryAssetIds || []).includes(data.coverAssetId)) addIssue(result, "errors", "galleryAssetIds", "asset.coverRepeated", "相簿不得包含封面 asset ID。");
+  validateWalkingRecord(result, data.walkingRecord);
 
   const duplicates = detectDuplicateParagraphs(data.summary);
   if (duplicates.length) addIssue(result, "warnings", "summary", "text.duplicateParagraph", `偵測到 ${duplicates.length} 個完整重複段落。`);

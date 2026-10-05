@@ -5,6 +5,7 @@ import {
   parseBoolean,
   parseNullableInteger,
 } from "./normalize-common.mjs";
+import { normalizeWalkingRecord } from "./walking-contract.mjs";
 
 const DISTRICT_SPLIT = /[、,，/／;；\s]+/;
 const KEYWORD_SPLIT = /[、,，;；|\n]+/;
@@ -38,6 +39,7 @@ export function normalizeActivity(input) {
       publicNotes: normalizeText(input.publicNotes, { nullable: true }),
       coverAssetId: normalizeText(input.coverAssetId, { nullable: true }),
       galleryAssetIds: normalizeList(input.galleryAssetIds),
+      walkingRecord: normalizeWalkingRecord(input.walkingRecord),
     },
     stats: { sdgCorrectionCount: sdgs.correctionCount, invalidSdgs: sdgs.invalid },
   };
