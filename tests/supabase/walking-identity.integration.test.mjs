@@ -154,11 +154,16 @@ insert into public.activity_walking_identities (content_id,walking_record_id,all
     assert.throws(() => asAnonymous(`select public.get_or_create_activity_walking_identity('${CONTENT_IDS[1]}'::uuid)`), /permission denied/i);
     console.log("anonymous PASS");
 
-    const first = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[1]}'::uuid) value`, { commit: true });
-    assert.equal(first[0].value, "WR-115-001");
+    const different = await Promise.all([
+      runConcurrentAllocation(ACTIVE, CONTENT_IDS[1], 0.35),
+      runConcurrentAllocation(ACTIVE, CONTENT_IDS[2]),
+    ]);
+    assert.deepEqual([...different].sort(), ["WR-115-001", "WR-115-002"]);
+    assert.deepEqual(queryTestJson(`select walking_record_id from public.activity_walking_identities where allocated_year=115 order by walking_record_id`).map((row) => row.walking_record_id), ["WR-115-001", "WR-115-002"]);
+    console.log("different-activity concurrency PASS");
     console.log("active admin PASS");
     const reused = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[1]}'::uuid) value`, { commit: true });
-    assert.equal(reused[0].value, "WR-115-001");
+    assert.equal(reused[0].value, different[0]);
     const created = queryTestJson(`select created_by::text created_by from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'`)[0];
     assert.equal(created.created_by, ACTIVE);
     console.log("created_by PASS");
@@ -167,18 +172,16 @@ insert into public.activity_walking_identities (content_id,walking_record_id,all
       update public.content_drafts set data=jsonb_set(data,'{walkingRecord}','null'::jsonb), updated_by='${ACTIVE}' where content_id='${CONTENT_IDS[1]}';
     `);
     const reopened = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[1]}'::uuid) value`, { commit: true });
-    assert.equal(reopened[0].value, "WR-115-001");
+    assert.equal(reopened[0].value, different[0]);
     assert.equal(queryTestJson(`select count(*)::integer count from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'`)[0].count, 1);
-    const second = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[2]}'::uuid) value`, { commit: true });
-    assert.equal(second[0].value, "WR-115-002");
     const otherYear = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[3]}'::uuid) value`, { commit: true });
     assert.equal(otherYear[0].value, "WR-116-001");
 
     executeTestSql(`update public.content_drafts set data=jsonb_set(data,'{year}','116'::jsonb), updated_by='${ACTIVE}' where content_id='${CONTENT_IDS[1]}';`);
     const yearChanged = asUser(ACTIVE, `select public.get_or_create_activity_walking_identity('${CONTENT_IDS[1]}'::uuid) value`, { commit: true });
-    assert.equal(yearChanged[0].value, "WR-115-001");
+    assert.equal(yearChanged[0].value, different[0]);
     assert.deepEqual(queryTestJson(`select walking_record_id,allocated_year,created_by::text created_by from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'`)[0], {
-      walking_record_id: "WR-115-001", allocated_year: 115, created_by: ACTIVE,
+      walking_record_id: different[0], allocated_year: 115, created_by: ACTIVE,
     });
     console.log("year-change PASS");
 
@@ -188,14 +191,6 @@ insert into public.activity_walking_identities (content_id,walking_record_id,all
     assert.equal(legacy114[0].value, "WR-114-002");
     console.log("legacy 112 PASS");
     console.log("legacy 114 PASS");
-
-    const different = await Promise.all([
-      runConcurrentAllocation(ACTIVE, CONTENT_IDS[11], 0.35),
-      runConcurrentAllocation(ACTIVE, CONTENT_IDS[12]),
-    ]);
-    assert.deepEqual([...different].sort(), ["WR-118-001", "WR-118-002"]);
-    assert.deepEqual(queryTestJson(`select walking_record_id from public.activity_walking_identities where allocated_year=118 order by walking_record_id`).map((row) => row.walking_record_id), ["WR-118-001", "WR-118-002"]);
-    console.log("different-activity concurrency PASS");
 
     const same = await Promise.all([
       runConcurrentAllocation(ACTIVE, CONTENT_IDS[13], 0.35),
@@ -211,7 +206,7 @@ insert into public.activity_walking_identities (content_id,walking_record_id,all
     console.log("direct UPDATE blocked");
     assert.throws(() => asUser(ACTIVE, `delete from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'; select '[]'::text`, { raw: true }), /permission denied|row-level security/i);
     console.log("direct DELETE blocked");
-    assert.equal(asUser(ACTIVE, `select walking_record_id from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'`)[0].walking_record_id, "WR-115-001");
+    assert.equal(asUser(ACTIVE, `select walking_record_id from public.activity_walking_identities where content_id='${CONTENT_IDS[1]}'`)[0].walking_record_id, different[0]);
     assert.equal(asUser(NON_ADMIN, `select walking_record_id from public.activity_walking_identities`).length, 0);
     assert.equal(asUser(INACTIVE, `select walking_record_id from public.activity_walking_identities`).length, 0);
 
