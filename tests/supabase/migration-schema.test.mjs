@@ -21,6 +21,7 @@ const publicationSnapshotSql = read("supabase/migrations/202608280002_publicatio
 const publicationManifestV2Sql = read("supabase/migrations/202609010001_publication_snapshot_media_manifest_v2.sql");
 const publicationMediaSql = read("supabase/migrations/202609020001_publication_media_promotion.sql");
 const githubPublicationSql = read("supabase/migrations/202609020002_github_publication_workflow.sql");
+const walkingIdentitySql = read("supabase/migrations/202610050001_activity_walking_identities.sql");
 
 test("migration 採穩定順序且不含 destructive drop", () => {
   assert.deepEqual(migrationFiles, [
@@ -37,9 +38,10 @@ test("migration 採穩定順序且不含 destructive drop", () => {
     "202609010001_publication_snapshot_media_manifest_v2.sql",
     "202609020001_publication_media_promotion.sql",
     "202609020002_github_publication_workflow.sql",
+    "202610050001_activity_walking_identities.sql",
   ]);
-  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}\n${mediaEnumSql}\n${mediaDraftSql}\n${mediaEditSql}\n${mediaReattachSql}\n${publicationSnapshotSql}\n${publicationManifestV2Sql}\n${publicationMediaSql}\n${githubPublicationSql}`, /\bdrop\s+(table|type|schema)\b/i);
-  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql, mediaEnumSql, mediaDraftSql, mediaEditSql, mediaReattachSql, publicationSnapshotSql, publicationManifestV2Sql, publicationMediaSql, githubPublicationSql]) {
+  assert.doesNotMatch(`${coreSql}\n${storageSql}\n${baselineSql}\n${productionSql}\n${contentCrudSql}\n${mediaEnumSql}\n${mediaDraftSql}\n${mediaEditSql}\n${mediaReattachSql}\n${publicationSnapshotSql}\n${publicationManifestV2Sql}\n${publicationMediaSql}\n${githubPublicationSql}\n${walkingIdentitySql}`, /\bdrop\s+(table|type|schema)\b/i);
+  for (const sql of [coreSql, storageSql, baselineSql, productionSql, contentCrudSql, mediaEnumSql, mediaDraftSql, mediaEditSql, mediaReattachSql, publicationSnapshotSql, publicationManifestV2Sql, publicationMediaSql, githubPublicationSql, walkingIdentitySql]) {
     assert.match(sql, /^begin;/i);
     assert.match(sql, /commit;\s*$/i);
   }
