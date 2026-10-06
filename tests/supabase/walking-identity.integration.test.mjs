@@ -43,15 +43,15 @@ function executeTestSql(sql) {
 
 function queryTestJson(sql) {
   if (!databaseUrl) return queryLocalJson(sql);
-  const output = directPsql(`select coalesce(json_agg(result), '[]'::json)::text from (${sql}) result;`);
-  return JSON.parse(output.split(/\r?\n/).filter((line) => line.startsWith("[")).at(-1) || "[]");
+  const output = directPsql(`select coalesce(jsonb_agg(to_jsonb(result)), '[]'::jsonb)::text from (${sql}) result;`);
+  return JSON.parse(output || "[]");
 }
 
 function asUser(userId, sql, { commit = false, raw = false } = {}) {
   const output = executeTestSql(`begin;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', ${sqlText(userId)}, true);
-${raw ? sql : `select coalesce(json_agg(result), '[]'::json)::text from (${sql}) result;`}
+${raw ? sql : `select coalesce(jsonb_agg(to_jsonb(result)), '[]'::jsonb)::text from (${sql}) result;`}
 ${commit ? "commit" : "rollback"};`).trim().split(/\r?\n/).filter((line) => line.startsWith("[")).at(-1);
   return JSON.parse(output || "[]");
 }
