@@ -72,6 +72,7 @@ test("112-015 keeps canonical cover null while display hero follows public legac
   const model = buildPreviewModel({ type: "activity", publicId: "112-015", publishedSnapshotId: "snapshot", draft: null,
     published: { snapshot_data: canonical }, media: mediaRows });
   expect(model.contentType).toBe("activity");
+  if (model.contentType !== "activity") throw new Error("expected activity preview");
   expect(model.data.coverAssetId).toBeNull();
   expect(model.heroSource).toBe("legacy_convention");
   expect(model.cover?.url).toBe("https://yimi-tian.github.io/yimi-story/public/images/activities/112-015/cover.jpg");
@@ -89,4 +90,41 @@ test("new draft without explicit cover may use first gallery image only as displ
   expect(model.data.coverAssetId).toBeNull();
   expect(model.heroSource).toBe("gallery_fallback");
   expect(model.cover?.url).toBe(model.gallery[0].url);
+});
+
+test("activity walking draft preview keeps effective title and selected existing cover", () => {
+  const data = {
+    id: "115-099", year: 115, name: "活動名稱", startDate: null, endDate: null, dateLabel: "10/6",
+    districts: ["中埔鄉"], venue: "場地", projectName: null, activityType: "走讀", topic: "地方文化", sdgs: [],
+    summary: "這是一段足夠長度的活動摘要內容，供預覽測試使用。", participants: null, partnerOrganizations: null,
+    leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false, internalNotes: null, publicNotes: null,
+    coverAssetId: "activity-cover", galleryAssetIds: ["walking-cover"], walkingRecord: {
+      type: "地方走讀", titleOverride: "走讀標題", summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "聚落範圍",
+      stops: [{ name: "第一站", note: null }], fieldNotes: ["觀察重點"], digitalWalkId: "DW-WT-001", coverAssetId: "walking-cover",
+    },
+  };
+  const model = buildPreviewModel({ type: "activity", publicId: data.id, publishedSnapshotId: null,
+    draft: { revision: 1, status: "draft", data, validation_result: { valid: true, errors: [], warnings: [] } }, published: null,
+    media: [media({ referenceId: "activity-cover" }), media({ referenceId: "walking-cover", previewUrl: "https://example.test/walking.jpg" })] });
+  expect(model.contentType).toBe("activity");
+  if (model.contentType !== "activity") throw new Error("expected activity preview");
+  expect(model.walkingRecord?.titleOverride).toBe("走讀標題");
+  expect(model.walkingCover?.url).toBe("https://example.test/walking.jpg");
+});
+
+test("walking preview null cover follows effective activity cover without mutating canonical", () => {
+  const data = {
+    id: "115-099", year: 115, name: "活動名稱", startDate: null, endDate: null, dateLabel: "10/6", districts: ["中埔鄉"], venue: "場地",
+    projectName: null, activityType: "走讀", topic: "地方文化", sdgs: [], summary: "這是一段足夠長度的活動摘要內容，供預覽測試使用。",
+    participants: null, partnerOrganizations: null, leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false,
+    internalNotes: null, publicNotes: null, coverAssetId: "activity-cover", galleryAssetIds: [], walkingRecord: {
+      type: "地方走讀", titleOverride: null, summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "範圍", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null,
+    },
+  };
+  const before = structuredClone(data);
+  const model = buildPreviewModel({ type: "activity", publicId: data.id, publishedSnapshotId: null, draft: { revision: 1, status: "draft", data, validation_result: { valid: true, errors: [], warnings: [] } }, published: null, media: [media({ referenceId: "activity-cover" })] });
+  expect(model.contentType).toBe("activity");
+  if (model.contentType !== "activity") throw new Error("expected activity preview");
+  expect(model.walkingCover?.url).toBe("https://example.test/image.jpg");
+  expect(data).toEqual(before);
 });

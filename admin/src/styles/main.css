@@ -130,6 +130,19 @@ button { cursor: pointer; }
 .check-group .legacy-option small { color: #8c682a; }
 .internal-note { border-left: 4px solid #ad7a36; border-radius: 8px; padding: .8rem 0 .8rem 1rem; background: #fff9ea; }
 .media-readonly { border-style: dashed; }
+.walking-section { display: grid; gap: 1rem; border-color: #c9d9d1; background: #fbfdfb; }
+.walking-section__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.walking-section__heading h2, .walking-section__heading p { margin: 0; }
+.walking-fields { display: grid; gap: 1rem; }
+.walking-identity { display: grid; gap: .25rem; border-left: 4px solid #39715f; border-radius: 8px; padding: .75rem 1rem; background: #edf5f0; }
+.walking-identity span, .walking-identity small { color: #65756d; font-size: .76rem; }
+.walking-repeater { display: grid; gap: .8rem; margin: 0; border: 1px solid #d8e1dc; border-radius: 10px; padding: 1rem; }
+.walking-repeater legend { padding: 0 .35rem; font-weight: 800; }
+.walking-repeater__row { display: grid; grid-template-columns: 1fr 1.4fr auto; align-items: end; gap: .7rem; border-bottom: 1px solid #e3e8e4; padding-bottom: .8rem; }
+.walking-preview { display: grid; gap: 1rem; }
+.walking-preview dl { display: grid; gap: .45rem; margin: 0; }
+.walking-preview dl > div { display: grid; grid-template-columns: 8rem 1fr; gap: .7rem; }
+.walking-preview dd { margin: 0; }
 .publication-panel { display: grid; gap: 1rem; margin-bottom: 1rem; border-color: #bad0c5; background: #f7fbf8; }
 .publication-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .publication-panel__heading h2 { margin-bottom: .35rem; }
@@ -260,6 +273,8 @@ button { cursor: pointer; }
   .public-preview__gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .image-editor-layout { grid-template-columns: 1fr; }
   .publication-stepper { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .walking-section__heading { flex-direction: column; }
+  .walking-repeater__row { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .login-intro { min-height: auto; }

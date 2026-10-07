@@ -84,6 +84,7 @@ export async function requestPublicationPreparation(
   expectedRevision: number,
   action: "validate" | "create",
 ): Promise<{ preparation: PublicationPreparation; snapshot?: PublicationSnapshotSummary }> {
+  await assertWalkingIdentityReadyForPublication(client, draftId);
   const { data, error } = await client.functions.invoke("prepare-publication-snapshot", {
     body: { action, draftId, expectedRevision },
   });
@@ -102,6 +103,17 @@ export async function requestPublicationPreparation(
     createdAt: String(data.snapshot.created_at),
   } : undefined;
   return { preparation: data.preparation as PublicationPreparation, snapshot };
+}
+
+export async function assertWalkingIdentityReadyForPublication(client: SupabaseClient, draftId: string): Promise<void> {
+  const draft = await client.from("content_drafts").select("content_id,data").eq("id", draftId).single();
+  if (draft.error || !draft.data) fail("PUBLICATION_WALKING_IDENTITY_CHECK_FAILED");
+  const value = draft.data as { content_id?: unknown; data?: { walkingRecord?: unknown } };
+  if (value.data?.walkingRecord === null || value.data?.walkingRecord === undefined) return;
+  const identity = await client.from("activity_walking_identities").select("walking_record_id")
+    .eq("content_id", String(value.content_id)).maybeSingle();
+  if (identity.error) fail("PUBLICATION_WALKING_IDENTITY_CHECK_FAILED");
+  if (!identity.data?.walking_record_id) fail("PUBLICATION_WALKING_IDENTITY_REQUIRED");
 }
 
 export async function fetchPublicationSnapshots(client: SupabaseClient, contentId: string): Promise<PublicationSnapshotSummary[]> {

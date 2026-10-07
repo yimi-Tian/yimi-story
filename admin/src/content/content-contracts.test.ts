@@ -39,6 +39,7 @@ const activityForm: ActivityForm = {
   sdgs: ["SDG 11"], summary: "這是一段足夠長度的活動成果摘要，用來保留既有日期與缺少封面的文字編輯。",
   participants: "20", partnerOrganizations: "合作單位", leader: "帶領者", keywords: ["走讀", "走讀"], videoUrl: "", relatedUrl: "",
   featured: false, publicNotes: "", internalNotes: "既有備註", coverAssetId: null, galleryAssetIds: [],
+  walkingRecord: null,
 };
 
 describe("Stage 1 canonical adapter", () => {

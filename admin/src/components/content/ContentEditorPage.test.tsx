@@ -9,12 +9,15 @@ const mocks = vi.hoisted(() => ({
   openContentDraft: vi.fn(),
   fetchContentList: vi.fn(),
   fetchPublicationSnapshots: vi.fn().mockResolvedValue([]),
+  saveContentDraft: vi.fn(),
+  getOrCreateWalkingIdentity: vi.fn(),
+  client: {},
 }));
 
-vi.mock("../../lib/supabase", () => ({ getSupabaseClient: () => ({}) }));
+vi.mock("../../lib/supabase", () => ({ getSupabaseClient: () => mocks.client }));
 vi.mock("../../data/content-repository", async (importOriginal) => {
   const original = await importOriginal<typeof import("../../data/content-repository")>();
-  return { ...original, openContentDraft: mocks.openContentDraft, fetchContentList: mocks.fetchContentList };
+  return { ...original, openContentDraft: mocks.openContentDraft, fetchContentList: mocks.fetchContentList, saveContentDraft: mocks.saveContentDraft, getOrCreateWalkingIdentity: mocks.getOrCreateWalkingIdentity };
 });
 vi.mock("../../data/publication-repository", () => ({
   fetchPublicationSnapshots: mocks.fetchPublicationSnapshots,
@@ -145,4 +148,60 @@ test("活動列表 participants 欄位標題顯示參與人次", async () => {
   render(<MemoryRouter><ContentListPage type="activity" /></MemoryRouter>);
   expect(await screen.findByRole("columnheader", { name: "參與人次" })).toBeInTheDocument();
   expect(screen.queryByRole("columnheader", { name: "人數" })).not.toBeInTheDocument();
+});
+
+const walkingActivityRecord = () => ({
+  contentId: "walking-content", contentType: "activity" as const, publicId: "115-099", publishedSnapshotId: "snapshot", publishedAt: "2026-01-01T00:00:00Z",
+  publishedRevision: 0, draftId: "walking-draft", draftStatus: "draft" as const, revision: 1, updatedAt: "2026-01-01T00:00:00Z", mediaCount: 0,
+  walkingRecordId: null, validationResult: { valid: true, errors: [], warnings: [] },
+  data: { id: "115-099", year: 115, name: "走讀活動", startDate: null, endDate: null, dateLabel: "10/6", districts: ["中埔鄉"], venue: "場地",
+    projectName: null, activityType: "走讀", topic: "地方文化", sdgs: [], summary: "這是一段足夠長度的活動成果摘要，用來測試走讀草稿儲存。", participants: 20,
+    partnerOrganizations: null, leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false, publicNotes: null, internalNotes: null,
+    coverAssetId: null, galleryAssetIds: [], walkingRecord: null },
+});
+
+test("first successful walking save allocates identity after canonical draft save", async () => {
+  mocks.openContentDraft.mockResolvedValue(walkingActivityRecord());
+  mocks.saveContentDraft.mockResolvedValue({ revision: 2, status: "validated", updatedAt: "2026-10-06T00:00:00Z" });
+  mocks.getOrCreateWalkingIdentity.mockResolvedValue("WR-115-001");
+  render(<MemoryRouter initialEntries={["/activities/115-099"]}><Routes><Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} /></Routes></MemoryRouter>);
+  fireEvent.click(await screen.findByRole("checkbox", { name: /建立走讀與田野紀錄/ }));
+  fireEvent.change(screen.getByLabelText(/走讀摘要/), { target: { value: "這是一段足夠長度的走讀摘要內容，用來測試首次儲存。" } });
+  fireEvent.change(screen.getByLabelText(/走讀範圍摘要/), { target: { value: "中埔聚落" } });
+  fireEvent.click(screen.getByRole("button", { name: "儲存草稿" }));
+  await waitFor(() => expect(mocks.saveContentDraft).toHaveBeenCalled());
+  expect(mocks.saveContentDraft.mock.calls.at(-1)?.[2]).toMatchObject({ walkingRecord: { summary: "這是一段足夠長度的走讀摘要內容，用來測試首次儲存。", routeSummary: "中埔聚落" } });
+  await waitFor(() => expect(mocks.getOrCreateWalkingIdentity).toHaveBeenCalledWith({}, "walking-content"));
+  expect(screen.queryByText(/Walking Record ID 建立失敗/)).not.toBeInTheDocument();
+});
+
+test("identity failure is not presented as a completed walking save", async () => {
+  mocks.openContentDraft.mockResolvedValue(walkingActivityRecord());
+  mocks.saveContentDraft.mockResolvedValue({ revision: 2, status: "validated", updatedAt: "2026-10-06T00:00:00Z" });
+  mocks.getOrCreateWalkingIdentity.mockRejectedValue(new Error("WALKING_IDENTITY_CREATE_FAILED"));
+  render(<MemoryRouter initialEntries={["/activities/115-099"]}><Routes><Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} /></Routes></MemoryRouter>);
+  fireEvent.click(await screen.findByRole("checkbox", { name: /建立走讀與田野紀錄/ }));
+  fireEvent.change(screen.getByLabelText(/走讀摘要/), { target: { value: "這是一段足夠長度的走讀摘要內容，用來測試失敗狀態。" } });
+  fireEvent.change(screen.getByLabelText(/走讀範圍摘要/), { target: { value: "中埔聚落" } });
+  fireEvent.click(screen.getByRole("button", { name: "儲存草稿" }));
+  expect(await screen.findByText(/活動草稿已儲存，但 Walking Record ID 建立失敗/)).toBeInTheDocument();
+  expect(screen.getAllByText("有尚未儲存的變更").length).toBeGreaterThan(0);
+});
+
+test("reload recognizes a saved walking draft with missing identity and does not allocate on read", async () => {
+  const record = walkingActivityRecord(); record.data = { ...record.data, walkingRecord: { type: "地方走讀", titleOverride: null, summary: "這是一段足夠長度的走讀摘要內容，用來測試重新整理。", routeSummary: "中埔聚落", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null } } as never;
+  mocks.openContentDraft.mockResolvedValue(record);
+  render(<MemoryRouter initialEntries={["/activities/115-099"]}><Routes><Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} /></Routes></MemoryRouter>);
+  expect(await screen.findByText("Walking Record ID 尚未建立")).toBeInTheDocument();
+  expect(mocks.getOrCreateWalkingIdentity).not.toHaveBeenCalled();
+  expect(screen.getByRole("button", { name: "檢查內容" })).toBeDisabled();
+});
+
+test("retry after identity failure calls idempotent allocator again and clears failure", async () => {
+  mocks.openContentDraft.mockResolvedValue(walkingActivityRecord()); mocks.saveContentDraft.mockResolvedValue({ revision: 2, status: "validated", updatedAt: "2026-10-06T00:00:00Z" }); mocks.getOrCreateWalkingIdentity.mockRejectedValueOnce(new Error("fail")).mockResolvedValueOnce("WR-115-001");
+  render(<MemoryRouter initialEntries={["/activities/115-099"]}><Routes><Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} /></Routes></MemoryRouter>);
+  fireEvent.click(await screen.findByRole("checkbox", { name: /建立走讀與田野紀錄/ })); fireEvent.change(screen.getByLabelText(/走讀摘要/), { target: { value: "這是一段足夠長度的走讀摘要內容，用來測試重試配置。" } }); fireEvent.change(screen.getByLabelText(/走讀範圍摘要/), { target: { value: "中埔聚落" } });
+  fireEvent.click(screen.getByRole("button", { name: "儲存草稿" })); await screen.findByText(/Walking Record ID 建立失敗/);
+  await waitFor(() => expect(screen.getByRole("button", { name: "儲存草稿" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "儲存草稿" })); await waitFor(() => expect(mocks.getOrCreateWalkingIdentity).toHaveBeenCalledTimes(2)); await waitFor(() => expect(screen.queryByText(/Walking Record ID 建立失敗/)).not.toBeInTheDocument());
 });
