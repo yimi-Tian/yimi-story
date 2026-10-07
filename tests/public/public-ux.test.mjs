@@ -950,7 +950,7 @@ test("首頁鄉鎮使用正式公開活動動態計數且不再輸出連結", ()
   assert.deepEqual(
     ["朴子市", "水上鄉", "新港鄉", "太保市", "中埔鄉", "鹿草鄉", "六腳鄉", "義竹鄉", "東石鄉", "布袋鎮"]
       .map((district) => districtCounts.get(district) || 0),
-    [19, 8, 5, 0, 11, 2, 6, 9, 6, 2],
+    [19, 9, 5, 0, 11, 2, 6, 9, 6, 2],
   );
 });
 
@@ -1069,7 +1069,7 @@ test("首頁移除測試消息、修正統計並隱藏未啟用 YouTube", () => 
   assert.deepEqual(
     Object.fromEntries(platformHome.platformStats.map((item) => [item.label, item.value])),
     {
-      活動成果: "65",
+      活動成果: "66",
       照片素材: "120",
       地方主題: "4",
       探索入口: "2",
