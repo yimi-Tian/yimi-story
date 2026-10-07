@@ -15,6 +15,7 @@ export interface ContentListItem {
   revision: number | null;
   updatedAt: string;
   mediaCount: number;
+  walkingRecordId?: string | null;
   data: CanonicalContent;
 }
 export interface ContentDraftRecord extends ContentListItem {
@@ -32,6 +33,7 @@ function toListItem(row: RawObject): ContentListItem {
   const draft = firstObject(row.drafts);
   const published = firstObject(row.published);
   const media = Array.isArray(row.media) ? row.media : [];
+  const walkingIdentity = firstObject(row.walking_identity);
   const data = (draft?.data ?? published?.snapshot_data ?? {}) as CanonicalContent;
   return {
     contentId: String(row.id),
@@ -46,6 +48,7 @@ function toListItem(row: RawObject): ContentListItem {
     revision: typeof draft?.revision === "number" ? draft.revision : null,
     updatedAt: String(draft?.updated_at ?? row.updated_at),
     mediaCount: media.length,
+    walkingRecordId: walkingIdentity?.walking_record_id ? String(walkingIdentity.walking_record_id) : null,
     data,
   };
 }
@@ -58,7 +61,8 @@ const CONTENT_SELECT = `
   updated_at,
   drafts:content_drafts(id, revision, status, data, validation_result, updated_at),
   published:publication_snapshots!content_items_published_snapshot_id_fkey(id, snapshot_data, source_revision, created_at),
-  media:media_assets(id)
+  media:media_assets(id),
+  walking_identity:activity_walking_identities(walking_record_id)
 `;
 
 function fail(code: string): never {
@@ -143,4 +147,18 @@ export async function saveContentDraft(
   const row = Array.isArray(saved) ? saved[0] : saved;
   if (error || !row) fail("DRAFT_SAVE_FAILED");
   return { revision: row.revision, status: row.status as DraftStatus, updatedAt: row.updated_at };
+}
+
+export async function getOrCreateWalkingIdentity(client: SupabaseClient, contentId: string): Promise<string> {
+  const { data, error } = await client.rpc("get_or_create_activity_walking_identity", { p_content_id: contentId });
+  const value = Array.isArray(data) ? data[0] : data;
+  if (error || typeof value !== "string" || !/^WR-\d{3}-\d{3,}$/.test(value)) fail("WALKING_IDENTITY_CREATE_FAILED");
+  return value;
+}
+
+export async function getWalkingIdentity(client: SupabaseClient, contentId: string): Promise<string | null> {
+  const { data, error } = await client.from("activity_walking_identities")
+    .select("walking_record_id").eq("content_id", contentId).maybeSingle();
+  if (error) fail("WALKING_IDENTITY_READ_FAILED");
+  return data?.walking_record_id ? String(data.walking_record_id) : null;
 }

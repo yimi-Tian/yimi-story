@@ -1,4 +1,4 @@
-import type { ActivityData } from "../../../src/content-types/activity";
+import type { ActivityData, WalkingRecordExtension } from "../../../src/content-types/activity";
 import type { ClassResultData } from "../../../src/content-types/class-result";
 import settings from "../../../config/content-settings.json";
 // @ts-expect-error Stage 1 browser-safe ESM is JavaScript and intentionally reused directly.
@@ -9,6 +9,7 @@ import { normalizeClassResult } from "../../../tools/content/normalize-class-res
 import { validateActivity } from "../../../tools/content/validate-activity.mjs";
 // @ts-expect-error Stage 1 browser-safe ESM is JavaScript and intentionally reused directly.
 import { validateClassResult } from "../../../tools/content/validate-class-result.mjs";
+import { findDigitalWalk, getPublishedDigitalWalkOptions } from "../data/digital-walk-repository";
 
 export type ContentType = "class_result" | "activity";
 export type DraftStatus = "draft" | "validated";
@@ -39,11 +40,25 @@ export const validationFieldLabels: Record<string, string> = {
   relatedUrl: "延伸連結", featured: "首頁精選", displayOrder: "顯示順序",
   publicNotes: "公開備註", internalNotes: "內部備註", coverAssetId: "封面圖片",
   galleryAssetIds: "相簿圖片", media: "圖片", altText: imageAltTextLabel,
+  walkingRecord: "走讀與田野紀錄",
 };
 
 export interface PresentedValidationIssue extends ValidationIssue { canonicalField: string; targetId: string }
 
 export function validationFieldLabel(field: string): string {
+  const walkingLabels: Record<string, string> = {
+    "walkingRecord.type": "走讀／田野類型",
+    "walkingRecord.titleOverride": "走讀頁標題",
+    "walkingRecord.summary": "走讀摘要",
+    "walkingRecord.routeSummary": "走讀範圍摘要",
+    "walkingRecord.stops": "走訪地點／站點",
+    "walkingRecord.fieldNotes": "現場觀察重點",
+    "walkingRecord.digitalWalkId": "Digital Walk",
+    "walkingRecord.coverAssetId": "走讀封面圖",
+  };
+  if (walkingLabels[field]) return walkingLabels[field];
+  const stopMatch = field.match(/^walkingRecord\.stops\[(\d+)\]\.(name|note)$/);
+  if (stopMatch) return `站點 ${Number(stopMatch[1]) + 1}${stopMatch[2] === "name" ? "名稱" : "說明"}`;
   if (field === "media.altText" || field === "altText") return imageAltTextLabel;
   const root = field.split(/[.[]/, 1)[0];
   if (field.startsWith("galleryAssetIds.")) {
@@ -54,6 +69,20 @@ export function validationFieldLabel(field: string): string {
 }
 
 export function validationTargetId(field: string): string {
+  const walkingTargets: Record<string, string> = {
+    walkingRecord: "walking-section",
+    "walkingRecord.type": "field-walking-type",
+    "walkingRecord.titleOverride": "field-walking-title",
+    "walkingRecord.summary": "field-walking-summary",
+    "walkingRecord.routeSummary": "field-walking-route-summary",
+    "walkingRecord.stops": "walking-stops",
+    "walkingRecord.fieldNotes": "walking-field-notes",
+    "walkingRecord.digitalWalkId": "field-walking-digital-walk",
+    "walkingRecord.coverAssetId": "field-walking-cover",
+  };
+  if (walkingTargets[field]) return walkingTargets[field];
+  const stopMatch = field.match(/^walkingRecord\.stops\[(\d+)\]\.(name|note)$/);
+  if (stopMatch) return `walking-stop-${Number(stopMatch[1])}-${stopMatch[2]}`;
   if (field === "coverAssetId") return "media-cover";
   if (field.startsWith("galleryAssetIds.")) return `media-gallery-${Number(field.split(".")[1]) + 1}`;
   if (field === "galleryAssetIds" || field === "media" || field === "media.altText" || field === "altText") return "media-section";
@@ -89,6 +118,7 @@ const publicCanonicalKeys = [
   "id", "year", "title", "className", "instructor", "description", "districts", "venue", "tags", "sdgs", "displayOrder",
   "name", "startDate", "endDate", "dateLabel", "projectName", "activityType", "topic", "summary", "participants",
   "partnerOrganizations", "leader", "keywords", "videoUrl", "relatedUrl", "featured", "publicNotes", "coverAssetId", "galleryAssetIds",
+  "walkingRecord",
 ] as const;
 export function matchesPublishedContent(draft: CanonicalContent, published: CanonicalContent): boolean {
   const pick = (data: CanonicalContent) => publicCanonicalKeys.map((key) => (data as unknown as Record<string, unknown>)[key]);
@@ -148,6 +178,7 @@ export interface ActivityForm {
   internalNotes: string;
   coverAssetId: string | null;
   galleryAssetIds: string[];
+  walkingRecord: WalkingRecordExtension | null;
 }
 
 export type ContentForm = ClassResultForm | ActivityForm;
@@ -202,6 +233,7 @@ export function emptyActivityForm(year = 115): ActivityForm {
     internalNotes: "",
     coverAssetId: null,
     galleryAssetIds: [],
+    walkingRecord: null,
   };
 }
 
@@ -218,6 +250,7 @@ export function classDataToForm(data: ClassResultData): ClassResultForm {
 export function activityDataToForm(data: ActivityData): ActivityForm {
   return {
     ...data,
+    walkingRecord: data.walkingRecord ?? null,
     year: String(data.year),
     startDate: data.startDate ?? "",
     endDate: data.endDate ?? "",
@@ -244,6 +277,26 @@ export function validateCanonicalContent(type: ContentType, data: CanonicalConte
   return (type === "class_result"
     ? validateClassResult(data, options)
     : validateActivity(data, options)) as ValidationResult;
+}
+
+export function validateWalkingMediaReference(data: ActivityData): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const reference = data.walkingRecord?.coverAssetId;
+  if (reference) {
+    const allowed = new Set([data.coverAssetId, ...data.galleryAssetIds].filter(Boolean));
+    if (!allowed.has(reference)) issues.push({ field: "walkingRecord.coverAssetId", code: "walking.cover.foreign", message: "走讀封面只能選擇此活動的封面或相簿圖片。" });
+  }
+  const digitalWalkId = data.walkingRecord?.digitalWalkId;
+  if (digitalWalkId && !findDigitalWalk(digitalWalkId)) {
+    issues.push({ field: "walkingRecord.digitalWalkId", code: "walking.digitalWalkId.unknown", message: "請選擇正式存在且已公開的數位走讀路線。" });
+  }
+  return issues;
+}
+
+export function walkingReferenceWarnings(data: ActivityData): ValidationIssue[] {
+  const digitalWalkId = data.walkingRecord?.digitalWalkId;
+  if (!digitalWalkId || getPublishedDigitalWalkOptions().some((route) => route.id === digitalWalkId)) return [];
+  return findDigitalWalk(digitalWalkId) ? [{ field: "walkingRecord.digitalWalkId", code: "walking.digitalWalkId.retired", message: "目前關聯路線已不公開；已保留原值，請確認是否需要調整。" }] : [];
 }
 
 export function formFromCanonical(type: "class_result", data: CanonicalContent): ClassResultForm;

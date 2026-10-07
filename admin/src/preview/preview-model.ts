@@ -1,9 +1,9 @@
-import type { ActivityData } from "../../../src/content-types/activity";
+import type { ActivityData, WalkingRecordExtension } from "../../../src/content-types/activity";
 import type { ClassResultData } from "../../../src/content-types/class-result";
 import type { DraftStatus, ValidationResult } from "../content/content-contracts";
 
 export type PublicClassPreviewData = Omit<ClassResultData, "internalNotes">;
-export type PublicActivityPreviewData = Omit<ActivityData, "internalNotes">;
+export type PublicActivityPreviewData = Omit<ActivityData, "internalNotes" | "walkingRecord">;
 
 export interface PreviewImageModel {
   url: string | null;
@@ -31,6 +31,8 @@ export interface ClassPreviewModel extends PreviewBase {
 export interface ActivityPreviewModel extends PreviewBase {
   contentType: "activity";
   data: PublicActivityPreviewData;
+  walkingRecord?: WalkingRecordExtension | null;
+  walkingCover?: PreviewImageModel | null;
 }
 
 export type DraftPreviewModel = ClassPreviewModel | ActivityPreviewModel;

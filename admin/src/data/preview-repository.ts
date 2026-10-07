@@ -85,6 +85,7 @@ export function buildPreviewModel(input: {
     };
   }
   const data = projectActivityPublicData(canonical as ActivityData) as PublicActivityPreviewData;
+  const walkingRecord = (canonical as ActivityData).walkingRecord;
   const gallery = data.galleryAssetIds.map((id) => imageFor(id, mediaMap, "活動圖片") as PreviewImageModel);
   const explicitCover = imageFor(data.coverAssetId, mediaMap, "活動圖片");
   const usesLegacyConvention = !explicitCover && Boolean(input.publishedSnapshotId);
@@ -94,6 +95,8 @@ export function buildPreviewModel(input: {
     cover: explicitCover ?? (usesLegacyConvention ? legacyActivityHero(input.publicId, gallery[0] ?? null) : gallery[0] ?? null),
     heroSource: explicitCover ? "explicit" : usesLegacyConvention ? "legacy_convention" : gallery.length ? "gallery_fallback" : null,
     gallery,
+    walkingRecord,
+    walkingCover: walkingRecord ? imageFor(walkingRecord.coverAssetId ?? data.coverAssetId, mediaMap, "走讀與田野紀錄圖片") ?? explicitCover ?? gallery[0] ?? null : null,
     unavailableDraftImages: unavailableDraftCount([data.coverAssetId, ...data.galleryAssetIds], mediaMap),
   };
 }

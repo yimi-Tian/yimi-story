@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   districtOptions,
   emptyActivityForm,
@@ -10,7 +10,9 @@ import {
   unpublishedContentState,
   sdgOptions,
   validateCanonicalContent,
+  validateWalkingMediaReference,
   validationTargetId,
+  walkingReferenceWarnings,
   type ActivityForm,
   type ClassResultForm,
   type ContentForm,
@@ -18,13 +20,15 @@ import {
   type DraftStatus,
   type ValidationResult,
 } from "../../content/content-contracts";
-import { createContentDraft, openContentDraft, saveContentDraft, suggestNextPublicId, type ContentDraftRecord } from "../../data/content-repository";
+import { createContentDraft, getOrCreateWalkingIdentity, openContentDraft, saveContentDraft, suggestNextPublicId, type ContentDraftRecord } from "../../data/content-repository";
 import { downgradeValidatedAfterEdit } from "../../data/content-list";
 import { getSupabaseClient } from "../../lib/supabase";
 import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning";
 import { ErrorState, LoadingState } from "../States";
 import { DraftMediaEditor, type DraftMediaEditorHandle } from "./DraftMediaEditor";
 import { PublicationPreparationPanel } from "./PublicationPreparationPanel";
+import { WalkingRecordFields } from "./WalkingRecordFields";
+import type { ActivityData } from "../../../../src/content-types/activity";
 
 const emptyValidation: ValidationResult = { valid: false, errors: [], warnings: [] };
 
@@ -70,6 +74,7 @@ function ActivityFields({ form, set, errorFor }: { form: ActivityForm; set(field
 export function ContentEditorPage({ type, isNew = false }: { type: ContentType; isNew?: boolean }) {
   const { publicId = "" } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const client = getSupabaseClient();
   const isClass = type === "class_result";
   const basePath = isClass ? "/class-results" : "/activities";
@@ -84,6 +89,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   const [uploading, setUploading] = useState(false);
   const [imageEditing, setImageEditing] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [walkingIdentityFailed, setWalkingIdentityFailed] = useState(Boolean((location.state as { walkingIdentityFailed?: boolean } | null)?.walkingIdentityFailed));
   const mediaRef = useRef<DraftMediaEditorHandle>(null);
 
   useEffect(() => {
@@ -118,24 +124,42 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   };
   const runValidation = () => {
     const result = validateCanonicalContent(type, canonical, legacy);
+    if (type === "activity") result.errors.push(...validateWalkingMediaReference(canonical as unknown as ActivityData));
+    if (type === "activity") result.warnings.push(...walkingReferenceWarnings(canonical as unknown as ActivityData));
+    result.valid = result.errors.length === 0;
     result.warnings.push(...(mediaRef.current?.warnings() ?? []));
     setValidation(result); setStatus(result.valid ? "validated" : "draft");
     return result;
   };
   const save = async () => {
     if (saving) return;
-    setSaving(true); setFailed(false);
+    setSaving(true); setFailed(false); setWalkingIdentityFailed(false);
     try {
       const result = runValidation();
       const desiredStatus: DraftStatus = result.valid ? "validated" : "draft";
       if (isNew) {
         const created = await createContentDraft(client, type, Number(canonical.year), canonical, result);
+        if (type === "activity" && (canonical as unknown as ActivityData).walkingRecord) {
+          try { await getOrCreateWalkingIdentity(client, created.contentId); }
+          catch {
+            navigate(`${basePath}/${encodeURIComponent(created.publicId)}`, { replace: true, state: { walkingIdentityFailed: true } });
+            return;
+          }
+        }
         setDirty(false);
         navigate(`${basePath}/${encodeURIComponent(created.publicId)}`, { replace: true });
       } else if (record?.draftId) {
         const saved = await saveContentDraft(client, record.draftId, canonical, result, desiredStatus, mediaRef.current?.metadata() ?? []);
         await mediaRef.current?.afterSave();
-        setRecord({ ...record, data: canonical, validationResult: result, revision: saved.revision, draftStatus: saved.status, updatedAt: saved.updatedAt });
+        let walkingRecordId = record.walkingRecordId;
+        if (type === "activity" && (canonical as unknown as ActivityData).walkingRecord) {
+          try { walkingRecordId = await getOrCreateWalkingIdentity(client, record.contentId); }
+          catch {
+            setRecord({ ...record, data: canonical, validationResult: result, revision: saved.revision, draftStatus: saved.status, updatedAt: saved.updatedAt });
+            setStatus(saved.status); setDirty(true); setWalkingIdentityFailed(true); return;
+          }
+        }
+        setRecord({ ...record, data: canonical, validationResult: result, revision: saved.revision, draftStatus: saved.status, updatedAt: saved.updatedAt, walkingRecordId });
         setStatus(saved.status); setDirty(false);
       }
     } catch { setFailed(true); } finally { setSaving(false); }
@@ -164,6 +188,7 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
     errors: validation.errors.map(presentValidationIssue),
     warnings: validation.warnings.map(presentValidationIssue),
   }), [validation]);
+  const walkingIdentityRequired = type === "activity" && Boolean((form as ActivityForm).walkingRecord) && Boolean(record) && !record?.walkingRecordId;
   const errorFor = useCallback((field: string) => presentedValidation.errors.find((issue) => issue.canonicalField === field)?.message, [presentedValidation.errors]);
   const focusIssue = (targetId: string) => {
     const target = document.getElementById(targetId);
@@ -177,12 +202,14 @@ export function ContentEditorPage({ type, isNew = false }: { type: ContentType; 
   return <>
     <div className="page-heading"><div><p className="eyebrow">{isNew ? "新增內容" : "編輯內容"}</p><h1>{isNew ? `新增${isClass ? "班級花絮" : "活動成果"}` : String((form as ClassResultForm).title || (form as ActivityForm).name)}</h1><p className="muted">內容編號：<code>{isNew ? previewId : form.id}</code>{isNew && "（預覽；儲存時由系統安全配置）"}</p></div><div className="heading-actions"><button className="button button--ghost" type="button" onClick={() => void cancel()}>取消</button><button className="button button--secondary" type="button" disabled={isNew || saving} onClick={preview}>預覽</button><button className="button button--accent" type="button" disabled={saving || uploading} onClick={() => void save()}>{uploading ? "圖片上傳中…" : saving ? "儲存中…" : "儲存草稿"}</button></div></div>
     {failed && <div className="form-error" role="alert">儲存失敗，請確認權限或網路連線後再試。</div>}
+    {walkingIdentityFailed && <div className="form-error" role="alert">活動草稿已儲存，但 Walking Record ID 建立失敗；這次儲存尚未完成，請重試。</div>}
+    {!walkingIdentityFailed && walkingIdentityRequired && !dirty && <div className="unsaved-notice" role="status"><strong>Walking Record ID 尚未建立</strong><span>請重新儲存草稿，完成後端識別碼配置後才能進行發布。</span></div>}
     <section className="version-panel"><div><span>目前網站版本</span><strong>{record?.publishedAt ? `正式版本${record.publishedRevision ? ` r${record.publishedRevision}` : ""}` : "尚未發布"}</strong>{record?.publishedAt&&<small>版本建立時間 {new Date(record.publishedAt).toLocaleString("zh-TW")}</small>}</div><div><span>最新草稿</span><strong>{record?.revision ? `r${record.revision}` : "建立後為 r1"}</strong><small>{record?.updatedAt ? `最後更新 ${new Date(record.updatedAt).toLocaleString("zh-TW")}` : "尚未儲存"}</small></div><span className={`record-status ${dirty ? "has-draft" : ""}`}>{dirty ? "有尚未儲存的變更" : record?.publishedSnapshotId && record.draftId ? unpublishedContentState(record) === "synced" ? "內容已同步" : unpublishedContentState(record) === "changed" ? "已發布・有未發布修改" : "內容比對暫不可用" : status === "validated" ? "可準備發布" : "草稿"}</span></section>
     {dirty && <div className="unsaved-notice" role="status"><strong>有尚未儲存的變更</strong><span>請先儲存目前修改，再進行發布。</span></div>}
     <div className="validation-grid" aria-live="polite"><section className="validation-panel validation-panel--error"><h2>{presentedValidation.errors.length ? `需要修正 ${presentedValidation.errors.length} 項` : "沒有需要修正的項目"}</h2>{presentedValidation.errors.length ? <ul>{presentedValidation.errors.map((issue, index) => <li key={`${issue.code}-${index}`}><button type="button" className="validation-link" onClick={() => focusIssue(issue.targetId)}><strong>{issue.field}</strong>：{issue.message}</button></li>)}</ul> : <p>目前沒有驗證錯誤。</p>}</section><section className="validation-panel validation-panel--warning"><h2>提醒（{presentedValidation.warnings.length}）</h2>{presentedValidation.warnings.length ? <ul>{presentedValidation.warnings.map((issue, index) => <li key={`${issue.code}-${index}`}><button type="button" className="validation-link" onClick={() => focusIssue(issue.targetId)}><strong>{issue.field}</strong>：{issue.message}</button></li>)}</ul> : <p>目前沒有提醒。</p>}</section></div>
-    <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} errorFor={errorFor} /> : <ActivityFields form={form as ActivityForm} set={set} errorFor={errorFor} />}
+    <form className="content-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>{isClass ? <ClassFields form={form as ClassResultForm} set={set} errorFor={errorFor} /> : <><ActivityFields form={form as ActivityForm} set={set} errorFor={errorFor} /><WalkingRecordFields value={(form as ActivityForm).walkingRecord} activityCoverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} walkingRecordId={record?.walkingRecordId ?? null} errorFor={errorFor} onChange={(value) => set("walkingRecord", value)} /></>}
       {record?.draftId ? <DraftMediaEditor ref={mediaRef} client={client} contentId={record.contentId} draftId={record.draftId} coverAssetId={form.coverAssetId} galleryAssetIds={form.galleryAssetIds} onReferences={setMediaReferences} onDirty={markMediaDirty} onUploading={markUploading} onEditing={markImageEditing} onVersionSaved={imageVersionSaved} /> : <section className="form-section media-readonly"><h2>圖片</h2><p className="muted">請先儲存文字草稿，再上傳圖片。</p></section>}
     </form>
-    {record?.draftId && record.revision ? <PublicationPreparationPanel contentState={unpublishedContentState(record)} client={client} contentId={record.contentId} draftId={record.draftId} revision={record.revision} draftStatus={status} blocked={dirty || saving || uploading || imageEditing} /> : null}
+    {record?.draftId && record.revision ? <PublicationPreparationPanel contentState={unpublishedContentState(record)} client={client} contentId={record.contentId} draftId={record.draftId} revision={record.revision} draftStatus={status} blocked={dirty || saving || uploading || imageEditing || walkingIdentityRequired} /> : null}
   </>;
 }

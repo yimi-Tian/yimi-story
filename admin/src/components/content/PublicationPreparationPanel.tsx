@@ -19,6 +19,7 @@ const messageFor=(error:unknown)=>{
   if(code==="PUBLICATION_OLD_SCHEMA")return"此版本使用較舊的發布格式，請重新儲存草稿後建立新版發布資料。";
   if(code==="SOURCE_MEDIA_MISSING"||code==="SOURCE_OBJECT_MISSING")return"圖片資料尚未準備完成，請確認圖片仍可正常預覽。";
   if(code==="SOURCE_CHECKSUM_MISMATCH")return"圖片完整性檢查失敗，請重新確認圖片。";
+  if(code==="PUBLICATION_WALKING_IDENTITY_REQUIRED")return"Walking Record ID 尚未建立，請先重新儲存草稿。";
   return"準備發布未完成，請確認內容、圖片與網路連線後再試。";
 };
 const stepState=(done:boolean,current:boolean,error=false)=>error?"需修正":done?"已完成":current?"進行中":"未完成";

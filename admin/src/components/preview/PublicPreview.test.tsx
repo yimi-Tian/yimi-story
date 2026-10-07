@@ -14,7 +14,7 @@ const model: DraftPreviewModel = {
     id: "112-015", year: 112, name: "<script>alert(1)</script>", startDate: null, endDate: null, dateLabel: "112年春季",
     districts: ["水上鄉"], venue: "場地", projectName: null, activityType: "成果", topic: "地方", sdgs: [],
     summary: "<img src=x onerror=alert(1)>", participants: 20, partnerOrganizations: null, leader: null, keywords: [],
-    videoUrl: null, relatedUrl: null, featured: false, publicNotes: "公開備註", coverAssetId: null, galleryAssetIds: ["image"], walkingRecord: null,
+    videoUrl: null, relatedUrl: null, featured: false, publicNotes: "公開備註", coverAssetId: null, galleryAssetIds: ["image"],
   },
 };
 
@@ -40,4 +40,18 @@ test("failed image is isolated behind a safe fallback", () => {
   const rendered = render(<PublicPreview model={model} />);
   fireEvent.error(within(rendered.container).getByRole("img", { name: "活動圖片" }));
   expect(within(rendered.container).getByText("圖片暫時無法預覽")).toBeInTheDocument();
+});
+
+test("admin draft preview shows Walking effective title, fields and cover source indication", () => {
+  const walkingModel: DraftPreviewModel = { ...model, contentType: "activity", walkingCover: { url: "https://example.test/walking.jpg", alt: "走讀圖片" }, walkingRecord: {
+    type: "聚落踏查", titleOverride: "聚落踏查紀錄", summary: "這是一段足夠長度的走讀摘要內容，供預覽顯示。", routeSummary: "灣潭聚落",
+    stops: [{ name: "第一站", note: "站點說明" }], fieldNotes: ["觀察重點"], digitalWalkId: "DW-WT-001", coverAssetId: "image",
+  } };
+  render(<PublicPreview model={walkingModel} />);
+  expect(screen.getByRole("heading", { name: "聚落踏查紀錄" })).toBeInTheDocument();
+  expect(screen.getByText("聚落踏查")).toBeInTheDocument();
+  expect(screen.getByText("灣潭聚落")).toBeInTheDocument();
+  expect(screen.getByText("第一站")).toBeInTheDocument();
+  expect(screen.getByText("觀察重點")).toBeInTheDocument();
+  expect(screen.getByText("走讀封面：使用本活動既有圖片")).toBeInTheDocument();
 });
