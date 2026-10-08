@@ -39,7 +39,7 @@ function ActivityPreview({ model }: { model: ActivityPreviewModel }) {
     {model.walkingRecord && <section className="public-preview__section walking-preview" aria-label="走讀與田野紀錄草稿預覽"><h2>{model.walkingRecord.titleOverride || data.name}</h2>
       {model.walkingCover && <PreviewImage image={model.walkingCover} className="public-preview__cover" />}
       <p className="muted">走讀封面：{model.walkingRecord.coverAssetId ? "使用本活動既有圖片" : "沿用活動主圖"}</p>
-      <dl><Detail label="走讀／田野類型" value={model.walkingRecord.type} /><Detail label="走讀範圍" value={model.walkingRecord.routeSummary} /><Detail label="數位走讀" value={model.walkingRecord.digitalWalkId} /></dl>
+      <dl><Detail label="走讀／田野類型" value={model.walkingRecord.type} /><Detail label="走讀地點" value={model.walkingLocation} /><Detail label="走讀範圍" value={model.walkingRecord.routeSummary} /><Detail label="數位走讀" value={model.walkingRecord.digitalWalkId} /></dl>
       <p>{model.walkingRecord.summary}</p>
       {model.walkingRecord.stops.length > 0 && <div><h3>走訪地點／站點</h3><ol>{model.walkingRecord.stops.map((stop, index) => <li key={`${stop.name}-${index}`}><strong>{stop.name}</strong>{stop.note && <p>{stop.note}</p>}</li>)}</ol></div>}
       {model.walkingRecord.fieldNotes.length > 0 && <div><h3>現場觀察重點</h3><ul>{model.walkingRecord.fieldNotes.map((note, index) => <li key={`${note}-${index}`}>{note}</li>)}</ul></div>}

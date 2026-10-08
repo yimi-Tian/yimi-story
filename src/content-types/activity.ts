@@ -16,6 +16,7 @@ export type WalkingRecordStop = {
 export type WalkingRecordExtension = {
   type: WalkingType;
   titleOverride: string | null;
+  locationOverride: string | null;
   summary: string;
   routeSummary: string | null;
   stops: WalkingRecordStop[];

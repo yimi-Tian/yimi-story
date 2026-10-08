@@ -32,6 +32,7 @@ export interface ActivityPreviewModel extends PreviewBase {
   contentType: "activity";
   data: PublicActivityPreviewData;
   walkingRecord?: WalkingRecordExtension | null;
+  walkingLocation?: string | null;
   walkingCover?: PreviewImageModel | null;
 }
 

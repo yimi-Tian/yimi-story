@@ -189,7 +189,7 @@ test("identity failure is not presented as a completed walking save", async () =
 });
 
 test("reload recognizes a saved walking draft with missing identity and does not allocate on read", async () => {
-  const record = walkingActivityRecord(); record.data = { ...record.data, walkingRecord: { type: "地方走讀", titleOverride: null, summary: "這是一段足夠長度的走讀摘要內容，用來測試重新整理。", routeSummary: "中埔聚落", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null } } as never;
+  const record = walkingActivityRecord(); record.data = { ...record.data, walkingRecord: { type: "地方走讀", titleOverride: null, locationOverride: null, summary: "這是一段足夠長度的走讀摘要內容，用來測試重新整理。", routeSummary: "中埔聚落", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null } } as never;
   mocks.openContentDraft.mockResolvedValue(record);
   render(<MemoryRouter initialEntries={["/activities/115-099"]}><Routes><Route path="/activities/:publicId" element={<ContentEditorPage type="activity" />} /></Routes></MemoryRouter>);
   expect(await screen.findByText("Walking Record ID 尚未建立")).toBeInTheDocument();
