@@ -5,6 +5,7 @@ export const legacyWalkingFixtures = [
     activityName: "樸仔樹腳走畫",
     activitySummary: "透過朴子老城走讀與現地速寫，帶領參與者走訪配天宮、榮昌戲院、玉勝巷等地方記憶場域，從建築、街巷與影劇文化重新理解朴子城鎮發展。活動將導覽解說轉化為手繪紀錄，讓民眾不只拍照留存，也能透過觀察與創作保存地方空間記憶，累積後續展示、導覽與地方文化教育素材。",
     titleOverride: "樸仔樹腳老城走畫",
+    locationOverride: null,
     walkingSummary: "走訪配天宮、榮昌戲院與玉勝巷，觀察朴子老城的建築、街巷與影劇相關場域，並以現地速寫留下沿途所見。",
     routeSummary: "本次紀錄涵蓋配天宮、榮昌戲院與玉勝巷等朴子老城場域，包含建築、街巷與影劇文化的現地觀察。",
     stops: [
@@ -23,6 +24,7 @@ export const legacyWalkingFixtures = [
     activityName: "踐學嘉邑:走讀諸羅山社",
     activitySummary: "17 名參與者在崎仔頭走讀中，透過耆老與在地婦女講述，認識龍泉土地公、自然湧泉與端午取午時水的地方記憶，也走訪草鞋製作與小草鞋文創工坊，理解港口運輸需求如何形成延續至第四代的草鞋工藝。",
     titleOverride: "崎仔頭取水與草鞋工藝走讀",
+    locationOverride: null,
     walkingSummary: "走進崎仔頭，從龍泉土地公與自然湧泉了解端午取午時水的地方記憶，也走訪草鞋製作與小草鞋文創工坊。",
     routeSummary: "本次紀錄涵蓋龍泉土地公、自然湧泉與草鞋工坊等崎仔頭地方場域。",
     stops: [
@@ -41,6 +43,7 @@ export const legacyWalkingFixtures = [
     activityName: "認識舊嘉:探索猿樹港",
     activitySummary: "30 名參與者走訪西崙村、副瀨村與東石，由村長及富安宮等在地人士帶領，從古井、三合院、鳥類棲地、義愛公故事與祭典認識聚落變遷。返程分享中，學員把現場所見連結個人與家族記憶，也具體回應過去曾到訪卻未理解的地方歷史。",
     titleOverride: "猿樹港聚落田野走讀",
+    locationOverride: null,
     walkingSummary: "走訪西崙村、副瀨村與東石，記錄古井、三合院、鳥類棲地、義愛公故事與地方祭典；返程時，學員也分享個人與家族記憶。",
     routeSummary: "本次紀錄涵蓋西崙村、副瀨村與東石三處聚落範圍，沿途內容包括古井、三合院、鳥類棲地、地方信仰與祭典。",
     stops: [
@@ -62,6 +65,7 @@ export const legacyWalkingFixtures = [
     activityName: "愛水愛嘉:探尋赤蘭溪流域的故事",
     activitySummary: "32 名參與者分兩次走訪水上三界埔與中埔鹽館，沿沄水溪、後坑仔溪觀察水路、聚落信仰、竹管仔厝、菸樓、水圳與生活遺跡。走讀中的居民應答與生活經驗分享，累積了赤蘭溪流域聚落變遷、產業與用水文化的現場觀察資料。",
     titleOverride: "赤蘭溪三界埔與鹽館田野紀錄",
+    locationOverride: "水上三界埔、中埔鹽館、沄水溪、後坑仔溪",
     walkingSummary: "分兩次走訪水上三界埔與中埔鹽館，紀錄範圍包含沄水溪、後坑仔溪、聚落信仰、竹管仔厝、菸樓、水圳與生活遺跡。",
     routeSummary: "田野範圍分別涵蓋水上三界埔、中埔鹽館，以及沄水溪、後坑仔溪等水路與生活遺跡。",
     stops: [
@@ -86,6 +90,7 @@ export const legacyWalkingFixtures = [
     activityName: "船仔媽廟街散策",
     activitySummary: "從新港奉天宮與船仔媽傳說出發，帶領參與者走訪廟街歷史據點與百年店家，認識信仰、產業與地方生活的連結。活動將地方傳說、宗教場域與老店故事串聯為可走讀的文化路線，累積新港廟街地方記憶與導覽素材。",
     titleOverride: "新港船仔媽廟街散策",
+    locationOverride: null,
     walkingSummary: "從新港奉天宮與船仔媽傳說出發，走訪大興宮、培桂堂、源發號與金長利，認識廟街信仰、歷史據點與地方產業。",
     routeSummary: "本次紀錄涵蓋新港奉天宮、大興宮、培桂堂、源發號與金長利等廟街文化地點。",
     stops: [

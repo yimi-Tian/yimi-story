@@ -49,6 +49,7 @@ export function validationFieldLabel(field: string): string {
   const walkingLabels: Record<string, string> = {
     "walkingRecord.type": "走讀／田野類型",
     "walkingRecord.titleOverride": "走讀頁標題",
+    "walkingRecord.locationOverride": "走讀地點顯示",
     "walkingRecord.summary": "走讀摘要",
     "walkingRecord.routeSummary": "走讀範圍摘要",
     "walkingRecord.stops": "走訪地點／站點",
@@ -73,6 +74,7 @@ export function validationTargetId(field: string): string {
     walkingRecord: "walking-section",
     "walkingRecord.type": "field-walking-type",
     "walkingRecord.titleOverride": "field-walking-title",
+    "walkingRecord.locationOverride": "field-walking-location",
     "walkingRecord.summary": "field-walking-summary",
     "walkingRecord.routeSummary": "field-walking-route-summary",
     "walkingRecord.stops": "walking-stops",

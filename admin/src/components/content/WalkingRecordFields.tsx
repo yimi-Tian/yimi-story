@@ -4,7 +4,7 @@ import { findDigitalWalk, getPublishedDigitalWalkOptions } from "../../data/digi
 export const walkingTypes: WalkingType[] = ["地方走讀", "聚落踏查", "流域觀察", "生態觀察", "訪談／口述", "文史採集", "產業地景", "其他"];
 
 export function emptyWalkingRecord(): WalkingRecordExtension {
-  return { type: "地方走讀", titleOverride: null, summary: "", routeSummary: null, stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null };
+  return { type: "地方走讀", titleOverride: null, locationOverride: null, summary: "", routeSummary: null, stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null };
 }
 type Props = {
   value: WalkingRecordExtension | null;
@@ -28,7 +28,7 @@ export function WalkingRecordFields({ value, activityCoverAssetId, galleryAssetI
   const update = (patch: Partial<WalkingRecordExtension>) => value && onChange({ ...value, ...patch });
   const toggle = (checked: boolean) => {
     if (checked) return onChange(emptyWalkingRecord());
-    const hasContent = Boolean(value && (value.summary.trim() || value.titleOverride || value.routeSummary || value.stops.length || value.fieldNotes.length || value.digitalWalkId || value.coverAssetId));
+    const hasContent = Boolean(value && (value.summary.trim() || value.titleOverride || value.locationOverride || value.routeSummary || value.stops.length || value.fieldNotes.length || value.digitalWalkId || value.coverAssetId));
     if (!hasContent || window.confirm("取消後，這筆活動的走讀與田野草稿內容將被移除。\n既有 WR ID 不會因此回收。")) onChange(null);
   };
   const updateStop = (index: number, patch: Partial<WalkingRecordStop>) => {
@@ -53,6 +53,7 @@ export function WalkingRecordFields({ value, activityCoverAssetId, galleryAssetI
       <div className="form-grid">
         <label htmlFor="field-walking-type">走讀／田野類型<span className="required-mark">必填</span><select id="field-walking-type" value={value.type} aria-invalid={Boolean(errorFor("walkingRecord.type"))} onChange={(event) => update({ type: event.target.value as WalkingType })}>{walkingTypes.map((type) => <option key={type}>{type}</option>)}</select>{errorFor("walkingRecord.type") && <small className="field-error">{errorFor("walkingRecord.type")}</small>}</label>
         <label htmlFor="field-walking-title">走讀頁標題<small>留空則沿用活動名稱。</small><input id="field-walking-title" value={value.titleOverride ?? ""} onChange={(event) => update({ titleOverride: event.target.value || null })} />{errorFor("walkingRecord.titleOverride") && <small className="field-error">{errorFor("walkingRecord.titleOverride")}</small>}</label>
+        <label htmlFor="field-walking-location">走讀地點顯示（選填）<small>留空則沿用活動地點；只有走讀頁需要不同的地點描述時才填寫。</small><input id="field-walking-location" value={value.locationOverride ?? ""} onChange={(event) => update({ locationOverride: event.target.value || null })} />{errorFor("walkingRecord.locationOverride") && <small className="field-error">{errorFor("walkingRecord.locationOverride")}</small>}</label>
         <label className="full-field" htmlFor="field-walking-summary">走讀摘要<span className="required-mark">必填</span><small>簡要說明這次走進哪裡、觀察什麼、記錄什麼。請不要重複活動效益或成果說明。限 20～1500 字；已輸入 {value.summary.length} 字。</small><textarea id="field-walking-summary" rows={6} value={value.summary} onChange={(event) => update({ summary: event.target.value })} />{errorFor("walkingRecord.summary") && <small className="field-error">{errorFor("walkingRecord.summary")}</small>}</label>
         <label className="full-field" htmlFor="field-walking-route-summary">走讀範圍摘要<small>可說明此次田野涵蓋的聚落、路線或觀察範圍；若無法確認實際行走順序，不需寫成第一站、第二站。</small><textarea id="field-walking-route-summary" rows={4} value={value.routeSummary ?? ""} onChange={(event) => update({ routeSummary: event.target.value || null })} />{errorFor("walkingRecord.routeSummary") && <small className="field-error">{errorFor("walkingRecord.routeSummary")}</small>}</label>
       </div>

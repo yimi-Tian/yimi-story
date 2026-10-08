@@ -6,6 +6,8 @@ import { projectActivityPublicData, projectClassResultPublicData, safePublicHttp
 import { normalizeContentForm, validateCanonicalContent, type CanonicalContent, type ContentType, type DraftStatus, type ValidationResult } from "../content/content-contracts";
 import { getMediaForContent, type DraftMediaAsset } from "./media-repository";
 import type { DraftPreviewModel, PreviewImageModel, PublicActivityPreviewData, PublicClassPreviewData } from "../preview/preview-model";
+// @ts-expect-error Stage 1 browser-safe Walking contract is shared with Admin preview.
+import { effectiveWalkingLocation } from "../../../tools/content/walking-contract.mjs";
 
 type Raw = Record<string, unknown>;
 
@@ -96,6 +98,7 @@ export function buildPreviewModel(input: {
     heroSource: explicitCover ? "explicit" : usesLegacyConvention ? "legacy_convention" : gallery.length ? "gallery_fallback" : null,
     gallery,
     walkingRecord,
+    walkingLocation: walkingRecord ? effectiveWalkingLocation(canonical as ActivityData) : null,
     walkingCover: walkingRecord ? imageFor(walkingRecord.coverAssetId ?? data.coverAssetId, mediaMap, "走讀與田野紀錄圖片") ?? explicitCover ?? gallery[0] ?? null : null,
     unavailableDraftImages: unavailableDraftCount([data.coverAssetId, ...data.galleryAssetIds], mediaMap),
   };

@@ -99,7 +99,7 @@ test("activity walking draft preview keeps effective title and selected existing
     summary: "這是一段足夠長度的活動摘要內容，供預覽測試使用。", participants: null, partnerOrganizations: null,
     leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false, internalNotes: null, publicNotes: null,
     coverAssetId: "activity-cover", galleryAssetIds: ["walking-cover"], walkingRecord: {
-      type: "地方走讀", titleOverride: "走讀標題", summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "聚落範圍",
+      type: "地方走讀", titleOverride: "走讀標題", locationOverride: "走讀專屬地點", summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "聚落範圍",
       stops: [{ name: "第一站", note: null }], fieldNotes: ["觀察重點"], digitalWalkId: "DW-WT-001", coverAssetId: "walking-cover",
     },
   };
@@ -109,6 +109,7 @@ test("activity walking draft preview keeps effective title and selected existing
   expect(model.contentType).toBe("activity");
   if (model.contentType !== "activity") throw new Error("expected activity preview");
   expect(model.walkingRecord?.titleOverride).toBe("走讀標題");
+  expect(model.walkingLocation).toBe("走讀專屬地點");
   expect(model.walkingCover?.url).toBe("https://example.test/walking.jpg");
 });
 
@@ -118,7 +119,7 @@ test("walking preview null cover follows effective activity cover without mutati
     projectName: null, activityType: "走讀", topic: "地方文化", sdgs: [], summary: "這是一段足夠長度的活動摘要內容，供預覽測試使用。",
     participants: null, partnerOrganizations: null, leader: null, keywords: [], videoUrl: null, relatedUrl: null, featured: false,
     internalNotes: null, publicNotes: null, coverAssetId: "activity-cover", galleryAssetIds: [], walkingRecord: {
-      type: "地方走讀", titleOverride: null, summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "範圍", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null,
+      type: "地方走讀", titleOverride: null, locationOverride: null, summary: "這是一段足夠長度的走讀摘要內容，供預覽測試使用。", routeSummary: "範圍", stops: [], fieldNotes: [], digitalWalkId: null, coverAssetId: null,
     },
   };
   const before = structuredClone(data);
@@ -126,5 +127,6 @@ test("walking preview null cover follows effective activity cover without mutati
   expect(model.contentType).toBe("activity");
   if (model.contentType !== "activity") throw new Error("expected activity preview");
   expect(model.walkingCover?.url).toBe("https://example.test/image.jpg");
+  expect(model.walkingLocation).toBe("場地");
   expect(data).toEqual(before);
 });

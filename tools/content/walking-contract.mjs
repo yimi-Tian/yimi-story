@@ -12,6 +12,7 @@ export const WALKING_TYPES = Object.freeze([
 export const WALKING_RECORD_KEYS = Object.freeze([
   "type",
   "titleOverride",
+  "locationOverride",
   "summary",
   "routeSummary",
   "stops",
@@ -64,6 +65,7 @@ export function normalizeWalkingRecord(value) {
     ...unknownProperties(source, WALKING_RECORD_KEYS),
     type: trimmed(source.type),
     titleOverride: nullableText(source.titleOverride),
+    locationOverride: nullableText(source.locationOverride),
     summary: trimmed(source.summary),
     routeSummary: nullableText(source.routeSummary),
     stops,
@@ -75,4 +77,8 @@ export function normalizeWalkingRecord(value) {
 
 export function effectiveWalkingTitle(activity) {
   return trimmed(activity?.walkingRecord?.titleOverride) || trimmed(activity?.name);
+}
+
+export function effectiveWalkingLocation(activity) {
+  return trimmed(activity?.walkingRecord?.locationOverride) || trimmed(activity?.venue);
 }

@@ -52,6 +52,9 @@ function validateWalkingRecord(result, walkingRecord) {
   if (walkingRecord.titleOverride !== null && (typeof walkingRecord.titleOverride !== "string" || !walkingRecord.titleOverride.trim() || walkingRecord.titleOverride.length > 150)) {
     addIssue(result, "errors", "walkingRecord.titleOverride", "walking.titleOverride.invalid", "走讀頁標題最多 150 字或 null。");
   }
+  if (walkingRecord.locationOverride !== null && (typeof walkingRecord.locationOverride !== "string" || !walkingRecord.locationOverride.trim() || walkingRecord.locationOverride.length > 300)) {
+    addIssue(result, "errors", "walkingRecord.locationOverride", "walking.locationOverride.invalid", "走讀地點顯示最多 300 字或 null。");
+  }
   if (walkingRecord.routeSummary !== null && (typeof walkingRecord.routeSummary !== "string" || !walkingRecord.routeSummary.trim() || walkingRecord.routeSummary.length > 1500)) {
     addIssue(result, "errors", "walkingRecord.routeSummary", "walking.routeSummary.invalid", "走讀範圍摘要最多 1500 字或 null。");
   }
