@@ -1,0 +1,72 @@
+# 一次性驗證：用 GitHub 官方 Jekyll 建置動作（與 Pages 相同的 github-pages 環境）建置本分支，
+# 再用 check-site-v2.py 檢查輸出。只「建置」，不上傳 Pages 構件、不部署、不寫入任何內容。
+# 只在推送到 ci/jekyll-verify-b5 這一個分支時執行；請勿把本分支合併到 main。
+name: Jekyll build check (B5, no deploy)
+
+on:
+  push:
+    branches:
+      - ci/jekyll-verify-b5
+
+permissions:
+  contents: read   # 最小權限：只讀；沒有 pages: write、id-token: write、也沒有 environment
+
+concurrency:
+  group: jekyll-verify-b5
+  cancel-in-progress: true
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Jekyll build (build only, no deploy)
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: ./
+          destination: ./_site_check
+
+      - name: check-site-v2 (13 WebP, six-file allowlist, required files, excluded paths)
+        run: python3 .github/scripts/check-site-v2.py _site_check --expect-images | tee check-report.txt
+
+      - name: Published size vs GitHub Pages 1 GB limit
+        run: |
+          mb=$(du -sm _site_check | cut -f1)
+          files=$(find _site_check -type f | wc -l)
+          {
+            echo "### Jekyll build check"
+            echo "- _site files: ${files}"
+            echo "- _site size: ${mb} MiB (GitHub Pages published-site limit: 1 GB)"
+            echo "- check-site-v2: $(tail -1 check-report.txt)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "size=${mb} MiB files=${files}"
+          if [ "$mb" -gt 1000 ]; then echo "::error::_site is over 1000 MiB"; exit 1; fi
+
+  control-without-config:
+    # 對照組：移除 _config.yml 後同樣用 Jekyll 建置，check-site-v2 必須「失敗」（證明檢查能抓到洩漏）
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Remove _config.yml (control only; nothing is committed)
+        run: rm _config.yml
+      - name: Jekyll build (control)
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: ./
+          destination: ./_site_control
+      - name: check-site-v2 must FAIL here
+        run: |
+          if python3 .github/scripts/check-site-v2.py _site_control --expect-images > control-report.txt; then
+            echo "::error::control unexpectedly passed"; exit 1
+          fi
+          grep -E "^FAIL" control-report.txt | head -20
+          echo "control OK (check failed as expected)"
