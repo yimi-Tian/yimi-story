@@ -18,19 +18,70 @@
     return [...new Set((Array.isArray(values) ? values : []).filter(Boolean))];
   }
 
+  // 圖片顯示版對照：map 形如 { "<原圖路徑小寫>": { d: "顯示版 WebP", o: "原圖實際路徑" } }。
+  // 在「產生 <img src> 之前」就把路徑換成顯示版，所以瀏覽器不會先下載原圖或先發出 404 請求。
+  // 找不到對照時原樣回傳（行為與舊版完全相同）。
+  function getDisplayMap(map) {
+    if (map) return map;
+    return (typeof globalThis !== "undefined" && globalThis.YIMI_IMAGE_DISPLAY_MAP) || null;
+  }
+
+  function displayKey(path) {
+    return String(path || "").replace(/^\.?\//, "").split(/[?#]/)[0].toLowerCase();
+  }
+
+  function lookupDisplay(path, map) {
+    const source = getDisplayMap(map);
+    if (!source || typeof path !== "string" || !path) return null;
+    const key = displayKey(path);
+    const entry = Object.prototype.hasOwnProperty.call(source, key) ? source[key] : null;
+    return entry && entry.d ? entry : null;
+  }
+
+  function resolveDisplayImage(path, map) {
+    const entry = lookupDisplay(path, map);
+    return entry ? entry.d : path;
+  }
+
+  // 同一張圖（原圖路徑、大小寫不同的原圖路徑、顯示版）回傳相同的識別值，供去重與比對使用。
+  function imageIdentity(path, map) {
+    const entry = lookupDisplay(path, map);
+    return entry ? entry.d : path;
+  }
+
+  function sameImage(a, b, map) {
+    return imageIdentity(a, map) === imageIdentity(b, map);
+  }
+
+  // 展開成「顯示版在前、原圖實際路徑在後」的候選清單（顯示版載入失敗時才退回原圖）。
+  function expandDisplayCandidates(paths, map) {
+    const out = [];
+    for (const path of paths) {
+      const entry = lookupDisplay(path, map);
+      if (entry) {
+        out.push(entry.d);
+        if (entry.o) out.push(entry.o);
+      } else {
+        out.push(path);
+      }
+    }
+    return out;
+  }
+
   function resolvePublicCover({
     explicitCover = "",
     gallery = [],
     legacyFallbacks = [],
     placeholder = "public/images/placeholder.svg",
     preferLegacyFallback = false,
+    displayMap = null,
   } = {}) {
     const galleryPaths = uniquePaths(gallery);
     const legacyPaths = uniquePaths(legacyFallbacks);
     const ordered = preferLegacyFallback
-      ? [explicitCover, ...legacyPaths, ...galleryPaths, placeholder]
-      : [explicitCover, ...galleryPaths, ...legacyPaths, placeholder];
-    const candidates = uniquePaths(ordered);
+      ? [explicitCover, ...legacyPaths, ...galleryPaths]
+      : [explicitCover, ...galleryPaths, ...legacyPaths];
+    const candidates = uniquePaths([...expandDisplayCandidates(ordered.filter(Boolean), displayMap), placeholder]);
     const src = candidates[0] || placeholder;
     return { src, fallbacks: candidates.filter((candidate) => candidate !== src) };
   }
@@ -201,6 +252,10 @@
     DEFAULT_BATCH_SIZE,
     nextVisibleCount,
     resolvePublicCover,
+    resolveDisplayImage,
+    expandDisplayCandidates,
+    imageIdentity,
+    sameImage,
     visibleBatch,
     getPublicWalkingRecords,
     getPublicDigitalWalks,
