@@ -1,0 +1,17 @@
+# GitHub Pages（Jekyll）發布範圍隔離：只排除「網站不需要、不應公開」的開發／後台／測試檔。
+# 前台檔案、public/、assets/、data/、css/、js/ 與六檔發布白名單（activities.csv、activities-data.js、
+# data/class-results.json、data/class-results-data.js、data/platform-home.json、data/platform-home-data.js）不在排除清單。
+# 注意：Jekyll 會自動排除以 "_" 或 "." 開頭的檔案；請勿新增 .nojekyll（會讓這些檔案全部公開）。
+exclude:
+  - admin
+  - supabase
+  - tests
+  - tools
+  - schemas
+  - src
+  - config
+  - README.md
+  - activities.backup-20260617-113529.csv
+  - activities.backup-20260617-113706.csv
+  - activities-data.backup-20260617-113529.js
+  - activities-data.backup-20260617-113706.js
