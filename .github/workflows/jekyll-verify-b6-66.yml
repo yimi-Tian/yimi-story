@@ -1,0 +1,115 @@
+# 一次性驗證（B6：main bf7d609 + PR #66）：用 GitHub 官方 Jekyll 建置動作（與 Pages 相同的 github-pages 環境）建置本分支，
+# 再用 check-site-v2.py 檢查輸出。只「建置」，不上傳 Pages 構件、不部署、不寫入任何內容。
+# 只在推送到 ci/jekyll-verify-b6-66 這一個分支時執行；請勿把本分支合併到 main，也不要開 PR。
+name: Jekyll build check (B6-66, no deploy)
+
+on:
+  push:
+    branches:
+      - ci/jekyll-verify-b6-66
+
+permissions:
+  contents: read   # 最小權限：只讀；沒有 pages: write、id-token: write、也沒有 environment
+
+concurrency:
+  group: jekyll-verify-b6-66
+  cancel-in-progress: true
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Jekyll build (build only, no deploy)
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: ./
+          destination: ./_site_check
+
+      - name: check-site-v2 (13 WebP, six-file allowlist, required files, excluded paths)
+        shell: bash
+        run: |
+          set -o pipefail   # 讓 check-site-v2 的失敗（結束碼 1）不被 tee 吃掉，Job 會因此失敗
+          python3 .github/scripts/check-site-v2.py _site_check --expect-images | tee check-report.txt
+
+      - name: Six-file allowlist SHA-256 vs production baseline
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 - <<'PY' | tee sha-report.txt
+          import hashlib, sys
+          EXP = {
+            "activities.csv": "48ba0b9aada80e81cf724ca839f10ca92ed457f63015fc264280b6a95bb29d77",
+            "activities-data.js": "f94cacf92abf79afaee7bc92839998357f0daf9c29d0a268ab816b88bdeff78e",
+            "data/class-results.json": "c0b01588a749db1834f581635eba4603fc71739f2b681c46b2462d420131011b",
+            "data/class-results-data.js": "ab29f5019958572b4b962c1dd2f49d041b34011a03a3581a1fd1580da1f43579",
+            "data/platform-home.json": "99c3d5bd1de8fdc53714bc3b9398d5137d607e89427d5ba26c4bf22b4105862f",
+            "data/platform-home-data.js": "9bf500b802efbfcf11bfd4f87e29eb991ce646fbec0666b916698a11f1830085",
+          }
+          bad = 0
+          for f, h in EXP.items():
+              got = hashlib.sha256(open("_site_check/" + f, "rb").read()).hexdigest()
+              ok = got == h
+              bad += (not ok)
+              print(("OK   " if ok else "FAIL ") + f + " " + got)
+          print("SHA-256 result:", "all six match production baseline" if not bad else str(bad) + " mismatch")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Published size (bytes / MiB / headroom to 1 GiB / 900 MiB internal alert)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bytes=$(find _site_check -type f -printf '%s\n' | awk '{s+=$1} END{printf "%d", s}')
+          files=$(find _site_check -type f | wc -l)
+          limit=1073741824   # 1 GiB
+          alert=943718400    # 900 MiB（專案內部警戒值，僅供提醒，不是 GitHub 官方限制）
+          mib=$(awk -v b="$bytes" 'BEGIN{printf "%.2f", b/1048576}')
+          left=$((limit - bytes))
+          left_mib=$(awk -v b="$left" 'BEGIN{printf "%.2f", b/1048576}')
+          pct=$(awk -v b="$bytes" -v l="$limit" 'BEGIN{printf "%.1f", 100*b/l}')
+          if [ "$bytes" -gt "$alert" ]; then alert_txt="YES (over the internal 900 MiB alert; reminder only, not a GitHub limit)"; else alert_txt="no"; fi
+          if [ "$bytes" -gt "$limit" ]; then over_txt="YES"; else over_txt="no"; fi
+          {
+            echo "### Jekyll build check"
+            echo "- _site files: ${files}"
+            echo "- _site size: ${bytes} bytes = ${mib} MiB (${pct}% of 1 GiB)"
+            echo "- headroom to 1 GiB (1073741824 bytes): ${left} bytes = ${left_mib} MiB"
+            echo "- over 1 GiB: ${over_txt}"
+            echo "- over internal 900 MiB alert (943718400 bytes): ${alert_txt}"
+            echo "- check-site-v2: $(tail -1 check-report.txt)"
+            echo "- six-file SHA-256: $(tail -1 sha-report.txt)"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ "$bytes" -gt "$alert" ]; then echo "::warning::_site is over the internal 900 MiB alert (${mib} MiB); reminder only"; fi
+          if [ "$bytes" -gt "$limit" ]; then echo "::error::_site exceeds 1 GiB"; exit 1; fi
+
+  control-without-config:
+    # 對照組：移除 _config.yml 後同樣用 Jekyll 建置，check-site-v2 必須「失敗」（證明檢查能抓到洩漏）
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Remove _config.yml (control only; nothing is committed)
+        run: rm _config.yml
+      - name: Jekyll build (control)
+        uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: ./
+          destination: ./_site_control
+      - name: check-site-v2 must FAIL here
+        shell: bash
+        run: |
+          set -o pipefail
+          if python3 .github/scripts/check-site-v2.py _site_control --expect-images > control-report.txt; then
+            echo "::error::control unexpectedly passed"; exit 1
+          fi
+          grep -E "^FAIL" control-report.txt | head -20
+          echo "control OK (check failed as expected)"
