@@ -71,12 +71,15 @@
   }
 
   function renderHero(hero) {
-    const slides = hero.slides.map((slide, index) => `
+    const slides = hero.slides.map((slide, index) => {
+      const cover = publicCover(slide);
+      return `
       <figure class="hero-slide${index === 0 ? " active" : ""}" data-slide="${index}">
-        <img src="${escapeHtml(slide.image)}" alt="${escapeHtml(slide.alt)}"${index === 0 ? "" : ' loading="lazy"'}>
+        <img src="${escapeHtml(cover.src)}"${imageFallbackAttribute(cover)} alt="${escapeHtml(slide.alt)}"${index === 0 ? "" : ' loading="lazy"'}>
         <figcaption>${escapeHtml(slide.caption)}</figcaption>
       </figure>
-    `).join("");
+    `;
+    }).join("");
 
     document.querySelector("#hero").innerHTML = `
       <div class="hero-media">${slides}</div>
@@ -93,6 +96,8 @@
         `).join("")}
       </div>
     `;
+
+    bindPublicImageFallbacks(document.querySelector("#hero"));
 
     let current = 0;
     let timer;

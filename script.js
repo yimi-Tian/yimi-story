@@ -2347,6 +2347,7 @@ function pageHeader(title, subtitle, options = {}) {
   };
   const hall = hallHeaders[routePage] || hallHeaders.overview;
   const headerImage = options.image || hall.image;
+  const headerCover = resolvePublicCover({ explicitCover: headerImage, placeholder: PLACEHOLDER });
   const hallIntroductions = {
     overview: "112–115 年成果故事，從課程、地方行動到數位典藏，累積嘉義地方知識的軌跡。",
     themes: "依地方議題整理課程成果、社區故事與長期行動。",
@@ -2366,7 +2367,7 @@ function pageHeader(title, subtitle, options = {}) {
         <p>${displaySubtitle}</p>
       </div>
       <div class="platform-hall-media">
-        <img src="${headerImage}" alt="">
+        <img src="${headerCover.src}"${headerCover.fallbacks.length ? ` data-image-fallbacks="${imageFallbackData(headerCover.src, headerCover.fallbacks)}"` : ""} alt="">
       </div>
     </section>
   `;
@@ -2921,7 +2922,9 @@ function getClubOverviewRecordDate(record) {
 }
 
 function clubOverviewCard(item) {
-  const cover = hasThemeValue(item.coverImage) ? item.coverImage : PLACEHOLDER;
+  const coverCover = resolvePublicCover({ explicitCover: hasThemeValue(item.coverImage) ? item.coverImage : "", placeholder: PLACEHOLDER });
+  const cover = coverCover.src;
+  const coverFallbackAttr = coverCover.fallbacks.length ? ` data-image-fallbacks="${imageFallbackData(cover, coverCover.fallbacks)}"` : "";
   const name = getClubShortTitle(item);
   const summary = hasThemeValue(item.tagline) ? item.tagline : getClubDescription(item);
   const records = Array.isArray(item.serviceRecords) ? item.serviceRecords : [];
@@ -2930,7 +2933,7 @@ function clubOverviewCard(item) {
   const copy = getClubOverviewCopy(item);
   return `
     <a class="club-record-card club-entry-card" href="#/clubs/${item.id}">
-      <img src="${cover}" alt="${name}代表圖片" loading="lazy">
+      <img src="${cover}"${coverFallbackAttr} alt="${name}代表圖片" loading="lazy">
       <div class="club-record-card-body">
         <span class="club-overview-record-count">${records.length} 筆${copy.recordLabel}</span>
         <h2>${name}</h2>
@@ -3242,11 +3245,13 @@ function getClubActivities(club) {
 }
 
 function selectClubCoverCandidates(club, activities = []) {
-  return unique([
+  const candidates = [
     club?.coverImage,
     ...activities.flatMap(clubActivityImageCandidates),
-    PLACEHOLDER,
-  ].filter(hasThemeValue));
+  ].filter(hasThemeValue);
+  // 顯示版在前、原圖後備；未對照的路徑原樣保留。
+  const expanded = publicUx?.expandDisplayCandidates ? publicUx.expandDisplayCandidates(candidates) : candidates;
+  return unique([...expanded, PLACEHOLDER]);
 }
 
 function selectClubCover(club, activities = []) {
@@ -3399,13 +3404,14 @@ function getClassResultMedia(result) {
     gallery: gallery.map((entry) => entry.src),
     placeholder: showcaseData.placeholderImage || PLACEHOLDER,
   });
-  const matchedGallery = gallery.find((entry) => entry.src === resolved.src);
+  const sameCover = (entry) => (publicUx?.sameImage ? publicUx.sameImage(entry.src, resolved.src) : entry.src === resolved.src);
+  const matchedGallery = gallery.find(sameCover);
   const cover = {
     src: resolved.src,
     alt: result.coverImageAlt || matchedGallery?.alt || `${result.title || result.className || "班級花絮與成果"}封面照片`,
     fallbacks: resolved.fallbacks,
   };
-  return { cover, gallery: gallery.filter((entry) => entry.src !== cover.src) };
+  return { cover, gallery: gallery.filter((entry) => !sameCover(entry)) };
 }
 
 function buildClassResultItems(results) {
@@ -4281,7 +4287,15 @@ function sdgIconPath(sdg) {
 }
 
 function unique(values) {
-  return [...new Set(values)];
+  // 顯示版與原圖視為同一張圖（避免封面顯示版與照片牆原圖重複出現）；未對照的路徑行為不變。
+  if (!publicUx?.imageIdentity) return [...new Set(values)];
+  const seen = new Set();
+  return Array.from(values).filter((value) => {
+    const identity = typeof value === "string" ? publicUx.imageIdentity(value) : value;
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
 }
 
 function formatNumber(value) {
