@@ -1,0 +1,65 @@
+/* V1-H2-FINAL R2 主題：海洋藍識別（只覆蓋顏色與主視覺邊緣；不改版型）。參考色：海洋藍 #327F9A／淺海藍 #B7DDE7／暖沙白 #F5F3E9 */
+html[data-ocean]{--ink:#12384a;--muted:#4a6b78;--primary:#327f9a;--bg:#f5f3e9;--sky:#dcedf1;--field:#b7dde7;--water:#327f9a;--border:rgba(18,56,74,.16)}
+html[data-ocean][data-view="a11"] .hero{background:
+ radial-gradient(ellipse 34% 54% at 41% 62%,rgba(183,221,231,var(--glow,.62)),transparent 72%),
+ radial-gradient(ellipse 48% 42% at 87% 8%,rgba(183,221,231,var(--glowtop,.38)),transparent 78%),
+ linear-gradient(180deg,#f7f5ec 0 33%,#f5f3e9 58%,#f5f3e9 100%)}
+html[data-ocean]{--glow:.34;--glowtop:.22}
+html[data-ocean][data-view="a11"] .hero:before{background:linear-gradient(180deg,rgba(183,221,231,.5),rgba(183,221,231,.1))}
+html[data-ocean][data-view="a11"] .hero:after{background:linear-gradient(180deg,rgba(183,221,231,.16),rgba(245,243,233,.9))}
+html[data-ocean][data-view="a11"] .landscape-lines{background:repeating-radial-gradient(ellipse at 79% 94%,transparent 0 52px,rgba(50,127,154,.04) 53px 54px,transparent 55px 84px)}
+html[data-ocean][data-view="a11"] .site-header{background:linear-gradient(180deg,rgba(247,245,236,.7),transparent)}
+html[data-ocean][data-view="a11"] .brand-mark{box-shadow:0 12px 28px rgba(50,127,154,.2)}
+html[data-ocean][data-view="a11"] .eyebrow{color:#47697a}
+html[data-ocean][data-view="a11"] .hero-lede{color:#476676}
+html[data-ocean][data-view="a11"] .world-frame:before,html[data-ocean][data-view="a11"] .world-frame:after,html[data-ocean] .image-wash{display:none}
+html[data-ocean][data-view="a11"] .world-frame img{filter:drop-shadow(0 22px 26px rgba(18,56,74,.13))}
+html[data-ocean][data-view="a11"] .world-frame figcaption{left:11%;bottom:6%;opacity:1;color:var(--ink);text-shadow:none}
+html[data-ocean] .world-frame figcaption span{font-size:9px;letter-spacing:.14em;color:var(--primary);font-weight:700}
+html[data-ocean] .world-frame figcaption strong{font-size:22px;letter-spacing:.05em}
+html[data-ocean][data-view="a11"] .preview-action i{background:var(--accent)}
+@media(max-width:620px){
+ html[data-ocean][data-view="a11"] .hero{background:
+  radial-gradient(ellipse 62% 18% at 18% 68%,rgba(183,221,231,var(--glow,.62)),transparent 72%),
+  radial-gradient(ellipse 100% 40% at 93% 24%,rgba(183,221,231,var(--glowtop,.38)),transparent 78%),
+  linear-gradient(180deg,#f7f5ec 0 59%,#f5f3e9 100%)}
+ html[data-ocean] .world-frame figcaption span{display:block;font-size:7px}
+ html[data-ocean][data-view="a11"] .world-frame figcaption{left:7%;bottom:2%}
+ html[data-ocean] .world-frame figcaption strong{font-size:15px}
+}
+
+/* 模型尺寸：依同仁回饋放大（新圖框更緊；桌機再放大 1.12 倍、手機 1.05 倍；縮放後仍完整保留十鄉鎮） */
+html[data-ocean][data-view="a11"] .world-frame img{transform:scale(1.12)}
+@media(max-width:620px){html[data-ocean][data-view="a11"] .world-frame img{transform:scale(1.05)}}
+/* 平板橫向／小筆電（921–1180px）：A1.1 原欄寬下限會讓主視覺右側被裁切，改為右欄可收縮 */
+@media(min-width:921px) and (max-width:1180px){html[data-ocean][data-view="a11"] .hero{grid-template-columns:minmax(340px,.42fr) minmax(0,.58fr)}html[data-ocean][data-view="a11"] .hero h1{font-size:50px}}
+/* 手機：入口按鈕下移，避免貼住模型右下緣 */
+@media(max-width:620px){html[data-ocean][data-view="a11"] .preview-action{bottom:1%}html[data-ocean][data-view="a11"] .world-note{bottom:-3%}}
+
+/* V1-H2-FINAL.2 手機版主視覺群組整體上移（僅 ≤620px；--m-lift 為上移量）
+   原 .hero 為固定高度(100svh/min 720px)＋align-content:center，內容垂直置中；
+   底部 padding 增加 2×lift，置中點即上移 lift。不改子元素間距、字級、地景大小。Logo／導覽列為 absolute，不受影響。 */
+@media(max-width:620px){
+ html[data-ocean]{--m-lift:40px}
+ html[data-ocean][data-view="a11"] .hero{padding-bottom:calc(30px + 2*var(--m-lift))}
+}
+
+/* V1-H2-FINAL.3 說明句改為「走進邑米服務的十鄉鎮…」後變長，折行時避免單字落單（僅文字折行，不改間距／字級） */
+html[data-ocean] .hero-lede{text-wrap:balance}
+
+/* V1-H2-FIX.1 暫未提供功能的入口先隱藏（保留在 HTML 中，以 hidden 屬性控制，日後移除屬性即可恢復） */
+[hidden]{display:none!important}
+
+/* V1-I2 觸控範圍：以透明擴大點擊區達約 44px，不改字級與構圖（≤620px 或觸控裝置；滑鼠桌機不變）。 */
+@media(max-width:620px),(pointer:coarse){
+ .simple-nav a,.brand,.primary-action,.data-link{position:relative}
+ .simple-nav a:after,.brand:after{content:"";position:absolute;left:-14px;right:-14px;top:-9px;bottom:-9px}
+ .brand:after{left:-4px;right:-4px;top:-4px;bottom:-4px}
+ .primary-action:after{content:"";position:absolute;left:0;right:0;top:-2px;bottom:-2px}
+ .preview-action:after{content:"";position:absolute;left:-3px;right:-3px;top:-8px;bottom:-1px;border-radius:inherit}
+ .data-link:after{content:"";position:absolute;left:-8px;right:-8px;top:-6px;bottom:-25px}
+}
+@media(max-width:620px){
+ /* 「地方故事持續點亮中」下移，與入口按鈕（pill）拉開間距 */
+ html[data-ocean][data-view="a11"] .world-note{bottom:calc(-3% - 9px)}
+}

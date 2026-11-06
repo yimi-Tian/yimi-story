@@ -1,0 +1,12 @@
+/* V1-I2 手機觸控尺寸（只影響 ≤700px 或觸控裝置；桌機滑鼠版不變）。僅調整按鈕尺寸，不改字級、場景、相機。 */
+@media (max-width:700px),(pointer:coarse){
+ #navw #nav button,#navw .sub button{min-width:44px;min-height:44px}
+ #subtog{min-width:44px;min-height:44px}
+ #settog,#lt button{min-width:44px;min-height:44px}
+ #dcb,#abx{min-height:44px;min-width:44px}
+ #m1-back{position:fixed}
+ #m1-back::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
+ #p .m1-link a{display:flex;align-items:center;min-height:44px}
+}
+/* 資訊卡寬度含內距，避免手機左右超出畫面 2～4px */
+@media (max-width:700px){#p{box-sizing:border-box}}
