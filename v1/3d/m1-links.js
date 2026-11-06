@@ -1,0 +1,30 @@
+/* 由 m1-links.json 原樣產生（供 file:// 與靜態託管共用）；請改 JSON 後重產 */
+window.YIMI_M1_LINKS={
+ "schema": "yimi-m1-links/1",
+ "note": "V1-M1 驗證用：資訊卡 → 正式網站已公開成果。與 3D 檔內的資訊卡內容分開管理；未列入此表的卡片一律不顯示連結。",
+ "siteBase": "https://yimi-tian.github.io/yimi-story/",
+ "backHref": "../index.html",
+ "backLabel": "← 返回網站",
+ "backNote": "返回網址與成果連結基底由根目錄 site-config.js 決定（yimi-tian.github.io/yimi-story/ 為正式環境，其餘為測試環境）；本檔 backHref／siteBase 僅在 site-config.js 缺少時作後備。成果連結一律指向正式站已公開頁面。",
+ "verifiedAgainst": "yimi-story main bf7d609：activities.csv 與 activities-data.js，是否公開=是",
+ "items": [
+  {
+   "cardTitle": "朴子老診所",
+   "town": "朴子",
+   "relation": "相關成果",
+   "activityId": "114-015",
+   "year": "114",
+   "activityName": "朴子醫路：藥香與老城之間",
+   "route": "#/overview/activity/114-015/114"
+  },
+  {
+   "cardTitle": "刺繡工坊",
+   "town": "朴子",
+   "relation": "相關成果",
+   "activityId": "112-004",
+   "year": "112",
+   "activityName": "傳技藝坊-刺繡",
+   "route": "#/overview/activity/112-004/112"
+  }
+ ]
+};
