@@ -29,7 +29,12 @@ for f, h in sorted(exp.items()):
 tracked = set(subprocess.check_output(['git', '-C', repo, 'ls-files', '-z']).decode('utf-8').split('\0')) - {''}
 sitefiles = sorted(os.path.relpath(os.path.join(d, f), site).replace(os.sep, '/') for d, _, fs in os.walk(site) for f in fs)
 untracked = [f for f in sitefiles if f not in tracked]
-chk(not untracked, f'_site 內沒有 git 未追蹤（建置產生）的檔案：{untracked[:5]}')
+# Jekyll 預設行為（與 v1/ 無關、正式站本來就如此）：子資料夾的 README.md 會另外輸出成 <資料夾>/index.html；
+# 另外預設主題會輸出 assets/css/style.css。這裡只允許這兩類，其餘任何建置產生的檔案都算不符。
+KNOWN = {'assets/css/style.css'} | {os.path.dirname(f) + '/index.html' for f in tracked if f.endswith('/README.md') and not re.match(r'^(admin|supabase|tests|tools|schemas|src|config)/', f)}
+unexpected = [f for f in untracked if f not in KNOWN]
+print('INFO Jekyll 預設產生的檔案（%d）：%s' % (len(untracked), untracked))
+chk(not unexpected and all(k in untracked for k in KNOWN), f'_site 內除 Jekyll 預設產生的 README→index.html／theme css 外，沒有其他非 git 檔案：{unexpected[:5]}')
 diff = [f for f in sitefiles if f in tracked and sha(os.path.join(site, f)) != hashlib.sha256(subprocess.check_output(['git', '-C', repo, 'show', ':' + f])).hexdigest()]
 chk(not diff, f'_site 內所有檔案位元組與 git 完全相同（不符 {len(diff)}）：{diff[:5]}')
 # 3. 禁止出現
